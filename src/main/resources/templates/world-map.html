@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ALPHA-DECODE | World Exploration Map</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#cf2020",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#201212",
+                        "bauhaus-yellow": "#FFD700",
+                        "bauhaus-blue": "#0055A4",
+                        "bauhaus-black": "#171111",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    boxShadow: {
+                        'hard': '8px 8px 0px 0px #171111',
+                        'hard-sm': '4px 4px 0px 0px #171111',
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .bauhaus-border {
+            border: 4px solid #171111;
+        }
+
+        .bauhaus-card {
+            transition: transform 0.1s ease;
+        }
+
+        .bauhaus-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 10px 10px 0px 0px #171111;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light text-bauhaus-black font-display antialiased">
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white border-b-4 border-bauhaus-black px-6 md:px-12 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Geometric Logo -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1">
+                    <div class="size-6 rounded-full bg-primary border-2 border-bauhaus-black"></div>
+                    <div class="size-6 bg-bauhaus-black border-2 border-bauhaus-black"></div>
+                    <div
+                        class="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-bottom-[20px] border-b-bauhaus-yellow border-b-[21px] mb-1">
+                    </div>
+                </div>
+                <a th:href="@{/}"
+                    class="text-2xl font-bold tracking-tighter uppercase hover:text-primary transition-colors">ALPHA-DECODE</a>
+            </div>
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-10">
+                <a class="text-sm font-bold uppercase hover:text-primary transition-colors border-b-2 border-primary pb-0.5"
+                    href="#">Explore</a>
+                <a class="text-sm font-bold uppercase hover:text-primary transition-colors"
+                    th:href="@{/lesson}">Library</a>
+                <a class="text-sm font-bold uppercase hover:text-primary transition-colors"
+                    th:href="@{/dashboard}">Profile</a>
+            </nav>
+            <!-- Streak & Profile -->
+            <div class="flex items-center gap-6">
+                <!-- Daily Streak Counter -->
+                <div class="relative group">
+                    <div
+                        class="flex items-center justify-center size-14 rounded-full bg-bauhaus-yellow border-4 border-bauhaus-black shadow-hard-sm animate-pulse">
+                        <div class="text-center">
+                            <span class="block text-lg font-black leading-none">7</span>
+                            <span class="block text-[8px] font-bold uppercase leading-none">Streak</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="bauhaus-border bg-white p-1 hover:bg-background-light">
+                        <span class="material-symbols-outlined block">notifications</span>
+                    </button>
+                    <a th:href="@{/dashboard}"
+                        class="size-10 bauhaus-border bg-bauhaus-blue flex items-center justify-center overflow-hidden">
+                        <div
+                            class="w-full h-full bg-bauhaus-blue flex items-center justify-center text-white font-black text-sm">
+                            U</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-6 md:px-12 py-12">
+        <!-- Hero Section -->
+        <div class="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div class="max-w-2xl">
+                <h2 class="text-6xl md:text-8xl font-black uppercase leading-[0.9] tracking-tighter mb-4">
+                    World<br /><span class="text-primary">Exploration</span>
+                </h2>
+                <p class="text-xl font-medium max-w-lg text-bauhaus-black/70">
+                    Master the geometric landscape. Select a primary region to continue your structural advancement.
+                </p>
+            </div>
+            <!-- Global Stats -->
+            <div class="flex gap-4">
+                <div class="bauhaus-border bg-white p-4 shadow-hard">
+                    <span class="block text-xs font-bold uppercase mb-1">Total Progress</span>
+                    <span class="text-4xl font-black">64%</span>
+                </div>
+                <div class="bauhaus-border bg-white p-4 shadow-hard">
+                    <span class="block text-xs font-bold uppercase mb-1">Rank</span>
+                    <span class="text-4xl font-black">A2</span>
+                </div>
+            </div>
+        </div>
+        <!-- Grid of Regions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <!-- Region: Red - Skibidi Sector -->
+            <a th:href="@{/lesson}"
+                class="bauhaus-card bauhaus-border bg-primary p-6 shadow-hard flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="bg-white bauhaus-border p-2">
+                        <span class="material-symbols-outlined text-4xl font-bold">category</span>
+                    </div>
+                    <span
+                        class="text-white text-xs font-bold uppercase tracking-widest bg-bauhaus-black px-2 py-1">Sector
+                        01</span>
+                </div>
+                <h3 class="text-3xl font-black text-white uppercase mb-2 leading-tight">The Skibidi Sector</h3>
+                <p class="text-white/90 text-sm font-medium mb-auto">Foundational structural mechanics and rhythmic
+                    patterns of learning.</p>
+                <div class="mt-8">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-black text-white uppercase tracking-tighter">Completion</span>
+                        <span class="text-2xl font-black text-white">82%</span>
+                    </div>
+                    <!-- Thick Progress Bar -->
+                    <div class="h-8 w-full bg-bauhaus-black border-2 border-bauhaus-black overflow-hidden">
+                        <div class="h-full bg-white w-[82%]"></div>
+                    </div>
+                </div>
+            </a>
+            <!-- Region: Blue - Slop Plains -->
+            <a th:href="@{/lesson}"
+                class="bauhaus-card bauhaus-border bg-bauhaus-blue p-6 shadow-hard flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="bg-white bauhaus-border p-2">
+                        <span class="material-symbols-outlined text-4xl font-bold">water</span>
+                    </div>
+                    <span
+                        class="text-white text-xs font-bold uppercase tracking-widest bg-bauhaus-black px-2 py-1">Sector
+                        02</span>
+                </div>
+                <h3 class="text-3xl font-black text-white uppercase mb-2 leading-tight">Slop Plains</h3>
+                <p class="text-white/90 text-sm font-medium mb-auto">Navigating the fluid dynamics of information
+                    density and variety.</p>
+                <div class="mt-8">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-black text-white uppercase tracking-tighter">Completion</span>
+                        <span class="text-2xl font-black text-white">45%</span>
+                    </div>
+                    <!-- Thick Progress Bar -->
+                    <div class="h-8 w-full bg-bauhaus-black border-2 border-bauhaus-black overflow-hidden">
+                        <div class="h-full bg-primary w-[45%]"></div>
+                    </div>
+                </div>
+            </a>
+            <!-- Region: Yellow - Rizz Region -->
+            <a href="#"
+                class="bauhaus-card bauhaus-border bg-bauhaus-yellow p-6 shadow-hard flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="bg-white bauhaus-border p-2">
+                        <span class="material-symbols-outlined text-4xl font-bold">bolt</span>
+                    </div>
+                    <span
+                        class="text-bauhaus-black text-xs font-bold uppercase tracking-widest bg-white border-2 border-bauhaus-black px-2 py-1">Sector
+                        03</span>
+                </div>
+                <h3 class="text-3xl font-black text-bauhaus-black uppercase mb-2 leading-tight">The Rizz Region</h3>
+                <p class="text-bauhaus-black/80 text-sm font-medium mb-auto">Advanced charismatic communication and
+                    social influence structures.</p>
+                <div class="mt-8">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-black text-bauhaus-black uppercase tracking-tighter">Completion</span>
+                        <span class="text-2xl font-black text-bauhaus-black">12%</span>
+                    </div>
+                    <!-- Thick Progress Bar -->
+                    <div class="h-8 w-full bg-bauhaus-black border-2 border-bauhaus-black overflow-hidden">
+                        <div class="h-full bg-primary w-[12%]"></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <!-- Secondary Map/Grid Footer -->
+        <div class="mt-16 grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-3 bauhaus-border bg-white p-8 shadow-hard">
+                <div class="flex items-center justify-between mb-8">
+                    <h4 class="text-2xl font-black uppercase italic">Regional Data Visualization</h4>
+                    <div class="flex gap-2">
+                        <div class="size-4 bg-primary bauhaus-border"></div>
+                        <div class="size-4 bg-bauhaus-blue bauhaus-border"></div>
+                        <div class="size-4 bg-bauhaus-yellow bauhaus-border"></div>
+                    </div>
+                </div>
+                <!-- Abstract Map Placeholder -->
+                <div
+                    class="aspect-[21/9] w-full bg-background-light border-4 border-dashed border-bauhaus-black/20 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10"
+                        style="background-image: radial-gradient(#171111 2px, transparent 2px); background-size: 24px 24px;">
+                    </div>
+                    <!-- Bauhaus map graphic elements -->
+                    <div class="absolute top-6 left-12 w-32 h-20 bg-primary/30 border-2 border-primary/50"></div>
+                    <div class="absolute top-8 left-16 w-20 h-12 bg-primary/50 border-2 border-primary"></div>
+                    <div
+                        class="absolute bottom-6 right-20 w-40 h-16 bg-bauhaus-blue/30 border-2 border-bauhaus-blue/50">
+                    </div>
+                    <div class="absolute bottom-8 right-24 w-24 h-10 bg-bauhaus-blue/50 border-2 border-bauhaus-blue">
+                    </div>
+                    <div
+                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-bauhaus-yellow/40 border-2 border-bauhaus-yellow">
+                    </div>
+                    <div class="z-10 text-center">
+                        <span class="material-symbols-outlined text-6xl text-bauhaus-black/30">map</span>
+                        <p class="text-sm font-bold uppercase text-bauhaus-black/40 mt-2">Tactical Map Overview</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bauhaus-border bg-bauhaus-black p-6 shadow-hard flex flex-col justify-center text-white">
+                <span class="material-symbols-outlined text-5xl mb-4 text-bauhaus-yellow">workspace_premium</span>
+                <h5 class="text-xl font-bold uppercase mb-2">Architect Status</h5>
+                <p class="text-xs text-white/60 mb-6 font-medium">You are currently in the top 5% of structural learners
+                    this week.</p>
+                <button
+                    class="bg-primary text-white font-bold uppercase py-3 border-2 border-white hover:bg-white hover:text-primary transition-all">
+                    View Leaderboard
+                </button>
+            </div>
+        </div>
+    </main>
+    <footer class="mt-20 border-t-4 border-bauhaus-black py-12 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-4">
+                <div class="flex gap-1 scale-75">
+                    <div class="size-6 rounded-full bg-primary border-2 border-bauhaus-black"></div>
+                    <div class="size-6 bg-bauhaus-black border-2 border-bauhaus-black"></div>
+                    <div
+                        class="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-bottom-[20px] border-b-bauhaus-yellow border-b-[21px] mb-1">
+                    </div>
+                </div>
+                <p class="text-sm font-black uppercase">Alpha-Decode © 1923-2024</p>
+            </div>
+            <div class="flex gap-8">
+                <a class="text-xs font-bold uppercase hover:underline" href="#">Guidelines</a>
+                <a class="text-xs font-bold uppercase hover:underline" href="#">Manifesto</a>
+                <a class="text-xs font-bold uppercase hover:underline" href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
+

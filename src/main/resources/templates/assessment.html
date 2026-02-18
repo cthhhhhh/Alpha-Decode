@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ALPHA-DECODE | Start Brainrot Assessment</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@400;700;900&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#cf2020",
+                        "bauhaus-yellow": "#FFD700",
+                        "bauhaus-blue": "#0055FF",
+                        "bauhaus-black": "#171111",
+                        "background-light": "#F0F0F0",
+                        "background-dark": "#1a1a1a",
+                    },
+                    fontFamily: {
+                        "display": ["Outfit", "sans-serif"],
+                        "sans": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0px",
+                        "lg": "2px",
+                        "xl": "4px",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'hard': '8px 8px 0px 0px rgba(0,0,0,1)',
+                        'hard-sm': '4px 4px 0px 0px rgba(0,0,0,1)',
+                        'hard-hover': '2px 2px 0px 0px rgba(0,0,0,1)',
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .bauhaus-grid {
+            background-size: 40px 40px;
+            background-image: radial-gradient(circle, #00000011 1px, transparent 1px);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light font-sans text-black antialiased">
+    <div class="min-h-screen flex flex-col border-[12px] border-black m-0 md:m-4">
+        <!-- Top Navigation -->
+        <nav class="flex flex-col md:flex-row items-stretch border-b-8 border-black bg-white">
+            <div
+                class="flex items-center gap-4 px-8 py-6 border-b-4 md:border-b-0 md:border-r-8 border-black bg-primary text-white">
+                <!-- Shared Logo -->
+                <a th:href="@{/}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="flex items-center gap-1">
+                        <div class="size-6 rounded-full bg-white border-2 border-white"></div>
+                        <div class="size-6 bg-white border-2 border-white opacity-80"></div>
+                        <div
+                            class="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[21px] border-b-bauhaus-yellow mb-1">
+                        </div>
+                    </div>
+                    <span class="font-display text-2xl font-black tracking-tighter uppercase">ALPHA-DECODE</span>
+                </a>
+            </div>
+            <div class="flex-1 flex flex-wrap items-center justify-between px-8 py-4 gap-6">
+                <div class="flex items-center gap-10 font-display font-bold uppercase tracking-widest text-sm">
+                    <a class="hover:underline decoration-4 underline-offset-8 decoration-primary border-b-2 border-primary pb-0.5"
+                        href="#">Curriculum</a>
+                    <a class="hover:underline decoration-4 underline-offset-8 decoration-bauhaus-blue"
+                        href="#">Archeology</a>
+                    <a class="hover:underline decoration-4 underline-offset-8 decoration-bauhaus-yellow"
+                        href="#">Trends</a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a th:href="@{/dashboard}"
+                        class="px-6 py-2 border-4 border-black font-display font-black uppercase text-sm shadow-hard-sm hover:shadow-hard-hover hover:translate-x-[2px] hover:translate-y-[2px] transition-all bg-white">
+                        Dashboard
+                    </a>
+                    <div class="size-10 border-4 border-black bg-bauhaus-yellow shadow-hard-sm overflow-hidden">
+                        <div
+                            class="w-full h-full bg-bauhaus-blue flex items-center justify-center text-white font-black text-xs">
+                            U</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <!-- Hero Section -->
+        <main class="flex flex-col lg:flex-row flex-1 min-h-[800px]">
+            <!-- Left Hero Content -->
+            <div class="flex-1 p-8 lg:p-16 flex flex-col justify-center relative bauhaus-grid">
+                <div class="max-w-4xl z-10">
+                    <h1
+                        class="font-display text-6xl md:text-8xl lg:text-[140px] leading-[0.85] font-black uppercase tracking-tighter text-black drop-shadow-[10px_10px_0px_#cf2020]">
+                        DECODE<br />THE<br />BRAINROT
+                    </h1>
+                    <div class="mt-12 max-w-xl border-l-8 border-black pl-8">
+                        <p class="text-xl md:text-2xl font-medium leading-tight uppercase tracking-tight">
+                            Bridging the gap between Gen-Alpha slang and corporate understanding through constructivist
+                            learning systems.
+                        </p>
+                    </div>
+                    <div class="mt-16">
+                        <a th:href="@{/dashboard}"
+                            class="group relative inline-flex items-center justify-center px-12 py-8 bg-primary text-white border-4 border-black shadow-hard hover:shadow-hard-hover hover:translate-x-[6px] hover:translate-y-[6px] transition-all">
+                            <span class="font-display text-2xl md:text-3xl font-black uppercase tracking-tighter">
+                                Start Brainrot Assessment
+                            </span>
+                        </a>
+                    </div>
+                </div>
+                <div
+                    class="absolute top-10 right-10 size-40 border-8 border-bauhaus-yellow rounded-full hidden lg:block opacity-50">
+                </div>
+            </div>
+            <!-- Right Hero Visual Panel -->
+            <div
+                class="lg:w-[450px] xl:w-[600px] bg-bauhaus-blue border-l-8 border-black p-12 flex items-center justify-center relative overflow-hidden">
+                <div class="relative w-full aspect-square max-w-[400px]">
+                    <div
+                        class="absolute top-0 left-0 w-3/4 h-3/4 rounded-full bg-bauhaus-yellow border-8 border-black z-10 shadow-hard">
+                    </div>
+                    <div class="absolute bottom-0 right-0 w-3/4 h-3/4 bg-primary border-8 border-black shadow-hard"
+                        style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+                    <div class="absolute top-1/2 left-0 w-full h-4 bg-black -rotate-45 z-20"></div>
+                    <div class="absolute top-0 left-1/2 h-full w-4 bg-black rotate-12 z-20"></div>
+                    <div
+                        class="absolute top-1/4 right-1/4 size-24 bg-white border-8 border-black z-30 shadow-hard-sm rotate-12">
+                    </div>
+                </div>
+                <div
+                    class="absolute bottom-10 left-0 bg-black text-white px-6 py-2 font-display uppercase tracking-widest text-xs rotate-90 origin-left">
+                    System Architecture v1.0
+                </div>
+            </div>
+        </main>
+        <!-- Feature Grid Section -->
+        <section class="grid grid-cols-1 md:grid-cols-3 border-t-8 border-black">
+            <div
+                class="p-12 border-b-8 md:border-b-0 md:border-r-8 border-black bg-white hover:bg-bauhaus-yellow transition-colors group">
+                <div
+                    class="size-16 bg-primary border-4 border-black mb-8 flex items-center justify-center text-white shadow-hard-sm group-hover:bg-black transition-colors">
+                    <span class="material-symbols-outlined text-4xl">translate</span>
+                </div>
+                <h3 class="font-display text-3xl font-black uppercase mb-4 leading-none">Skibidi Translation</h3>
+                <p class="text-lg font-medium leading-snug">Real-time conversion of Alpha dialect into standardized
+                    English protocols for executive review.</p>
+            </div>
+            <div
+                class="p-12 border-b-8 md:border-b-0 md:border-r-8 border-black bg-white hover:bg-primary hover:text-white transition-colors group">
+                <div
+                    class="size-16 bg-bauhaus-blue border-4 border-black mb-8 flex items-center justify-center text-white shadow-hard-sm group-hover:bg-white group-hover:text-black transition-colors">
+                    <span class="material-symbols-outlined text-4xl">trending_up</span>
+                </div>
+                <h3 class="font-display text-3xl font-black uppercase mb-4 leading-none text-inherit">Trend Forecasting
+                </h3>
+                <p class="text-lg font-medium leading-snug opacity-90">Predictive modeling for the next wave of viral
+                    brainrot before it hits mainstream saturation.</p>
+            </div>
+            <div class="p-12 bg-white hover:bg-bauhaus-blue hover:text-white transition-colors group">
+                <div
+                    class="size-16 bg-bauhaus-yellow border-4 border-black mb-8 flex items-center justify-center text-black shadow-hard-sm group-hover:bg-black group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-4xl">history_edu</span>
+                </div>
+                <h3 class="font-display text-3xl font-black uppercase mb-4 leading-none text-inherit">Meme Archeology
+                </h3>
+                <p class="text-lg font-medium leading-snug opacity-90">Deconstructing the historical layers and
+                    geometric origins of digital internet subcultures.</p>
+            </div>
+        </section>
+        <!-- Metrics Section -->
+        <section class="border-t-8 border-black bg-black p-8 md:p-16 flex flex-col md:flex-row gap-12 text-white">
+            <div class="flex-1 flex flex-col justify-between">
+                <h2 class="font-display text-5xl font-black uppercase tracking-tighter leading-none mb-8">
+                    Cultural<br />Metrics</h2>
+                <div class="h-2 w-32 bg-primary"></div>
+            </div>
+            <div class="flex-[2] grid grid-cols-1 sm:grid-cols-3 gap-8">
+                <div class="border-4 border-white p-6 bg-white/10 hover:bg-white/20 transition-all">
+                    <p class="font-display uppercase tracking-widest text-xs mb-2 opacity-70">Active Decoders</p>
+                    <p class="text-5xl font-black font-display text-bauhaus-yellow">12.4K</p>
+                    <div class="mt-4 flex items-center text-primary font-bold">
+                        <span class="material-symbols-outlined">north_east</span>
+                        <span class="ml-1">+12%</span>
+                    </div>
+                </div>
+                <div class="border-4 border-white p-6 bg-white/10 hover:bg-white/20 transition-all">
+                    <p class="font-display uppercase tracking-widest text-xs mb-2 opacity-70">Terms Cataloged</p>
+                    <p class="text-5xl font-black font-display text-primary">8,250</p>
+                    <div class="mt-4 flex items-center text-bauhaus-yellow font-bold">
+                        <span class="material-symbols-outlined">north_east</span>
+                        <span class="ml-1">+5%</span>
+                    </div>
+                </div>
+                <div class="border-4 border-white p-6 bg-white/10 hover:bg-white/20 transition-all">
+                    <p class="font-display uppercase tracking-widest text-xs mb-2 opacity-70">Daily Trends</p>
+                    <p class="text-5xl font-black font-display text-bauhaus-blue">142</p>
+                    <div class="mt-4 flex items-center text-primary font-bold">
+                        <span class="material-symbols-outlined">north_east</span>
+                        <span class="ml-1">+24%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Footer -->
+        <footer
+            class="border-t-8 border-black bg-white px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-3">
+                <div class="size-8 bg-black"></div>
+                <p class="font-display font-black text-xl uppercase tracking-tighter">ALPHA-DECODE © 2026</p>
+            </div>
+            <div class="flex gap-8 font-display uppercase font-bold text-sm tracking-widest">
+                <a class="hover:text-primary" href="#">Imprint</a>
+                <a class="hover:text-bauhaus-blue" href="#">Privacy</a>
+                <a class="hover:text-bauhaus-yellow" href="#">Manifesto</a>
+            </div>
+            <div class="flex gap-4">
+                <div class="size-10 bg-primary border-4 border-black"></div>
+                <div class="size-10 bg-bauhaus-blue border-4 border-black"></div>
+                <div class="size-10 bg-bauhaus-yellow border-4 border-black"></div>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
