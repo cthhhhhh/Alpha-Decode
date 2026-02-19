@@ -56,6 +56,77 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.15.0</version>
+
+                <configuration>
+                    <workingDirectory>frontend</workingDirectory>
+                </configuration>
+
+                <executions>
+                    <!-- 1) Download Node + npm locally (no global install needed) -->
+                    <execution>
+                    <id>install-node-and-npm</id>
+                    <goals>
+                        <goal>install-node-and-npm</goal>
+                    </goals>
+                    <configuration>
+                        <nodeVersion>v22.14.0</nodeVersion>
+                        <npmVersion>10.9.2</npmVersion>
+                    </configuration>
+                    </execution>
+
+                    <!-- 2) npm install -->
+                    <execution>
+                    <id>npm-install</id>
+                    <goals>
+                        <goal>npm</goal>
+                    </goals>
+                    <phase>generate-resources</phase>
+                    <configuration>
+                        <arguments>install</arguments>
+                    </configuration>
+                    </execution>
+
+                    <!-- 3) npm run build (creates frontend/dist) -->
+                    <execution>
+                    <id>npm-build</id>
+                    <goals>
+                        <goal>npm</goal>
+                    </goals>
+                    <phase>generate-resources</phase>
+                    <configuration>
+                        <arguments>run build</arguments>
+                    </configuration>
+                    </execution>
+                </executions>
+                </plugin>
+
+                <!-- 4) Copy Vite dist -> Spring Boot static folder -->
+                <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                    <id>copy-frontend</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                        <goal>copy-resources</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
+                        <resources>
+                        <resource>
+                            <directory>${project.basedir}/frontend/dist</directory>
+                            <filtering>false</filtering>
+                        </resource>
+                        </resources>
+                    </configuration>
+                    </execution>
+                </executions>
+                </plugin>
         </plugins>
     </build>
 </project>
