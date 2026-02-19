@@ -5,14 +5,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Flame, 
-  Trophy, 
-  BookOpen, 
-  Gamepad2, 
-  Search, 
-  ChevronRight, 
-  CheckCircle2, 
+import {
+  Flame,
+  Trophy,
+  BookOpen,
+  Gamepad2,
+  Search,
+  ChevronRight,
+  CheckCircle2,
   XCircle,
   Star,
   Zap,
@@ -34,10 +34,10 @@ const Header = ({ progress }: { progress: UserProgress }) => (
           α
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight hidden sm:block">
-          Alpha<span className="text-brand-primary">Lingo</span>
+          Alpha<span className="text-brand-primary">Decode</span>
         </h1>
       </div>
-      
+
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-1.5 text-orange-500 font-bold">
           <Flame size={20} fill="currentColor" />
@@ -59,7 +59,7 @@ const Header = ({ progress }: { progress: UserProgress }) => (
 const DailyWord = () => {
   const todayWord = SLANG_DATA[0]; // Simplified for demo
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-slate-900 text-white rounded-3xl p-8 mb-8 relative overflow-hidden"
@@ -110,12 +110,12 @@ const LessonPath = ({ progress, onSelectLesson }: { progress: UserProgress, onSe
       {/* Background path decoration - a subtle dashed line connecting levels */}
       <div className="absolute inset-0 pointer-events-none flex justify-center">
         <svg width="200" height="100%" className="opacity-10" style={{ minHeight: '800px' }}>
-          <path 
-            d="M 100 900 C 20 800, 180 700, 100 600 S 20 400, 100 300 S 180 100, 100 0" 
-            stroke="currentColor" 
-            strokeWidth="12" 
+          <path
+            d="M 100 900 C 20 800, 180 700, 100 600 S 20 400, 100 300 S 180 100, 100 0"
+            stroke="currentColor"
+            strokeWidth="12"
             strokeDasharray="20 20"
-            fill="none" 
+            fill="none"
             className="text-slate-900"
           />
         </svg>
@@ -127,8 +127,8 @@ const LessonPath = ({ progress, onSelectLesson }: { progress: UserProgress, onSe
         const isCurrent = isUnlocked && !isCompleted;
 
         return (
-          <div 
-            key={level.id} 
+          <div
+            key={level.id}
             className="relative flex flex-col items-center mt-16 first:mt-0"
             style={{ transform: `translateX(${level.x}px)` }}
           >
@@ -148,22 +148,22 @@ const LessonPath = ({ progress, onSelectLesson }: { progress: UserProgress, onSe
               ) : (
                 <Lock size={28} />
               )}
-              
+
               {/* Glossy effect */}
               {isUnlocked && <div className="absolute top-1 left-2 w-8 h-4 bg-white/30 rounded-full blur-[1px]" />}
-              
+
               {isCurrent && (
                 <div className="absolute -top-10 whitespace-nowrap bg-brand-yellow text-slate-900 text-[10px] font-black px-3 py-1 rounded-full border-2 border-white shadow-lg animate-bounce">
                   NEXT UP
                 </div>
               )}
-              
+
               {/* Level Number */}
               <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-900 font-black text-xs border-2 border-slate-200 shadow-sm">
                 {i + 1}
               </div>
             </motion.button>
-            
+
             <span className={`
               mt-4 font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap
               ${isUnlocked ? 'bg-white/90 text-slate-600 border-slate-100' : 'bg-slate-100 text-slate-400 border-slate-200'}
@@ -213,7 +213,7 @@ const QuizMode = ({ onComplete }: { onComplete: () => void }) => {
           <span className="font-black text-brand-primary">{score * 100} PTS</span>
         </div>
         <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-brand-primary"
             initial={{ width: 0 }}
             animate={{ width: `${((currentIdx + 1) / QUIZ_QUESTIONS.length) * 100}%` }}
@@ -248,11 +248,10 @@ const QuizMode = ({ onComplete }: { onComplete: () => void }) => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-6 rounded-2xl mb-8 border-2 ${
-              isCorrect 
-                ? 'bg-green-50 border-green-200 text-green-800' 
-                : 'bg-red-50 border-red-200 text-red-800'
-            }`}
+            className={`p-6 rounded-2xl mb-8 border-2 ${isCorrect
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+              }`}
           >
             <div className="flex items-center gap-3 mb-2">
               {isCorrect ? (
@@ -264,7 +263,7 @@ const QuizMode = ({ onComplete }: { onComplete: () => void }) => {
                 {isCorrect ? 'AMAZING RIZZ!' : 'L + RATIO...'}
               </p>
             </div>
-            
+
             <p className="text-sm font-medium leading-relaxed">
               {isCorrect ? (
                 <span>
@@ -294,8 +293,8 @@ const QuizMode = ({ onComplete }: { onComplete: () => void }) => {
 
 const Dictionary = () => {
   const [search, setSearch] = useState('');
-  const filtered = SLANG_DATA.filter(s => 
-    s.term.toLowerCase().includes(search.toLowerCase()) || 
+  const filtered = SLANG_DATA.filter(s =>
+    s.term.toLowerCase().includes(search.toLowerCase()) ||
     s.definition.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -303,7 +302,7 @@ const Dictionary = () => {
     <div className="py-8">
       <div className="relative mb-8">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-        <input 
+        <input
           type="text"
           placeholder="Search for slang..."
           className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl focus:border-brand-primary outline-none transition-colors font-medium"
@@ -314,18 +313,17 @@ const Dictionary = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map((item) => (
-          <motion.div 
+          <motion.div
             layout
             key={item.id}
             className="duo-card"
           >
             <div className="flex justify-between items-start mb-2">
               <h3 className="text-xl font-black">{item.term}</h3>
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase ${
-                item.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase ${item.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
                 item.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-red-100 text-red-700'
-              }`}>
+                  'bg-red-100 text-red-700'
+                }`}>
                 {item.difficulty}
               </span>
             </div>
@@ -387,7 +385,7 @@ const LessonSession = ({ levelId, onClose, onComplete }: { levelId: string, onCl
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-[100] bg-white flex flex-col"
@@ -398,7 +396,7 @@ const LessonSession = ({ levelId, onClose, onComplete }: { levelId: string, onCl
           <XCircle size={32} />
         </button>
         <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-brand-primary"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -451,8 +449,8 @@ const LessonSession = ({ levelId, onClose, onComplete }: { levelId: string, onCl
                       onClick={() => setSelectedOption(i)}
                       className={`
                         p-6 rounded-2xl border-2 text-left font-bold text-xl transition-all
-                        ${selectedOption === i 
-                          ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' 
+                        ${selectedOption === i
+                          ? 'border-brand-primary bg-brand-primary/5 text-brand-primary'
                           : 'border-slate-200 hover:bg-slate-50 text-slate-700'}
                         ${isChecked && i === step.correctAnswer ? 'border-green-500 bg-green-50' : ''}
                         ${isChecked && selectedOption === i && i !== step.correctAnswer ? 'border-red-500 bg-red-50' : ''}
@@ -491,8 +489,8 @@ const LessonSession = ({ levelId, onClose, onComplete }: { levelId: string, onCl
                         onClick={() => toggleWord(word)}
                         className={`
                           px-4 py-2 rounded-xl font-bold text-lg border-2 border-b-4 transition-all
-                          ${wordBankSelection.includes(word) 
-                            ? 'bg-slate-100 border-slate-100 text-transparent border-b-0' 
+                          ${wordBankSelection.includes(word)
+                            ? 'bg-slate-100 border-slate-100 text-transparent border-b-0'
                             : 'bg-white border-slate-200 hover:bg-slate-50 active:translate-y-1 active:border-b-2'}
                         `}
                       >
@@ -508,10 +506,9 @@ const LessonSession = ({ levelId, onClose, onComplete }: { levelId: string, onCl
       </div>
 
       {/* Footer */}
-      <div className={`border-t-2 p-6 transition-colors ${
-        !isChecked ? 'bg-white border-slate-100' : 
+      <div className={`border-t-2 p-6 transition-colors ${!isChecked ? 'bg-white border-slate-100' :
         isCorrect ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'
-      }`}>
+        }`}>
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
           {isChecked && (
             <div className="flex items-center gap-4">
@@ -527,14 +524,14 @@ const LessonSession = ({ levelId, onClose, onComplete }: { levelId: string, onCl
               </div>
             </div>
           )}
-          
+
           <button
             onClick={isChecked ? handleContinue : handleCheck}
             disabled={!isChecked && step.type === 'select' && selectedOption === null}
             className={`
               ml-auto px-12 py-4 rounded-2xl font-black text-xl transition-all
-              ${!isChecked 
-                ? (step.type === 'select' && selectedOption === null ? 'bg-slate-200 text-slate-400' : 'bg-brand-primary text-white shadow-[0_6px_0_#46a302]') 
+              ${!isChecked
+                ? (step.type === 'select' && selectedOption === null ? 'bg-slate-200 text-slate-400' : 'bg-brand-primary text-white shadow-[0_6px_0_#46a302]')
                 : (isCorrect ? 'bg-green-500 text-white shadow-[0_6px_0_#3d8b02]' : 'bg-red-500 text-white shadow-[0_6px_0_#c40000]')
               }
               active:translate-y-1 active:shadow-none
@@ -602,9 +599,9 @@ export default function App() {
                     <BookOpen className="text-brand-primary" />
                     LEARNING PATH
                   </h3>
-                  <LessonPath 
-                    progress={progress} 
-                    onSelectLesson={(id) => setSelectedLesson(id)} 
+                  <LessonPath
+                    progress={progress}
+                    onSelectLesson={(id) => setSelectedLesson(id)}
                   />
                 </div>
                 <div className="space-y-6">
@@ -630,7 +627,7 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="bg-brand-secondary text-white rounded-3xl p-6">
                     <h4 className="font-black mb-2">PRO TIP</h4>
                     <p className="text-sm opacity-80 mb-4">"Mewing" isn't just a cat sound. It's about that jawline definition!</p>
@@ -671,8 +668,8 @@ export default function App() {
 
       <AnimatePresence>
         {selectedLesson && (
-          <LessonSession 
-            levelId={selectedLesson} 
+          <LessonSession
+            levelId={selectedLesson}
             onClose={() => setSelectedLesson(null)}
             onComplete={handleLessonComplete}
           />
@@ -682,21 +679,21 @@ export default function App() {
       {/* Bottom Navigation */}
       <nav className="sticky bottom-0 bg-white border-t border-slate-200 px-4 py-2 sm:py-4">
         <div className="max-w-md mx-auto flex justify-between items-center">
-          <button 
+          <button
             onClick={() => setActiveTab('learn')}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'learn' ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <BookOpen size={24} />
             <span className="text-[10px] font-black uppercase">Learn</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('quiz')}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'quiz' ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Gamepad2 size={24} />
             <span className="text-[10px] font-black uppercase">Quiz</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('dictionary')}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'dictionary' ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
