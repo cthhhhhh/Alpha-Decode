@@ -37,10 +37,12 @@ hs_err_pid*
 replay_pid*
 
 #secrets
+src/main/resources/db.properties
 *.env
 
 target/*
 
 
 #vite builds
-src/main/resources/static
+src/main/resources/static/*
+
