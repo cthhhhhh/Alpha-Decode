@@ -16,8 +16,8 @@
 	
 	<properties>
 		<java.version>21</java.version>
-		<node.version>v20.11.0</node.version>
-		<npm.version>10.2.4</npm.version>
+		<node.version>v22.14.0</node.version>
+		<npm.version>10.9.2</npm.version>
 	</properties>
 
 	<dependencies>
@@ -27,11 +27,7 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- JPA Starter -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
+		
 
 		<!-- Swagger / OpenAPI -->
 		<dependency>
@@ -46,6 +42,14 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+        
+        <!-- Dev tools for hot reload (optional) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
 
 		<!-- Testing -->
 		<dependency>
@@ -53,6 +57,33 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+        
+        <!-- JPA + hibernate -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- lombok -->
+        <dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+    	</dependency>
+
+        <!-- postgresql driver to connect to db -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- health check -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 	</dependencies>
 
 	<build>
