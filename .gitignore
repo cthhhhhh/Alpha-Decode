@@ -10,6 +10,7 @@ frontend/.env
 frontend/.env.local
 
 # backend
+target/
 backend/target/
 backend/mvnw
 backend/mvnw.cmd
