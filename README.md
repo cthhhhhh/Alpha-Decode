@@ -1,6 +1,6 @@
-# AlphaLingo
+# Alpha Decode
 
-AlphaLingo is a gamified web application designed to help users master "Gen Alpha" slang (e.g., *Rizz*, *Fanum Tax*, *Skibidi*). Built with a modern React stack, it mimics the engagement mechanics of popular language learning apps like Duolingo.
+Alpha Decode is a gamified web application designed to help users master "Gen Alpha" slang (e.g., *Rizz*, *Fanum Tax*, *Skibidi*). Built with a modern React stack, it mimics the engagement mechanics of popular language learning apps like Duolingo.
 
 ## Features
 
