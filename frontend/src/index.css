@@ -2,27 +2,8 @@
 
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
-  --color-brand-primary: #58cc02; /* Duolingo Green */
-  --color-brand-secondary: #46178f; /* Kahoot Purple */
-  --color-brand-accent: #ff4b4b; /* Red */
-  --color-brand-yellow: #ffc800; /* Yellow */
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 font-sans;
+  background-color: #f8fafc; /* Slate-50 */
 }
-
-.kahoot-btn {
-  @apply relative overflow-hidden transition-all duration-200 active:translate-y-1 active:shadow-none;
-}
-
-.duo-card {
-  @apply border-2 border-b-4 border-slate-200 rounded-2xl p-6 bg-white transition-all hover:border-slate-300 active:translate-y-0.5 active:border-b-2;
-}
-
-.nyt-btn {
-  @apply px-4 py-2 border border-slate-900 rounded-full font-semibold hover:bg-slate-900 hover:text-white transition-colors;
-}
-
