@@ -206,9 +206,8 @@ export default function App() {
     const correct = currentQuestions[activeQuiz.qIndex].correct === optionIndex;
     setIsCorrect(correct);
 
-    // Award XP immediately per correct answer
+    // Track correct count but don't award XP yet — XP only applied on full completion
     if (correct) {
-      setXp(prev => prev + XP_PER_CORRECT);
       setActiveQuiz(prev => prev ? { ...prev, correctCount: prev.correctCount + 1 } : prev);
     }
   };
@@ -233,6 +232,9 @@ export default function App() {
 
       setQuizResult({ correct: finalCorrect, total: totalQuestions, xpEarned });
       setQuizCompleted(true);
+
+      // Only award XP on full lesson completion
+      setXp(prev => prev + xpEarned);
 
       // Update lessons state
       setLessons(prev => {
