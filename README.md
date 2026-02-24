@@ -34,7 +34,7 @@ Ensure you have the following installed before running the project:
     * Verify with: `mvn -version`
 * **Node.js & npm** (Optional - Maven handles this automatically, but good for debugging)
 
-## ⚡ Setup Guide (The "One Command" Way)
+## Setup Guide (The "One Command" Way)
 
 This project is configured with the `frontend-maven-plugin`. Maven will automatically download Node.js, install frontend dependencies, build the React app, and serve it via the Spring Boot server.
 
@@ -50,7 +50,6 @@ This project is configured with the `frontend-maven-plugin`. Maven will automati
     mvn spring-boot:run
     ```
 
-    *What happens next?*
     * Maven downloads Java dependencies.
     * Maven installs Node/npm locally (inside the folder).
     * Maven runs `npm run build` for the frontend.

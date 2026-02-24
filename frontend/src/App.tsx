@@ -124,14 +124,28 @@ const QUIZ_QUESTIONS: Record<string, { q: string; options: string[]; correct: nu
   ],
 };
 
+const ONBOARDING_QUESTIONS = [
+  { q: "What is 'Fanum Tax'?", options: ["A government fee", "Stealing food", "Paying for fans", "A dance move"], correct: 1 },
+  { q: "What is 'Rizz' short for?", options: ["Risk", "Charisma", "Rhythm", "Real"], correct: 1 },
+  { q: "What does 'Skibidi' usually precede?", options: ["Toilet", "Bop", "Dop", "Yes"], correct: 0 },
+  { q: "Mewing is done to improve...", options: ["Jawline", "Abs", "Hair", "Eyesight"], correct: 0 },
+  { q: "What is a 'Sigma'?", options: ["A follower", "A lone wolf", "A loud person", "A lazy person"], correct: 1 },
+];
+
 // --- MAIN COMPONENT ---
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'dict'>('learn');
   const [streak] = useState(12);
   const [xp] = useState(450);
-  const [level] = useState(5);
+  const [level, setLevel] = useState(5);
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(false);
+  
+  // Onboarding State
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [onboardingQIndex, setOnboardingQIndex] = useState(0);
+  const [onboardingScore, setOnboardingScore] = useState(0);
+  const [onboardingFinished, setOnboardingFinished] = useState(false);
   
   // Learning Path State
   const [lessons, setLessons] = useState(LESSONS);
@@ -173,6 +187,24 @@ export default function App() {
     }
   };
 
+  const handleOnboardingAnswer = (idx: number) => {
+    if (idx === ONBOARDING_QUESTIONS[onboardingQIndex].correct) {
+      setOnboardingScore(s => s + 1);
+    }
+    if (onboardingQIndex + 1 < ONBOARDING_QUESTIONS.length) {
+      setOnboardingQIndex(i => i + 1);
+    } else {
+      setOnboardingFinished(true);
+    }
+  };
+
+  const completeOnboarding = () => {
+    // Calculate level: Base 1 + Score * 10
+    const newLevel = onboardingScore * 10 || 1;
+    setLevel(newLevel);
+    setShowOnboarding(false);
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-green-100 flex flex-col">
       
@@ -184,7 +216,7 @@ export default function App() {
               <span className="font-black text-xl px-1">a</span>
             </div>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-              Alpha<span className="text-green-500">Lingo</span>
+              Alpha<span className="text-green-500">Decode</span>
             </h1>
           </div>
           
@@ -466,6 +498,64 @@ export default function App() {
                 </div>
               )}
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ONBOARDING MODAL */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-6"
+          >
+            <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
+                <div 
+                  className="h-full bg-green-500 transition-all duration-500"
+                  style={{ width: `${((onboardingQIndex) / ONBOARDING_QUESTIONS.length) * 100}%` }}
+                />
+              </div>
+              
+              {!onboardingFinished ? (
+                <>
+                  <div className="mb-8 mt-4">
+                    <h2 className="text-3xl font-black text-slate-800 mb-2">Brain Rot Check</h2>
+                    <p className="text-slate-500 font-bold">Question {onboardingQIndex + 1} of {ONBOARDING_QUESTIONS.length}</p>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-8">{ONBOARDING_QUESTIONS[onboardingQIndex].q}</h3>
+                  <div className="space-y-3">
+                    {ONBOARDING_QUESTIONS[onboardingQIndex].options.map((opt, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleOnboardingAnswer(i)}
+                        className="w-full p-4 rounded-xl font-bold text-left border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-4">
+                  <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-900 shadow-lg">
+                    <Trophy size={48} fill="currentColor" />
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-800 mb-2">Assessment Complete!</h2>
+                  <p className="text-slate-500 font-medium mb-8">Your Brain Rot Score: {onboardingScore}/{ONBOARDING_QUESTIONS.length}</p>
+                  <div className="bg-slate-100 p-6 rounded-2xl mb-8 border-2 border-slate-200">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Starting Level</p>
+                    <p className="text-5xl font-black text-green-500">LVL {onboardingScore * 10 || 1}</p>
+                  </div>
+                  <button 
+                    onClick={completeOnboarding}
+                    className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-lg hover:bg-slate-800 transition-colors shadow-lg"
+                  >
+                    Start Learning
+                  </button>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
