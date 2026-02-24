@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star } from 'lucide-react';
-import { LESSONS, ONBOARDING_QUESTIONS } from './constants';
+import { LESSONS, ONBOARDING_QUESTIONS } from './data';
 import type { Lesson } from './types';
 
 import Header from './components/Header';
@@ -13,7 +13,7 @@ import Glossary from './components/Glossary';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'dict'>('learn');
-  const [xp, setXp] = useState(450);
+  const [xp, setXp] = useState(50);
   const [level, setLevel] = useState(5);
   const [streak, setStreak] = useState(12);
 
@@ -45,24 +45,23 @@ export default function App() {
   };
 
   const handleLessonComplete = (lessonId: string, correct: number, total: number) => {
+    // Guard against double firing (React StrictMode or rapid clicks)
+    if (!activeLessonId) return;
+
     // 1 Correct answer = 1 Star (XP)
-    const xpEarned = correct;
     const passed = total === 0 || correct === total; // Requires 100% to unlock next
+
+    // Check completion BEFORE updating state
+    const currentLesson = lessons.find(l => l.id === lessonId);
+    const wasAlreadyCompleted = currentLesson?.completed;
 
     setLessons(prev => {
       const updated = [...prev];
       const idx = updated.findIndex(l => l.id === lessonId);
       if (idx !== -1) {
-        const wasAlreadyCompleted = updated[idx].completed;
-
         // Mark completed only if perfect
         if (correct === total && total > 0) {
           updated[idx] = { ...updated[idx], completed: true };
-          if (!wasAlreadyCompleted) {
-            setXp(prevXp => prevXp + xpEarned);
-          }
-        } else if (!wasAlreadyCompleted) {
-          setXp(prevXp => prevXp + xpEarned);
         }
 
         // Unlock next lesson ONLY if 100% correct
@@ -72,6 +71,12 @@ export default function App() {
       }
       return updated;
     });
+
+    // Add XP side-effect safely outside the updater ONLY if not previously completed
+    if (currentLesson && !wasAlreadyCompleted) {
+      setXp(prev => prev + correct);
+    }
+
     setActiveLessonId(null);
   };
 
@@ -88,8 +93,13 @@ export default function App() {
   };
 
   const completeOnboarding = () => {
-    const newLevel = onboardingScore * 10 || 1;
+    const newLevel = onboardingScore + 1;
     setLevel(newLevel);
+    setShowOnboarding(false);
+    window.location.href = '/signup';
+  };
+
+  const handleSkipOnboarding = () => {
     setShowOnboarding(false);
   };
 
@@ -121,12 +131,14 @@ export default function App() {
                     </div>
                     <p className="text-white/80 font-medium">Test your knowledge up to Level {level}!</p>
                   </div>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05, backgroundColor: '#f8fafc' }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleDailyQuizComplete}
-                    className="relative z-10 bg-white text-brand-secondary px-6 py-3 rounded-2xl font-black hover:bg-slate-100 transition-colors shadow-sm"
+                    className="relative z-10 bg-white text-brand-secondary px-6 py-3 rounded-2xl font-black transition-all shadow-sm"
                   >
                     Start (+10 Stars, +1 Streak)
-                  </button>
+                  </motion.button>
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl" />
                 </div>
               )}
@@ -143,15 +155,21 @@ export default function App() {
 
                 {/* Sidebar — simplified scoring */}
                 <div className="space-y-4">
-                  <div className="bg-brand-yellow/10 border-2 border-brand-yellow/40 rounded-3xl p-8 text-center">
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    className="bg-brand-yellow/10 border-2 border-brand-yellow/40 rounded-3xl p-8 text-center transition-shadow hover:shadow-xl hover:shadow-brand-yellow/10"
+                  >
                     <div className="w-16 h-16 bg-brand-yellow rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg rotate-3">
                       <Star size={32} className="text-white fill-white" />
                     </div>
                     <p className="text-2xl font-black text-slate-900 leading-tight">1 Correct = 1 Star</p>
                     <p className="text-sm font-bold text-slate-500 mt-2">Get all questions correct to unlock the next level!</p>
-                  </div>
+                  </motion.div>
 
-                  <div className="bg-brand-primary/10 border-2 border-brand-primary/30 rounded-3xl p-6 flex items-center gap-4">
+                  <motion.div
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    className="bg-brand-primary/10 border-2 border-brand-primary/30 rounded-3xl p-6 flex items-center gap-4 transition-shadow hover:shadow-xl hover:shadow-brand-primary/10"
+                  >
                     <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shrink-0">
                       <Trophy size={20} className="text-white" fill="white" />
                     </div>
@@ -159,7 +177,7 @@ export default function App() {
                       <p className="font-black text-slate-900 text-sm">Perfect Score</p>
                       <p className="text-xs font-bold text-slate-500">Unlocks next lesson</p>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
@@ -199,27 +217,33 @@ export default function App() {
       {/* Bottom Navigation — matches CS203T1-main */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 px-4 py-2 sm:py-4 z-50 shadow-[0_-1px_0_rgba(0,0,0,0.05)]">
         <div className="max-w-md mx-auto flex justify-between items-center">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setActiveTab('learn')}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'learn' ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <BookOpen size={24} />
             <span className="text-[10px] font-black uppercase">Learn</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setActiveTab('leaderboard')}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'leaderboard' ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Trophy size={24} />
             <span className="text-[10px] font-black uppercase">Ranks</span>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setActiveTab('dict')}
             className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'dict' ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
-          </button>
+          </motion.button>
         </div>
       </nav>
 
@@ -228,6 +252,7 @@ export default function App() {
         {activeLessonId && (
           <LessonSession
             lessonId={activeLessonId}
+            initialCompleted={lessons.find(l => l.id === activeLessonId)?.completed || false}
             onClose={() => setActiveLessonId(null)}
             onComplete={handleLessonComplete}
           />
@@ -242,6 +267,7 @@ export default function App() {
         finished={onboardingFinished}
         onAnswer={handleOnboardingAnswer}
         onComplete={completeOnboarding}
+        onSkip={handleSkipOnboarding}
       />
     </div>
   );

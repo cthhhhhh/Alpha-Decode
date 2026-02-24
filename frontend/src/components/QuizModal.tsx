@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, XCircle, Trophy, Star } from 'lucide-react';
-import { QUIZ_QUESTIONS, XP_PER_CORRECT, PASS_THRESHOLD } from '../constants';
+import { QUIZ_QUESTIONS, XP_PER_CORRECT, PASS_THRESHOLD } from '../data';
 
 interface ActiveQuiz {
     lessonId: string;
@@ -75,10 +75,10 @@ const QuizModal = ({
                             /* ── Result screen ── */
                             <div className="text-center py-4">
                                 <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${quizResult.correct / quizResult.total === 1
-                                        ? 'bg-brand-yellow/20 text-brand-yellow'
-                                        : quizResult.correct / quizResult.total >= PASS_THRESHOLD
-                                            ? 'bg-brand-primary/10 text-brand-primary'
-                                            : 'bg-brand-accent/10 text-brand-accent'
+                                    ? 'bg-brand-yellow/20 text-brand-yellow'
+                                    : quizResult.correct / quizResult.total >= PASS_THRESHOLD
+                                        ? 'bg-brand-primary/10 text-brand-primary'
+                                        : 'bg-brand-accent/10 text-brand-accent'
                                     }`}>
                                     <Trophy size={40} fill="currentColor" />
                                 </div>
@@ -168,8 +168,8 @@ const QuizModal = ({
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             className={`p-6 rounded-2xl mb-8 border-2 ${isCorrect
-                                                    ? 'bg-green-50 border-green-200 text-green-800'
-                                                    : 'bg-red-50 border-red-200 text-red-800'
+                                                ? 'bg-green-50 border-green-200 text-green-800'
+                                                : 'bg-red-50 border-red-200 text-red-800'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3 mb-2">

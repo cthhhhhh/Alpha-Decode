@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Search } from 'lucide-react';
-import { TERMS } from '../constants';
+import { TERMS } from '../data';
 
 const Glossary = () => {
     const [query, setQuery] = useState('');
@@ -28,7 +28,13 @@ const Glossary = () => {
             {/* Terms grid — uses .duo-card from index.css */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filtered.map(term => (
-                    <motion.div layout key={term.id} className="duo-card">
+                    <motion.div
+                        layout
+                        key={term.id}
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="duo-card hover:shadow-xl hover:shadow-slate-200/50 transition-shadow"
+                    >
                         <div className="flex justify-between items-start mb-2">
                             <h3 className="text-xl font-black">{term.term}</h3>
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase

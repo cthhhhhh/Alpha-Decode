@@ -1,15 +1,16 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
-import { BookOpen, CheckCircle2, XCircle, Star } from 'lucide-react';
-import { LESSON_CONTENT } from '../constants';
+import { BookOpen, CheckCircle2, XCircle, Star, Trophy } from 'lucide-react';
+import { LESSON_CONTENT } from '../data';
 
 interface Props {
     lessonId: string;
+    initialCompleted: boolean;
     onClose: () => void;
     onComplete: (id: string, correct: number, total: number) => void;
 }
 
-const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
+const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Props) => {
     const lesson = LESSON_CONTENT.find(l => l.id === lessonId);
     const [stepIdx, setStepIdx] = useState(0);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -18,12 +19,16 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
     // Track score for graded steps (select + translate)
     const [correctCount, setCorrectCount] = useState(0);
-    const [gradedTotal, setGradedTotal] = useState(0);
+    const [isFinished, setIsFinished] = useState(false);
 
     if (!lesson) return null;
 
     const step = lesson.steps[stepIdx];
     const progress = (stepIdx / lesson.steps.length) * 100;
+
+    const totalGraded = lesson.steps.filter(s => s.type !== 'intro').length;
+    const currentGradedIdx = lesson.steps.slice(0, stepIdx + 1).filter(s => s.type !== 'intro').length;
+    const isGradedStep = step.type !== 'intro';
 
     const handleCheck = () => {
         let correct = false;
@@ -31,11 +36,9 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
             correct = true; // intros are always "correct", not graded
         } else if (step.type === 'select') {
             correct = selectedOption === step.correctAnswer;
-            setGradedTotal(t => t + 1);
             if (correct) setCorrectCount(c => c + 1);
         } else if (step.type === 'translate') {
             correct = wordBankSelection.join(' ') === step.targetSentence;
-            setGradedTotal(t => t + 1);
             if (correct) setCorrectCount(c => c + 1);
         }
         setIsCorrect(correct);
@@ -50,10 +53,7 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
             setIsChecked(false);
             setIsCorrect(null);
         } else {
-            // Note: setState is async, so capture the final values directly
-            const finalCorrect = step.type !== 'intro' && isCorrect ? correctCount : correctCount;
-            const finalTotal = gradedTotal;
-            onComplete(lessonId, finalCorrect, finalTotal);
+            setIsFinished(true);
         }
     };
 
@@ -89,16 +89,23 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
                         animate={{ width: `${progress}%` }}
                     />
                 </div>
-                <div className="flex items-center gap-1 text-brand-yellow font-black">
-                    <Star size={20} fill="currentColor" />
-                    <span>{stepIdx + 1}</span>
-                </div>
+                {isGradedStep && !isFinished && (
+                    <div className="flex items-center gap-1 text-slate-500 font-bold whitespace-nowrap">
+                        <span>Question {currentGradedIdx} of {totalGraded}</span>
+                    </div>
+                )}
+                {!isGradedStep && !isFinished && (
+                    <div className="flex items-center gap-1 text-brand-yellow font-black">
+                        <Star size={20} fill="currentColor" />
+                        <span>Intro</span>
+                    </div>
+                )}
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-4 py-8">
                 <div className="max-w-2xl mx-auto h-full flex flex-col">
-                    <h2 className="text-3xl font-black mb-8">{step.title}</h2>
+                    {!isFinished && <h2 className="text-3xl font-black mb-8">{step.title}</h2>}
 
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -106,7 +113,7 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="flex-1"
+                            className={`flex-1 ${isFinished ? 'hidden' : ''}`}
                         >
                             {/* ── Intro slide ── */}
                             {step.type === 'intro' && (
@@ -132,25 +139,32 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
 
                             {/* ── Select slide ── */}
                             {step.type === 'select' && (
-                                <div className="grid grid-cols-1 gap-4">
-                                    {step.options?.map((opt, i) => (
-                                        <button
-                                            key={opt}
-                                            disabled={isChecked}
-                                            onClick={() => setSelectedOption(i)}
-                                            className={`
+                                <div className="space-y-8">
+                                    {step.content && (
+                                        <div className="bg-slate-50 p-8 rounded-3xl border-2 border-slate-100">
+                                            <p className="text-2xl font-bold text-slate-700">{step.content}</p>
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {step.options?.map((opt, i) => (
+                                            <button
+                                                key={opt}
+                                                disabled={isChecked}
+                                                onClick={() => setSelectedOption(i)}
+                                                className={`
                         p-6 rounded-2xl border-2 text-left font-bold text-xl transition-all
                         ${selectedOption === i
-                                                    ? 'border-brand-primary bg-brand-primary/5 text-brand-primary'
-                                                    : 'border-slate-200 hover:bg-slate-50 text-slate-700'}
+                                                        ? 'border-brand-primary bg-brand-primary/5 text-brand-primary'
+                                                        : 'border-slate-200 hover:bg-slate-50 text-slate-700'}
                         ${isChecked && i === step.correctAnswer ? 'border-green-500 bg-green-50' : ''}
                         ${isChecked && selectedOption === i && i !== step.correctAnswer ? 'border-red-500 bg-red-50' : ''}
                       `}
-                                        >
-                                            <span className="mr-4 text-slate-300">{i + 1}</span>
-                                            {opt}
-                                        </button>
-                                    ))}
+                                            >
+                                                <span className="mr-4 text-slate-300">{i + 1}</span>
+                                                {opt}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -196,57 +210,105 @@ const LessonSession = ({ lessonId, onClose, onComplete }: Props) => {
                             )}
                         </motion.div>
                     </AnimatePresence>
+
+                    {/* ── Summary view ── */}
+                    {isFinished && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex-1 flex flex-col items-center justify-center text-center space-y-8 py-12"
+                        >
+                            <div className="w-24 h-24 bg-brand-yellow rounded-3xl flex items-center justify-center text-white shadow-xl rotate-6 animate-bounce">
+                                <Trophy size={48} fill="currentColor" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tight">Lesson Complete!</h2>
+                                <p className="text-xl text-slate-500 font-bold">You're leveling up your brain.</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
+                                    <p className="text-3xl font-black text-brand-primary">{Math.round((correctCount / totalGraded) * 100)}%</p>
+                                </div>
+                                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
+                                    <div className="flex items-center justify-center gap-1">
+                                        <Star size={24} className="text-brand-yellow" fill="currentColor" />
+                                        <p className="text-3xl font-black text-slate-900">
+                                            {initialCompleted ? '+0' : `+${correctCount}`}
+                                        </p>
+                                    </div>
+                                    {initialCompleted && (
+                                        <p className="text-[10px] font-black text-slate-400 uppercase mt-1">Already Earned</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => onComplete(lessonId, correctCount, totalGraded)}
+                                className="w-full max-w-sm bg-brand-primary text-white py-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#46a302] active:translate-y-1 active:shadow-none transition-all"
+                            >
+                                RETURN HOME
+                            </motion.button>
+                        </motion.div>
+                    )}
                 </div>
             </div>
 
             {/* Footer */}
-            <div className={`border-t-2 p-6 transition-colors ${!isChecked ? 'bg-white border-slate-100'
+            {!isFinished && (
+                <div className={`border-t-2 p-6 transition-colors ${!isChecked ? 'bg-white border-slate-100'
                     : isCorrect ? 'bg-green-100 border-green-200'
                         : 'bg-red-100 border-red-200'
-                }`}>
-                <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
-                    {isChecked && (
-                        <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
-                                {isCorrect ? <CheckCircle2 /> : <XCircle />}
-                            </div>
-                            <div>
-                                <p className={`font-black text-xl ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
-                                    {isCorrect ? 'Excellent!' : 'Correct solution:'}
-                                </p>
-                                {!isCorrect && (
-                                    <p className="text-red-700 font-bold">
-                                        {step.type === 'select' && step.options && step.correctAnswer !== undefined
-                                            ? step.options[step.correctAnswer]
-                                            : step.targetSentence}
+                    }`}>
+                    <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
+                        {isChecked && (
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`}>
+                                    {isCorrect ? <CheckCircle2 /> : <XCircle />}
+                                </div>
+                                <div>
+                                    <p className={`font-black text-xl ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                                        {isCorrect ? 'Excellent!' : 'Correct solution:'}
                                     </p>
-                                )}
-                                <p className={`text-sm ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                                    {step.explanation}
-                                </p>
+                                    {!isCorrect && (
+                                        <p className="text-red-700 font-bold">
+                                            {step.type === 'select' && step.options && step.correctAnswer !== undefined
+                                                ? step.options[step.correctAnswer]
+                                                : step.targetSentence}
+                                        </p>
+                                    )}
+                                    <p className={`text-sm ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                        {step.explanation}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <button
-                        onClick={isChecked ? handleContinue : handleCheck}
-                        disabled={!isChecked && !canCheck}
-                        className={`
+                        <button
+                            onClick={isChecked ? handleContinue : handleCheck}
+                            disabled={!isChecked && !canCheck}
+                            className={`
               ml-auto px-12 py-4 rounded-2xl font-black text-xl transition-all
               ${!isChecked
-                                ? (!canCheck
-                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                    : 'bg-brand-primary text-white shadow-[0_6px_0_#46a302]')
-                                : (isCorrect
-                                    ? 'bg-green-500 text-white shadow-[0_6px_0_#3d8b02]'
-                                    : 'bg-red-500 text-white shadow-[0_6px_0_#c40000]')}
+                                    ? (!canCheck
+                                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                        : 'bg-brand-primary text-white shadow-[0_6px_0_#46a302]')
+                                    : (isCorrect
+                                        ? 'bg-green-500 text-white shadow-[0_6px_0_#3d8b02]'
+                                        : 'bg-red-500 text-white shadow-[0_6px_0_#c40000]')}
               active:translate-y-1 active:shadow-none
             `}
-                    >
-                        {isChecked ? 'CONTINUE' : 'CHECK'}
-                    </button>
+                        >
+                            {isChecked ? 'CONTINUE' : 'CHECK'}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </motion.div>
     );
 };

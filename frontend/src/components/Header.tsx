@@ -10,11 +10,9 @@ const Header = ({ streak, xp, level }: Props) => (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <div className="bg-green-500 text-white p-1 rounded-lg">
-                    <span className="font-black text-xl px-1">a</span>
-                </div>
+                <img src="/logo.svg" alt="Alpha Decode" className="w-8 h-8" />
                 <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-                    Alpha<span className="text-green-500">Decode</span>
+                    Alpha <span className="text-green-500">Decode</span>
                 </h1>
             </div>
 

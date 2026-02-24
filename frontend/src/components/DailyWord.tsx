@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { TERMS } from '../constants';
+import { TERMS } from '../data';
 
 const DailyWord = () => (
     <motion.div
