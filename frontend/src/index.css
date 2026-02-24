@@ -1,68 +1,28 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-primary: #58cc02; /* Duolingo Green */
+  --color-brand-secondary: #46178f; /* Kahoot Purple */
+  --color-brand-accent: #ff4b4b; /* Red */
+  --color-brand-yellow: #ffc800; /* Yellow */
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  @apply bg-slate-50 text-slate-900 font-sans;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.kahoot-btn {
+  @apply relative overflow-hidden transition-all duration-200 active:translate-y-1 active:shadow-none;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.duo-card {
+  @apply border-2 border-b-4 border-slate-200 rounded-2xl p-6 bg-white transition-all hover:border-slate-300 active:translate-y-0.5 active:border-b-2;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.nyt-btn {
+  @apply px-4 py-2 border border-slate-900 rounded-full font-semibold hover:bg-slate-900 hover:text-white transition-colors;
 }
+
