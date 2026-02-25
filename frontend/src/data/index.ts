@@ -7,6 +7,7 @@ export const TERMS: Term[] = [
         definition: 'Short for charisma. Ability to attract a romantic partner.',
         example: "He has so much rizz, he didn't even have to say anything.",
         difficulty: 'easy',
+        category: 'noun',
     },
     {
         id: '2',
@@ -14,6 +15,7 @@ export const TERMS: Term[] = [
         definition: 'Often used as a nonsense word or to describe something bad/evil, originating from the Skibidi Toilet series.',
         example: "That's so skibidi of you.",
         difficulty: 'medium',
+        category: 'adjective',
     },
     {
         id: '3',
@@ -21,6 +23,7 @@ export const TERMS: Term[] = [
         definition: 'An exclamation used when seeing someone with a large posterior. Derived from "God damn".',
         example: 'Gyatt! Look at that!',
         difficulty: 'easy',
+        category: 'reaction',
     },
     {
         id: '4',
@@ -28,6 +31,7 @@ export const TERMS: Term[] = [
         definition: "Stealing a portion of someone else's food, popularized by streamer Fanum.",
         example: 'You gotta pay the Fanum Tax on those fries.',
         difficulty: 'medium',
+        category: 'noun',
     },
     {
         id: '5',
@@ -35,6 +39,7 @@ export const TERMS: Term[] = [
         definition: 'A "lone wolf" or someone who is successful and independent. Often used ironically.',
         example: "He's such a sigma male.",
         difficulty: 'easy',
+        category: 'noun',
     },
     {
         id: '6',
@@ -42,6 +47,7 @@ export const TERMS: Term[] = [
         definition: 'Used to describe something weird, cringey, or abnormal. Based on memes about the state.',
         example: 'Only in Ohio would that happen.',
         difficulty: 'medium',
+        category: 'adjective',
     },
     {
         id: '7',
@@ -49,6 +55,7 @@ export const TERMS: Term[] = [
         definition: 'A tongue exercise meant to define the jawline. Often associated with "looksmaxxing".',
         example: "I can't talk right now, I'm mewing.",
         difficulty: 'hard',
+        category: 'verb',
     },
     {
         id: '8',
@@ -56,6 +63,7 @@ export const TERMS: Term[] = [
         definition: 'Short for delusional. Often used in the context of fan culture or relationships.',
         example: "She's so delulu if she thinks they're dating.",
         difficulty: 'easy',
+        category: 'adjective',
     },
 ];
 

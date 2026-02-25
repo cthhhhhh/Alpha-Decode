@@ -4,6 +4,7 @@ export interface Term {
     definition: string;
     example: string;
     difficulty: 'easy' | 'medium' | 'hard';
+    category: string;
 }
 
 export interface Lesson {
