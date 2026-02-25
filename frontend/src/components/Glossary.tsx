@@ -13,26 +13,39 @@ const LESSON_TITLES: Record<string, string> = LESSONS.reduce((acc, lesson) => {
     return acc;
 }, {} as Record<string, string>);
 
+// 1-based lesson number for display (e.g. lessonId '1' → Lesson 1)
+const LESSON_NUMBER: Record<string, number> = LESSONS.reduce((acc, lesson, index) => {
+    acc[lesson.id] = index + 1;
+    return acc;
+}, {} as Record<string, number>);
+
 const DIFFICULTY_ORDER: Record<string, number> = {
     easy: 1,
     medium: 2,
     hard: 3,
 };
 
+// All unique categories derived from data (stable order)
+const ALL_CATEGORIES = Array.from(new Set(TERMS.map(t => t.category).filter(Boolean))) as string[];
+
 const Glossary = () => {
     const [query, setQuery] = useState('');
     const [sortMode, setSortMode] = useState<'lesson' | 'alpha' | 'difficulty'>('lesson');
     const [showFilters, setShowFilters] = useState(false);
+    const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
     const queryLower = query.toLowerCase();
 
     const filtered = TERMS.filter(t => {
         const matchesTerm = t.term.toLowerCase().includes(queryLower);
         const matchesDefinition = t.definition.toLowerCase().includes(queryLower);
+        const matchesExample = t.example.toLowerCase().includes(queryLower);
+        const matchesCategory = t.category ? t.category.toLowerCase().includes(queryLower) : false;
         const lessonTitle = t.lessonId ? LESSON_TITLES[t.lessonId] : '';
         const matchesLessonTitle = lessonTitle ? lessonTitle.includes(queryLower) : false;
+        const matchesCategoryFilter = categoryFilter ? t.category === categoryFilter : true;
 
-        return matchesTerm || matchesDefinition || matchesLessonTitle;
+        return (matchesTerm || matchesDefinition || matchesExample || matchesCategory || matchesLessonTitle) && matchesCategoryFilter;
     });
 
     const sorted = [...filtered].sort((a, b) => {
@@ -91,11 +104,10 @@ const Glossary = () => {
                         onClick={() => setShowFilters(prev => !prev)}
                         aria-haspopup="dialog"
                         aria-expanded={showFilters}
-                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 text-sm font-black uppercase tracking-wide shadow-sm transition-colors ${
-                            showFilters
-                                ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-                                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 text-sm font-black uppercase tracking-wide shadow-sm transition-colors ${showFilters
+                            ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                            }`}
                     >
                         <SlidersHorizontal size={18} />
                         <span>Filter</span>
@@ -106,7 +118,7 @@ const Glossary = () => {
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 z-10"
+                            className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/60 z-10"
                         >
                             <div className="px-4 py-3 border-b border-slate-100">
                                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Arrange by</p>
@@ -118,11 +130,10 @@ const Glossary = () => {
                                         setSortMode('lesson');
                                         setShowFilters(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium ${
-                                        sortMode === 'lesson'
-                                            ? 'bg-brand-primary/10 text-brand-primary'
-                                            : 'text-slate-600 hover:bg-slate-50'
-                                    }`}
+                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium ${sortMode === 'lesson'
+                                        ? 'bg-brand-primary/10 text-brand-primary'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
                                 >
                                     Lesson order
                                 </button>
@@ -132,11 +143,10 @@ const Glossary = () => {
                                         setSortMode('alpha');
                                         setShowFilters(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium ${
-                                        sortMode === 'alpha'
-                                            ? 'bg-brand-primary/10 text-brand-primary'
-                                            : 'text-slate-600 hover:bg-slate-50'
-                                    }`}
+                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium ${sortMode === 'alpha'
+                                        ? 'bg-brand-primary/10 text-brand-primary'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
                                 >
                                     A–Z (alphabetical)
                                 </button>
@@ -146,19 +156,49 @@ const Glossary = () => {
                                         setSortMode('difficulty');
                                         setShowFilters(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium ${
-                                        sortMode === 'difficulty'
-                                            ? 'bg-brand-primary/10 text-brand-primary'
-                                            : 'text-slate-600 hover:bg-slate-50'
-                                    }`}
+                                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-medium ${sortMode === 'difficulty'
+                                        ? 'bg-brand-primary/10 text-brand-primary'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
                                 >
                                     Difficulty
                                 </button>
+                            </div>
+
+                            {/* Category filter */}
+                            <div className="px-4 py-3 border-t border-slate-100">
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Filter by category</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCategoryFilter(null)}
+                                        className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wide border transition-colors ${categoryFilter === null
+                                            ? 'bg-brand-primary border-brand-primary text-white'
+                                            : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        All
+                                    </button>
+                                    {ALL_CATEGORIES.map(cat => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => setCategoryFilter(prev => prev === cat ? null : cat)}
+                                            className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wide border transition-colors ${categoryFilter === cat
+                                                ? 'bg-brand-primary border-brand-primary text-white'
+                                                : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </motion.div>
                     )}
                 </div>
             </div>
+
 
             {/* Terms grid — uses .duo-card from index.css */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,8 +211,15 @@ const Glossary = () => {
                         className="duo-card hover:shadow-xl hover:shadow-slate-200/50 transition-shadow"
                     >
                         <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-xl font-black">{term.term}</h3>
-                            <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase
+                            <div className="flex flex-col gap-1">
+                                <h3 className="text-xl font-black">{term.term}</h3>
+                                {term.lessonId && LESSON_NUMBER[term.lessonId] !== undefined && (
+                                    <span className="text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full w-fit uppercase tracking-wide">
+                                        Lesson {LESSON_NUMBER[term.lessonId]}
+                                    </span>
+                                )}
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase shrink-0
                 ${term.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
                                     term.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                                         'bg-red-100 text-red-700'}`}>

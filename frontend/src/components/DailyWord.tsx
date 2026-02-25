@@ -1,7 +1,11 @@
 import { motion } from 'motion/react';
 import { TERMS } from '../data';
 
-const DailyWord = () => (
+interface DailyWordProps {
+    onLearnMore?: () => void;
+}
+
+const DailyWord = ({ onLearnMore }: DailyWordProps) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -21,7 +25,7 @@ const DailyWord = () => (
                 {TERMS[0].definition}
             </p>
             <div className="flex gap-3">
-                <button className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-slate-100 transition-colors">
+                <button onClick={onLearnMore} className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-slate-100 transition-colors">
                     Learn More
                 </button>
                 <button className="border border-white/20 px-6 py-3 rounded-full font-bold hover:bg-white/10 transition-colors">

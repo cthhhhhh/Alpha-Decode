@@ -124,7 +124,7 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <DailyWord />
+              <DailyWord onLearnMore={() => setActiveTab('dict')} />
 
               {/* Daily Quiz CTA */}
               {!dailyQuizCompleted && (
