@@ -5,6 +5,7 @@ export interface Term {
     example: string;
     difficulty: 'easy' | 'medium' | 'hard';
     category: string;
+    lessonId?: string;
 }
 
 export interface Lesson {

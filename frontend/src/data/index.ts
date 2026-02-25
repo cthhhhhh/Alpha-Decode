@@ -8,6 +8,7 @@ export const TERMS: Term[] = [
         example: "He has so much rizz, he didn't even have to say anything.",
         difficulty: 'easy',
         category: 'noun',
+        lessonId: '1',
     },
     {
         id: '2',
@@ -16,6 +17,7 @@ export const TERMS: Term[] = [
         example: "That's so skibidi of you.",
         difficulty: 'medium',
         category: 'adjective',
+        lessonId: '4',
     },
     {
         id: '3',
@@ -32,6 +34,7 @@ export const TERMS: Term[] = [
         example: 'You gotta pay the Fanum Tax on those fries.',
         difficulty: 'medium',
         category: 'noun',
+        lessonId: '2',
     },
     {
         id: '5',
@@ -40,6 +43,7 @@ export const TERMS: Term[] = [
         example: "He's such a sigma male.",
         difficulty: 'easy',
         category: 'noun',
+        lessonId: '6',
     },
     {
         id: '6',
@@ -48,6 +52,7 @@ export const TERMS: Term[] = [
         example: 'Only in Ohio would that happen.',
         difficulty: 'medium',
         category: 'adjective',
+        lessonId: '3',
     },
     {
         id: '7',
@@ -56,6 +61,7 @@ export const TERMS: Term[] = [
         example: "I can't talk right now, I'm mewing.",
         difficulty: 'hard',
         category: 'verb',
+        lessonId: '5',
     },
     {
         id: '8',
@@ -64,6 +70,7 @@ export const TERMS: Term[] = [
         example: "She's so delulu if she thinks they're dating.",
         difficulty: 'easy',
         category: 'adjective',
+        lessonId: '7',
     },
 ];
 
