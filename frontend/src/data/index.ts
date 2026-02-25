@@ -1,4 +1,4 @@
-import type { Term, Lesson, QuizQuestion, LessonContent } from '../types';
+import type { Term, Lesson, LessonContent } from '../types';
 
 export const TERMS: Term[] = [
     {
@@ -7,7 +7,6 @@ export const TERMS: Term[] = [
         definition: 'Short for charisma. Ability to attract a romantic partner.',
         example: "He has so much rizz, he didn't even have to say anything.",
         difficulty: 'easy',
-        category: 'noun',
     },
     {
         id: '2',
@@ -15,7 +14,6 @@ export const TERMS: Term[] = [
         definition: 'Often used as a nonsense word or to describe something bad/evil, originating from the Skibidi Toilet series.',
         example: "That's so skibidi of you.",
         difficulty: 'medium',
-        category: 'adjective',
     },
     {
         id: '3',
@@ -23,7 +21,6 @@ export const TERMS: Term[] = [
         definition: 'An exclamation used when seeing someone with a large posterior. Derived from "God damn".',
         example: 'Gyatt! Look at that!',
         difficulty: 'easy',
-        category: 'reaction',
     },
     {
         id: '4',
@@ -31,7 +28,6 @@ export const TERMS: Term[] = [
         definition: "Stealing a portion of someone else's food, popularized by streamer Fanum.",
         example: 'You gotta pay the Fanum Tax on those fries.',
         difficulty: 'medium',
-        category: 'noun',
     },
     {
         id: '5',
@@ -39,7 +35,6 @@ export const TERMS: Term[] = [
         definition: 'A "lone wolf" or someone who is successful and independent. Often used ironically.',
         example: "He's such a sigma male.",
         difficulty: 'easy',
-        category: 'noun',
     },
     {
         id: '6',
@@ -47,7 +42,6 @@ export const TERMS: Term[] = [
         definition: 'Used to describe something weird, cringey, or abnormal. Based on memes about the state.',
         example: 'Only in Ohio would that happen.',
         difficulty: 'medium',
-        category: 'adjective',
     },
     {
         id: '7',
@@ -55,7 +49,6 @@ export const TERMS: Term[] = [
         definition: 'A tongue exercise meant to define the jawline. Often associated with "looksmaxxing".',
         example: "I can't talk right now, I'm mewing.",
         difficulty: 'hard',
-        category: 'verb',
     },
     {
         id: '8',
@@ -63,64 +56,18 @@ export const TERMS: Term[] = [
         definition: 'Short for delusional. Often used in the context of fan culture or relationships.',
         example: "She's so delulu if she thinks they're dating.",
         difficulty: 'easy',
-        category: 'adjective',
     },
 ];
 
 export const LESSONS: Lesson[] = [
-    { id: '1', title: 'Rizz Basics', color: 'bg-green-500', gradient: '', locked: false, completed: false, x: 0, chapter: 1, story: 'Learn the art of effortless charm.', emoji: '✨' },
-    { id: '2', title: 'Fanum Tax', color: 'bg-indigo-500', gradient: '', locked: true, completed: false, x: 40, chapter: 1, story: 'The tax man cometh for your fries.', emoji: '🍟' },
-    { id: '3', title: 'Ohio Lore', color: 'bg-yellow-500', gradient: '', locked: true, completed: false, x: -40, chapter: 2, story: 'Descend into the heart of the bizarre.', emoji: '🌀' },
-    { id: '4', title: 'Skibidi 101', color: 'bg-red-500', gradient: '', locked: true, completed: false, x: 0, chapter: 2, story: 'A toilet-headed odyssey begins.', emoji: '🚽' },
-    { id: '5', title: 'Mewing Pro', color: 'bg-orange-500', gradient: '', locked: true, completed: false, x: 40, chapter: 3, story: 'Jawline or bust. Silence is the grind.', emoji: '💪' },
-    { id: '6', title: 'Sigma Mindset', color: 'bg-purple-500', gradient: '', locked: true, completed: false, x: -40, chapter: 3, story: 'Reject the hierarchy. Embrace the grindset.', emoji: '🐺' },
-    { id: '7', title: 'Delulu Land', color: 'bg-pink-500', gradient: '', locked: true, completed: false, x: 0, chapter: 4, story: 'The delulu is the solulu.', emoji: '🌸' },
+    { id: '1', title: 'Rizz Basics', locked: false, completed: false, x: 0 },
+    { id: '2', title: 'Fanum Tax', locked: true, completed: false, x: 40 },
+    { id: '3', title: 'Ohio Lore', locked: true, completed: false, x: -40 },
+    { id: '4', title: 'Skibidi 101', locked: true, completed: false, x: 0 },
+    { id: '5', title: 'Mewing Pro', locked: true, completed: false, x: 40 },
+    { id: '6', title: 'Sigma Mindset', locked: true, completed: false, x: -40 },
+    { id: '7', title: 'Delulu Land', locked: true, completed: false, x: 0 },
 ];
-
-export const QUIZ_QUESTIONS: Record<string, QuizQuestion[]> = {
-    '1': [
-        { q: "What is 'Rizz' short for?", options: ['Risk', 'Charisma', 'Rhythm', 'Real'], correct: 1, explanation: "'Rizz' is slang derived from 'charisma' — the natural ability to charm or attract others." },
-        { q: "If you have 'W Rizz', you are...", options: ['Awkward', 'Charming', 'Sleepy', 'Hungry'], correct: 1, explanation: "'W' in Gen Z slang means a win, so 'W Rizz' means top-tier, winning charm." },
-        { q: 'Which of these best describes someone with rizz?', options: ['Clumsy and shy', 'Magnetic and attractive', 'Loud and annoying', 'Smart but boring'], correct: 1, explanation: 'Rizz describes effortless attractiveness — someone people are naturally drawn to.' },
-        { q: 'Rizz is most commonly used in the context of...', options: ['Academics', 'Sports', 'Romance', 'Gaming'], correct: 2, explanation: 'Rizz is primarily about attracting a romantic partner through charm and charisma.' },
-    ],
-    '2': [
-        { q: "What is 'Fanum Tax'?", options: ['A government fee', 'Stealing food', 'Paying for fans', 'A dance move'], correct: 1, explanation: 'Fanum Tax means stealing a portion of someone else\'s food, popularised by streamer Fanum.' },
-        { q: 'Where did Fanum Tax originate?', options: ['TikTok', 'Twitch streaming', 'YouTube', 'Instagram'], correct: 1, explanation: 'The term was coined on Twitch, where streamer Fanum would take his friends\' food on stream.' },
-        { q: "If someone pays 'Fanum Tax', they...", options: ['Earn XP', 'Lose some of their food', 'Win a prize', 'Get fined'], correct: 1, explanation: "Paying the Fanum Tax means someone took a portion of your food — you 'paid' by losing some." },
-        { q: 'Fanum Tax is popularized by which type of creator?', options: ['Musician', 'Artist', 'Streamer', 'Chef'], correct: 2, explanation: 'Fanum is a Twitch streamer and member of the AMP group who popularised the term on his streams.' },
-    ],
-    '3': [
-        { q: 'Ohio is often associated with...', options: ['Normalcy', 'Weird events', 'Good weather', 'Technology'], correct: 1, explanation: 'Ohio memes portray the state as a place where bizarre, surreal, or unsettling things happen.' },
-        { q: "Using 'Ohio' in Gen Z slang means something is...", options: ['Cool', 'Strange or cringe', 'Expensive', 'Fast'], correct: 1, explanation: "Calling something 'Ohio' means it's weird or cringe — based on internet memes about the state." },
-        { q: 'Which phrase best uses Ohio correctly?', options: ['That sunset was so Ohio', 'Only in Ohio would this happen', "He's got Ohio skills", 'Ohio that meal!'], correct: 1, explanation: "'Only in Ohio would this happen' is the classic meme phrase used when something strange occurs." },
-        { q: 'Ohio memes are typically associated with...', options: ['Beautiful scenery', 'Bizarre or unsettling events', 'Sports victories', 'Academic success'], correct: 1, explanation: "Ohio memes revolve around outlandish, creepy, or weird scenarios that 'could only happen in Ohio'." },
-    ],
-    '4': [
-        { q: 'Skibidi is mostly used as...', options: ['A formal greeting', 'A nonsense filler word', 'A cooking term', 'A math concept'], correct: 1, explanation: "'Skibidi' is a nonsense/filler word from internet culture, often used to describe something weird." },
-        { q: 'Skibidi originated from which series?', options: ['Skibidi Toilet', 'Skibidi Dance', 'Skibidi School', 'Skibidi Wars'], correct: 0, explanation: "Skibidi Toilet is a YouTube series with toilet-headed characters that made 'skibidi' go viral." },
-        { q: "In Gen Z slang, 'skibidi' can describe something that is...", options: ['Delicious', 'Weird or bad', 'Exciting', 'Calm'], correct: 1, explanation: 'Skibidi is generally used negatively to call something strange, bad, or cringe in internet speak.' },
-        { q: "Which sentence uses 'skibidi' correctly?", options: ["That's so skibidi of you", 'I skibidi to school daily', 'She skibidied the exam', 'Skibidi is a sport'], correct: 0, explanation: "'That's so skibidi of you' uses it as an adjective to describe weird or bad behaviour — the correct usage." },
-    ],
-    '5': [
-        { q: 'Mewing is done to improve...', options: ['Jawline', 'Abs', 'Hair growth', 'Eyesight'], correct: 0, explanation: 'Mewing is a tongue posture technique promoted online as a way to define and strengthen the jawline.' },
-        { q: 'Mewing involves pressing your tongue against...', options: ['Your cheek', 'The roof of your mouth', 'Your teeth', 'Your chin'], correct: 1, explanation: 'The technique involves resting your tongue flat against the roof of your mouth to reshape the jaw over time.' },
-        { q: 'Mewing is associated with which broader concept?', options: ['Looksmaxxing', 'Speedrunning', 'Cooking', 'Studying'], correct: 0, explanation: 'Looksmaxxing is maximising physical appearance — mewing is a popular technique within that community.' },
-        { q: 'Which is TRUE about mewing?', options: ["It's a vocal exercise", "It's a tongue posture technique", "It's a type of dance", "It's a food diet"], correct: 1, explanation: 'Mewing is specifically a tongue posture technique, not a vocal or physical exercise.' },
-    ],
-    '6': [
-        { q: "A 'Sigma' is considered...", options: ['A follower', 'A lone wolf', 'A loud person', 'A lazy person'], correct: 1, explanation: "A Sigma is a 'lone wolf' — someone who succeeds independently outside of social hierarchies." },
-        { q: 'Sigma is often used to describe someone who is...', options: ['Dependent on others', 'Independent and successful', 'Talkative', 'Easily influenced'], correct: 1, explanation: 'The Sigma archetype values independence and self-sufficiency over social approval or group dynamics.' },
-        { q: "'Sigma grindset' refers to...", options: ['A type of workout', 'A mindset focused on self-improvement', 'A music genre', 'A fashion style'], correct: 1, explanation: "'Grindset' blends 'grind' and 'mindset'. Sigma grindset means silently hustling and self-improving." },
-        { q: 'Which best contrasts a Sigma with an Alpha?', options: ['Alpha is popular, Sigma is a loner', 'Alpha is smart, Sigma is dumb', 'Alpha is quiet, Sigma is loud', 'Alpha is lazy, Sigma is fast'], correct: 0, explanation: 'In the meme hierarchy, Alphas lead social groups while Sigmas reject the hierarchy and go their own way.' },
-    ],
-    '7': [
-        { q: "What does 'Delulu' mean?", options: ['Dedicated', 'Delusional', 'Deliberate', 'Delighted'], correct: 1, explanation: "'Delulu' is short for delusional — often used when someone has unrealistic expectations, especially about a celebrity crush." },
-        { q: "Which context is 'Delulu' most commonly used in?", options: ['Cooking', 'Gaming', 'Fan culture or relationships', 'Sports'], correct: 2, explanation: 'Delulu is most often used in fan communities to describe fans who believe they have a real relationship with a celebrity.' },
-        { q: "'The delulu is the solulu' means...", options: ['Being delusional is bad', 'Being delusional is somehow the solution', 'Reality always wins', 'You should be realistic'], correct: 1, explanation: 'This ironic phrase means that sometimes delusional positivity is what gets you through — it is used humorously.' },
-        { q: "Which sentence uses 'delulu' correctly?", options: ["She's so delulu if she thinks they're dating", 'He delulued the test', 'I delulu every morning', 'Delulu is a sport'], correct: 0, explanation: "Using 'delulu' as an adjective to describe someone with an unrealistic belief is the correct Gen Z usage." },
-    ],
-};
 
 export const ONBOARDING_QUESTIONS = [
     { q: "What is 'Fanum Tax'?", options: ['A government fee', 'Stealing food', 'Paying for fans', 'A dance move'], correct: 1 },
@@ -129,9 +76,6 @@ export const ONBOARDING_QUESTIONS = [
     { q: 'Mewing is done to improve...', options: ['Jawline', 'Abs', 'Hair', 'Eyesight'], correct: 0 },
     { q: "What is a 'Sigma'?", options: ['A follower', 'A lone wolf', 'A loud person', 'A lazy person'], correct: 1 },
 ];
-
-export const XP_PER_CORRECT = 50;
-export const PASS_THRESHOLD = 0.75;
 
 export const LESSON_CONTENT: LessonContent[] = [
     {

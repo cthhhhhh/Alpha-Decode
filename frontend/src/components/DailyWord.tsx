@@ -12,7 +12,9 @@ const DailyWord = () => (
                 <span className="bg-brand-yellow text-slate-900 text-xs font-black px-2 py-1 rounded uppercase tracking-wider">
                     Daily Slang
                 </span>
-                <span className="text-slate-400 text-xs font-medium">Feb 25, 2026</span>
+                <span className="text-slate-400 text-xs font-medium">
+                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
             </div>
             <h2 className="text-5xl font-black mb-2">{TERMS[0].term}</h2>
             <p className="text-xl text-slate-300 mb-6 max-w-xl">
