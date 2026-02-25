@@ -24,7 +24,6 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
     if (!lesson) return null;
 
     const step = lesson.steps[stepIdx];
-    const progress = (stepIdx / lesson.steps.length) * 100;
 
     const totalGraded = lesson.steps.filter(s => s.type !== 'intro').length;
     const currentGradedIdx = lesson.steps.slice(0, stepIdx + 1).filter(s => s.type !== 'intro').length;
@@ -82,12 +81,14 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                 <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
                     <XCircle size={32} />
                 </button>
-                <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div
-                        className="h-full bg-brand-primary"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                    />
+                <div className="flex-1 flex items-center gap-1.5">
+                    {lesson.steps.map((_, i) => (
+                        <div
+                            key={i}
+                            className={`flex-1 h-3.5 rounded-full transition-all duration-500 ${i < stepIdx ? 'bg-green-500' : 'bg-slate-200'
+                                }`}
+                        />
+                    ))}
                 </div>
                 {isGradedStep && !isFinished && (
                     <div className="flex items-center gap-1 text-slate-500 font-bold whitespace-nowrap">

@@ -67,6 +67,27 @@ export const TERMS: Term[] = [
     },
 ];
 
+export const DAILY_QUIZ_QUESTIONS = [
+    {
+        q: 'Which of these correctly uses "mewing" in a sentence?',
+        options: ['I mewed the exam', 'He stays quiet because he\'s mewing', 'She mewed to the party', 'They mewed all the fries'],
+        correct: 1,
+        explanation: 'Mewing requires silence — pressing the tongue to the roof of the mouth. "He stays quiet because he\'s mewing" is the correct usage.',
+    },
+    {
+        q: '"The delulu is the solulu" means...',
+        options: ['Being realistic always wins', 'Delusional positivity is somehow the answer', 'You should face the truth', 'Delulu people never succeed'],
+        correct: 1,
+        explanation: 'This ironic phrase means sometimes delusional confidence is what gets you through — it\'s used humorously in Gen Z culture.',
+    },
+    {
+        q: 'A true Sigma would most likely...',
+        options: ['Lead a group project loudly', 'Follow the most popular person', 'Work alone without seeking approval', 'Post on social media every day'],
+        correct: 2,
+        explanation: 'A Sigma is a lone wolf who operates outside social hierarchies — self-sufficient, silent, and independent.',
+    },
+];
+
 export const LESSONS: Lesson[] = [
     { id: '1', title: 'Rizz Basics', locked: false, completed: false, x: 0 },
     { id: '2', title: 'Fanum Tax', locked: true, completed: false, x: 40 },
