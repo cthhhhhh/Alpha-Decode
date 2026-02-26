@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Star } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
 import { LESSONS, ONBOARDING_QUESTIONS } from './data';
 import type { Lesson } from './types';
 
@@ -9,21 +9,26 @@ import DailyWord from './components/DailyWord';
 import LessonPath from './components/LessonPath';
 import LessonSession from './components/LessonSession';
 import OnboardingModal from './components/OnboardingModal';
+import DailyQuizModal from './components/DailyQuizModal';
 import Glossary from './components/Glossary';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'dict'>('learn');
   const [xp, setXp] = useState(50);
   const [level, setLevel] = useState(5);
-  const [streak, setStreak] = useState(12);
+  const [streak, setStreak] = useState(0);
 
   // Daily Quiz logic: reset on refresh
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(false);
+  const [showDailyQuiz, setShowDailyQuiz] = useState(false);
 
-  const handleDailyQuizComplete = () => {
-    setXp(prev => prev + 10);
-    setStreak(prev => prev + 1);
+  const handleDailyQuizComplete = (correct: number, total: number) => {
+    if (correct === total) {
+      setXp(prev => prev + 10);
+      setStreak(prev => prev + 1);
+    }
     setDailyQuizCompleted(true);
+    setShowDailyQuiz(false);
   };
 
   // Onboarding — reset on refresh
@@ -119,27 +124,50 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <DailyWord />
+              <DailyWord onLearnMore={() => setActiveTab('dict')} />
 
               {/* Daily Quiz CTA */}
               {!dailyQuizCompleted && (
-                <div className="bg-brand-secondary text-white rounded-3xl p-6 mb-8 flex items-center justify-between relative overflow-hidden">
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Gamepad2 size={24} />
-                      <h3 className="text-2xl font-black">Daily Quiz</h3>
+                <div className="relative rounded-3xl p-6 mb-8 overflow-hidden bg-brand-secondary shadow-xl shadow-brand-secondary/30">
+                  {/* Decorative blobs */}
+                  <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+
+                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    {/* Left: title + rewards */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+                          <Gamepad2 size={18} className="text-white" />
+                        </div>
+                        <h3 className="text-2xl font-black text-white tracking-tight">Daily Quiz</h3>
+                      </div>
+                      <p className="text-white/70 font-medium text-sm mb-3">Test your knowledge up to Level {level}!</p>
+
+                      {/* Reward chips */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-black text-white/60 uppercase tracking-wider">All correct →</span>
+                        <div className="flex items-center gap-1 bg-brand-yellow/20 border border-brand-yellow/40 text-brand-yellow px-3 py-1 rounded-full text-sm font-black">
+                          <Star size={13} fill="currentColor" />
+                          <span>+10 Stars</span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-brand-accent/20 border border-brand-accent/40 text-brand-accent px-3 py-1 rounded-full text-sm font-black">
+                          <Flame size={13} fill="currentColor" />
+                          <span>+1 Streak</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-white/80 font-medium">Test your knowledge up to Level {level}!</p>
+
+                    {/* CTA button */}
+                    <motion.button
+                      whileHover={{ scale: 1.06 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowDailyQuiz(true)}
+                      className="shrink-0 bg-white text-brand-secondary px-7 py-3.5 rounded-2xl font-black text-base shadow-[0_4px_0_rgba(0,0,0,0.25)] active:translate-y-1 active:shadow-none transition-all"
+                    >
+                      Start Quiz →
+                    </motion.button>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05, backgroundColor: '#f8fafc' }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleDailyQuizComplete}
-                    className="relative z-10 bg-white text-brand-secondary px-6 py-3 rounded-2xl font-black transition-all shadow-sm"
-                  >
-                    Start (+10 Stars, +1 Streak)
-                  </motion.button>
-                  <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl" />
                 </div>
               )}
 
@@ -258,6 +286,13 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      {/* Daily Quiz Modal */}
+      <DailyQuizModal
+        show={showDailyQuiz}
+        onClose={() => setShowDailyQuiz(false)}
+        onComplete={handleDailyQuizComplete}
+      />
 
       {/* Onboarding Modal */}
       <OnboardingModal

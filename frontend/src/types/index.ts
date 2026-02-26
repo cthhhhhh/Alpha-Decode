@@ -5,26 +5,15 @@ export interface Term {
     example: string;
     difficulty: 'easy' | 'medium' | 'hard';
     category: string;
+    lessonId?: string;
 }
 
 export interface Lesson {
     id: string;
     title: string;
-    color: string;
-    gradient: string;
     locked: boolean;
     completed: boolean;
     x: number;
-    chapter: number;
-    story: string;
-    emoji: string;
-}
-
-export interface QuizQuestion {
-    q: string;
-    options: string[];
-    correct: number;
-    explanation: string;
 }
 
 export interface LessonStep {
