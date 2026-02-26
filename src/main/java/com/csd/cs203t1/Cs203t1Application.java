@@ -1,4 +1,4 @@
-package com.example.cs203t1;
+package com.csd.cs203t1;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
