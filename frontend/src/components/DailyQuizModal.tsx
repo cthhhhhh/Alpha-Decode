@@ -212,14 +212,12 @@ const DailyQuizModal = ({ show, onClose, onComplete }: Props) => {
     const [correctCount, setCorrectCount] = useState(0);
     const [answerLog, setAnswerLog] = useState<boolean[]>([]);
     const [finished, setFinished] = useState(false);
-    const [showConfetti, setShowConfetti] = useState(false);
 
     const total = DAILY_QUIZ_QUESTIONS.length;
     const question = DAILY_QUIZ_QUESTIONS[qIndex];
     const isCorrect = selected !== null && selected === question.correct;
     const isPerfect = correctCount === total;
-
-    useEffect(() => { if (finished && isPerfect) setShowConfetti(true); }, [finished, isPerfect]);
+    const isShowingConfetti = finished && isPerfect;
 
     const handleCheck = () => {
         if (selected === null) return;
@@ -238,7 +236,7 @@ const DailyQuizModal = ({ show, onClose, onComplete }: Props) => {
 
     const handleReset = () => {
         setQIndex(0); setSelected(null); setIsChecked(false);
-        setCorrectCount(0); setAnswerLog([]); setFinished(false); setShowConfetti(false);
+        setCorrectCount(0); setAnswerLog([]); setFinished(false);
     };
 
     return (
@@ -247,7 +245,7 @@ const DailyQuizModal = ({ show, onClose, onComplete }: Props) => {
                 <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 28 }}
                     className="fixed inset-0 z-[100] bg-white flex flex-col">
-                    <FireworksCanvas active={showConfetti} />
+                    <FireworksCanvas active={isShowingConfetti} />
 
                     {/* Header */}
                     <div className="w-full px-4 pt-6 pb-4 flex items-center gap-4 max-w-3xl mx-auto">

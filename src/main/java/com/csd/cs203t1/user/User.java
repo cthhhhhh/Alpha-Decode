@@ -46,7 +46,13 @@ public class User {
 	@Column(nullable = false)
 	private Role role = Role.USER; //defaults to user, if creating admin/contributor account use setter to override
 
+	@Column(nullable = false)
+	private int level = 1;
+
+	@Column(nullable = false)
+	private int xp = 0;
+
 	@Column(nullable=false, unique=true, updatable=false)
-	final UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
+	private UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
 
 }

@@ -10,6 +10,7 @@ interface Props {
     onAnswer: (idx: number) => void;
     onComplete: () => void;
     onSkip: () => void;
+    onLogin: () => void;
 }
 
 const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { color: string; size: string; top?: string; left?: string; bottom?: string; right?: string; delay: number }) => (
@@ -29,11 +30,7 @@ const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { co
     />
 );
 
-const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, onSkip }: Props) => {
-    const handleLoginRedirect = () => {
-        window.location.href = '/login';
-    };
-
+const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, onSkip, onLogin }: Props) => {
     return (
         <AnimatePresence>
             {show && (
@@ -57,7 +54,7 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                         <motion.button
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            onClick={handleLoginRedirect}
+                            onClick={onLogin}
                             className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-600 hover:bg-white hover:text-brand-primary transition-all shadow-sm group"
                         >
                             <User size={18} className="group-hover:scale-110 transition-transform" />

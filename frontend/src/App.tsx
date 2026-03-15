@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
 import { LESSONS, ONBOARDING_QUESTIONS } from './data';
@@ -11,16 +12,56 @@ import LessonSession from './components/LessonSession';
 import OnboardingModal from './components/OnboardingModal';
 import DailyQuizModal from './components/DailyQuizModal';
 import Glossary from './components/Glossary';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'dict'>('learn');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // --- Auth State ---
+  const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [authRole, setAuthRole] = useState<string | null>(() => localStorage.getItem('role'));
+  const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
+
+  // --- Active Tab State (derived from URL) ---
+  const isLeaderboard = location.pathname.startsWith('/leaderboard');
+  const isGlossary = location.pathname.startsWith('/glossary');
+  const isLearn = !isLeaderboard && !isGlossary;
   const [xp, setXp] = useState(50);
   const [level, setLevel] = useState(5);
   const [streak, setStreak] = useState(0);
-
-  // Daily Quiz logic: reset on refresh
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(false);
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    // Show onboarding if they haven't finished it OR if they explicitly visit the root URL
+    return localStorage.getItem('onboardingFinished') !== 'true';
+  });
+  const [onboardingQIndex, setOnboardingQIndex] = useState(0);
+  const [onboardingScore, setOnboardingScore] = useState(0);
+  const [onboardingFinished, setOnboardingFinished] = useState(false);
+  const [lessons, setLessons] = useState<Lesson[]>(LESSONS);
+  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
+    setAuthToken(token);
+    setAuthRole(role);
+    setAuthUsername(username);
+    if (level !== undefined) setLevel(level);
+    if (xp !== undefined) setXp(xp);
+    navigate('/home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('username');
+    setAuthToken(null);
+    setAuthRole(null);
+    setAuthUsername(null);
+  };
+
+  // --- Handlers ---
 
   const handleDailyQuizComplete = (correct: number, total: number) => {
     if (correct === total) {
@@ -30,20 +71,6 @@ export default function App() {
     setDailyQuizCompleted(true);
     setShowDailyQuiz(false);
   };
-
-  // Onboarding — reset on refresh
-  const [showOnboarding, setShowOnboarding] = useState(true);
-  const [onboardingQIndex, setOnboardingQIndex] = useState(0);
-  const [onboardingScore, setOnboardingScore] = useState(0);
-  const [onboardingFinished, setOnboardingFinished] = useState(false);
-
-  // Learning Path
-  const [lessons, setLessons] = useState<Lesson[]>(LESSONS);
-
-  // Lesson Session
-  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-
-  // --- Handlers ---
 
   const startLesson = (lessonId: string) => {
     setActiveLessonId(lessonId);
@@ -97,34 +124,57 @@ export default function App() {
     }
   };
 
+  // Finish onboarding completely (go to register)
   const completeOnboarding = () => {
     const newLevel = onboardingScore + 1;
     setLevel(newLevel);
     setShowOnboarding(false);
-    window.location.href = '/signup';
+    localStorage.setItem('onboardingFinished', 'true');
+    localStorage.setItem('initialLevel', newLevel.toString());
+    localStorage.setItem('initialXp', '0'); // Fresh level, 0 xp
+    navigate('/register');
   };
 
+  // Skip onboarding (go straight to app)
   const handleSkipOnboarding = () => {
     setShowOnboarding(false);
+    localStorage.setItem('onboardingFinished', 'true');
+    navigate('/home');
   };
 
-  return (
+  const handleBackToOnboarding = () => {
+    setOnboardingQIndex(0);
+    setOnboardingScore(0);
+    setOnboardingFinished(false);
+    setShowOnboarding(true); // Force it back open
+    navigate('/');
+  };
+
+  const mainApp = (
     <div className="min-h-screen bg-slate-50 flex flex-col">
 
-      <Header streak={streak} xp={xp} level={level} />
+      <Header
+        streak={streak}
+        xp={xp}
+        level={level}
+        authToken={authToken}
+        authUsername={authUsername}
+        authRole={authRole}
+        onLogout={handleLogout}
+      />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 pb-32">
         <AnimatePresence mode="wait">
 
           {/* Learn Tab */}
-          {activeTab === 'learn' && (
+          {isLearn && (
             <motion.div
               key="learn"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <DailyWord onLearnMore={() => setActiveTab('dict')} />
+              <DailyWord onLearnMore={() => navigate('/glossary')} />
 
               {/* Daily Quiz CTA */}
               {!dailyQuizCompleted && (
@@ -212,7 +262,7 @@ export default function App() {
           )}
 
           {/* Glossary Tab */}
-          {activeTab === 'dict' && (
+          {isGlossary && (
             <motion.div
               key="dict"
               initial={{ opacity: 0, y: 20 }}
@@ -226,7 +276,7 @@ export default function App() {
           )}
 
           {/* Leaderboard Tab */}
-          {activeTab === 'leaderboard' && (
+          {isLeaderboard && (
             <motion.div
               key="leaderboard"
               initial={{ opacity: 0, y: 20 }}
@@ -248,8 +298,8 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setActiveTab('learn')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'learn' ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            onClick={() => navigate('/home')}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isLearn ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <BookOpen size={24} />
             <span className="text-[10px] font-black uppercase">Learn</span>
@@ -257,8 +307,8 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setActiveTab('leaderboard')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'leaderboard' ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            onClick={() => navigate('/leaderboard')}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isLeaderboard ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Trophy size={24} />
             <span className="text-[10px] font-black uppercase">Ranks</span>
@@ -266,8 +316,8 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setActiveTab('dict')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'dict' ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            onClick={() => navigate('/glossary')}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isGlossary ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
@@ -293,17 +343,52 @@ export default function App() {
         onClose={() => setShowDailyQuiz(false)}
         onComplete={handleDailyQuizComplete}
       />
-
-      {/* Onboarding Modal */}
-      <OnboardingModal
-        show={showOnboarding}
-        qIndex={onboardingQIndex}
-        score={onboardingScore}
-        finished={onboardingFinished}
-        onAnswer={handleOnboardingAnswer}
-        onComplete={completeOnboarding}
-        onSkip={handleSkipOnboarding}
-      />
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/login" element={
+        <LoginPage
+          onLoginSuccess={handleAuthSuccess}
+          onGoToRegister={() => navigate('/register')}
+          onBack={handleBackToOnboarding}
+        />
+      } />
+      <Route path="/register" element={
+        <RegisterPage
+          onRegisterSuccess={handleAuthSuccess}
+          onGoToLogin={() => navigate('/login')}
+          onBack={handleBackToOnboarding}
+        />
+      } />
+      <Route path="/" element={
+        <div className="min-h-screen bg-slate-50 flex flex-col">
+          <OnboardingModal
+            show={true}
+            qIndex={onboardingQIndex}
+            score={onboardingScore}
+            finished={onboardingFinished}
+            onAnswer={handleOnboardingAnswer}
+            onComplete={completeOnboarding}
+            onSkip={handleSkipOnboarding}
+            onLogin={() => navigate('/login')}
+          />
+        </div>
+      } />
+      <Route path="/home/*" element={
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      <Route path="/leaderboard/*" element={
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      <Route path="/glossary/*" element={
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      {/* Fallback to home if they visit a random bad URL */}
+      <Route path="/*" element={
+        showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
+      } />
+    </Routes>
   );
 }
