@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
-import { LESSONS, ONBOARDING_QUESTIONS } from './data';
+import { ONBOARDING_QUESTIONS } from './data';
 import type { Lesson } from './types';
 
 import Header from './components/Header';
@@ -43,8 +43,25 @@ export default function App() {
   const [onboardingQIndex, setOnboardingQIndex] = useState(0);
   const [onboardingScore, setOnboardingScore] = useState(0);
   const [onboardingFinished, setOnboardingFinished] = useState(false);
-  const [lessons, setLessons] = useState<Lesson[]>(LESSONS);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+  // Fetch lesson list from backend on mount
+  useEffect(() => {
+    fetch('/api/lessons/')
+      .then(r => r.json())
+      .then((data: { id: number; title: string }[]) => {
+        const xOffsets = [0, 40, -40, 0, 40, -40, 0];
+        setLessons(data.map((l, i) => ({
+          id: String(l.id),
+          title: l.title,
+          locked: i !== 0,
+          completed: false,
+          x: xOffsets[i % xOffsets.length],
+        })));
+      })
+      .catch(() => setLessons([]));
+  }, []);
 
   const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
     setAuthToken(token);

@@ -54,9 +54,9 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/lessons/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.OPTIONS, "/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**")).permitAll()
-                // Allow Tomcat error dispatch to reach the /error endpoint
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/error")).permitAll()
                 .anyRequest().authenticated()
             )
