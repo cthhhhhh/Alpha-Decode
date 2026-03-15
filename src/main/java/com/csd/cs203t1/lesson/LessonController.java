@@ -20,21 +20,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import org.springframework.web.bind.annotation.RequestParam;
-
-
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/lessons")
 public class LessonController {
 	final LessonService lessonService;
-	
-	public LessonController(LessonService ls){
+
+	public LessonController(LessonService ls) {
 		this.lessonService = ls;
 	}
+
 	/**
-	*List all lessons in the system
-	*@return a list of all lessons
-	*/
+	 * List all lessons in the system
+	 * 
+	 * @return a list of all lessons
+	 */
 	@GetMapping("/")
 	public List<Lesson> getLessons() {
 		return lessonService.listLessons();
@@ -43,6 +44,7 @@ public class LessonController {
 	/**
 	 * search for a specific lesson by id,
 	 * if no such lesson id, throw exception
+	 * 
 	 * @param id
 	 * @return Lesson with given id
 	 */
@@ -50,8 +52,10 @@ public class LessonController {
 	public Lesson getLesson(@PathVariable Long id) {
 		return lessonService.getLesson(id);
 	}
+
 	/**
 	 * search for specific lesson and its questions and quizzes by id
+	 * 
 	 * @param id
 	 * @return Lesson with associated quiz and question
 	 */
@@ -59,33 +63,34 @@ public class LessonController {
 	public Lesson getLessonsWithQuizAndQuestions(@PathVariable Long id) {
 		return lessonService.getLessonWithQuizAndQuestions(id);
 	}
-	
+
+	@PreAuthorize("hasRole('ADMIN')")
 	@DeleteMapping("/{id}")
-	public void deleteLesson(@PathVariable Long id){
+	public void deleteLesson(@PathVariable Long id) {
 		lessonService.deleteLesson(id);
 	}
 
 	@Data
 	public static class CreateLessonRequest {
-    	private LessonDTO lesson;
-    	private List<QuestionDTO> questions;
-}
+		private LessonDTO lesson;
+		private List<QuestionDTO> questions;
+	}
 
-
+	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
 	@PostMapping("/create")
 	public ResponseEntity<Lesson> createLesson(@RequestBody CreateLessonRequest request) {
-        // Delegate the work to the service
-        Lesson savedLesson = lessonService.addLesson(
-            request.getLesson(), 
-            request.getQuestions()
-        );
+		// Delegate the work to the service
+		Lesson savedLesson = lessonService.addLesson(
+				request.getLesson(),
+				request.getQuestions());
 
-        // Return 201 Created with the saved object
-        return new ResponseEntity<>(savedLesson, HttpStatus.CREATED);
-    }
+		// Return 201 Created with the saved object
+		return new ResponseEntity<>(savedLesson, HttpStatus.CREATED);
+	}
+
 	@GetMapping("/test")
 	public String test() {
-    return "Controller is active!";
-}
-	
+		return "Controller is active!";
+	}
+
 }

@@ -15,7 +15,7 @@ Alpha Decode is a gamified web application designed to help users master "Gen Al
 * **Framework:** Spring Boot 3.2.5
 * **Language:** Java 21
 * **Build Tool:** Maven 3.x
-* **Database:** H2 (Dev) / MySQL (Prod)
+* **Database:** H2 (Dev) / PostgreSQL (Prod)
 * **API Docs:** Swagger / OpenAPI
 
 ### Frontend
@@ -40,7 +40,7 @@ This project is configured with the `frontend-maven-plugin`. Maven will automati
 
 1.  **Clone the repository**
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/Lim-JL/CS203T1.git
     cd CS203T1
     ```
 
