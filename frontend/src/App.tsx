@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
-import { ONBOARDING_QUESTIONS } from './data';
 import type { Lesson } from './types';
+
 
 import Header from './components/Header';
 import DailyWord from './components/DailyWord';
@@ -45,6 +45,13 @@ export default function App() {
   const [onboardingFinished, setOnboardingFinished] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  // { q, options, correct } shaped for modals
+  type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
+  type OnbQ  = { q: string; options: string[]; correct: number };
+  const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
+  const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
+  // DB lesson id → 1-based position for Glossary
+  const [lessonIdToPosition, setLessonIdToPosition] = useState<Record<string, number>>({});
 
   // Fetch lesson list from backend on mount
   useEffect(() => {
@@ -52,6 +59,9 @@ export default function App() {
       .then(r => r.json())
       .then((data: { id: number; title: string }[]) => {
         const xOffsets = [0, 40, -40, 0, 40, -40, 0];
+        const pos: Record<string, number> = {};
+        data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
+        setLessonIdToPosition(pos);
         setLessons(data.map((l, i) => ({
           id: String(l.id),
           title: l.title,
@@ -61,6 +71,24 @@ export default function App() {
         })));
       })
       .catch(() => setLessons([]));
+  }, []);
+
+  // Fetch daily quiz questions
+  useEffect(() => {
+    fetch('/api/quiz/daily')
+      .then(r => r.json())
+      .then((data: { title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
+        setDailyQuizQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
+      ).catch(() => {});
+  }, []);
+
+  // Fetch onboarding questions
+  useEffect(() => {
+    fetch('/api/quiz/onboarding')
+      .then(r => r.json())
+      .then((data: { title: string; options: string[]; correctAnswer: number }[]) =>
+        setOnboardingQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer })))
+      ).catch(() => {});
   }, []);
 
   const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
@@ -175,10 +203,10 @@ export default function App() {
 
 
   const handleOnboardingAnswer = (idx: number) => {
-    if (idx === ONBOARDING_QUESTIONS[onboardingQIndex].correct) {
+    if (idx === onboardingQuestions[onboardingQIndex]?.correct) {
       setOnboardingScore(s => s + 1);
     }
-    if (onboardingQIndex + 1 < ONBOARDING_QUESTIONS.length) {
+    if (onboardingQIndex + 1 < onboardingQuestions.length) {
       setOnboardingQIndex(i => i + 1);
     } else {
       setOnboardingFinished(true);
@@ -332,7 +360,7 @@ export default function App() {
             >
               <h2 className="text-3xl font-black mb-2">The Alpha Glossary</h2>
               <p className="text-slate-500 mb-8">Master the vocabulary of the new generation.</p>
-              <Glossary />
+              <Glossary lessonIdToPosition={lessonIdToPosition} />
             </motion.div>
           )}
 
@@ -403,6 +431,7 @@ export default function App() {
         show={showDailyQuiz}
         onClose={() => setShowDailyQuiz(false)}
         onComplete={handleDailyQuizComplete}
+        questions={dailyQuizQuestions}
       />
     </div>
   );
@@ -430,6 +459,7 @@ export default function App() {
             qIndex={onboardingQIndex}
             score={onboardingScore}
             finished={onboardingFinished}
+            questions={onboardingQuestions}
             onAnswer={handleOnboardingAnswer}
             onComplete={completeOnboarding}
             onSkip={handleSkipOnboarding}

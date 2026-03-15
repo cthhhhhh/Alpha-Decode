@@ -1,12 +1,18 @@
 package com.csd.cs203t1;
 
+import com.csd.cs203t1.lesson.Lesson;
 import com.csd.cs203t1.lesson.LessonDTO;
 import com.csd.cs203t1.lesson.LessonRepository;
 import com.csd.cs203t1.lesson.LessonService;
 import com.csd.cs203t1.question.*;
+import com.csd.cs203t1.quiz.DailyQuiz;
+import com.csd.cs203t1.quiz.OnboardingQuiz;
+import com.csd.cs203t1.quiz.QuizRepository;
+import com.csd.cs203t1.term.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
@@ -14,21 +20,31 @@ public class DataSeeder implements CommandLineRunner {
 
     private final LessonService lessonService;
     private final LessonRepository lessonRepository;
+    private final TermRepository termRepository;
+    private final QuizRepository quizRepository;
 
-    public DataSeeder(LessonService lessonService, LessonRepository lessonRepository) {
+    public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
+                      TermRepository termRepository, QuizRepository quizRepository) {
         this.lessonService = lessonService;
         this.lessonRepository = lessonRepository;
+        this.termRepository = termRepository;
+        this.quizRepository = quizRepository;
     }
 
     @Override
     public void run(String... args) {
-        // Only seed if we don't have a full set of 7 lessons yet
-        if (lessonRepository.count() >= 7) return;
+        seedLessons();
+        seedTerms();
+        seedDailyQuiz();
+        seedOnboardingQuiz();
+    }
 
-        // Clear any partial/incomplete lessons and start fresh
+    // ─── Lessons ────────────────────────────────────────────────────────────────
+
+    private void seedLessons() {
+        if (lessonRepository.count() >= 7) return;
         lessonRepository.deleteAll();
 
-        // Lesson 1: Rizz Basics
         lessonService.addLesson(lesson("Rizz Basics", "green", "Charisma, attraction, and smooth talk.", "✨"), List.of(
             intro("New Word: Rizz", "Rizz is short for charisma. It is your ability to attract a partner through your personality and charm.", "Example: \"He has unspoken rizz.\""),
             select("What does \"Rizz\" mean?", null, List.of("Being rich", "Charisma", "Running fast", "Sleeping"), 1, "Rizz is short for cha-rizz-ma!"),
@@ -38,7 +54,6 @@ public class DataSeeder implements CommandLineRunner {
             translate("Translate this sentence", "She got major charisma", List.of("She", "got", "major", "rizz", "Ohio", "gyatt"), "She got major rizz", "Major charisma translates to major rizz.")
         ));
 
-        // Lesson 2: Fanum Tax
         lessonService.addLesson(lesson("Fanum Tax", "orange", "The art of taking a bite from someone else's food.", "🍕"), List.of(
             intro("New Word: Fanum Tax", "Popularized by streamer Fanum, this refers to the \"tax\" you take from a friend's food.", "Example: \"I'm taking my Fanum Tax from that pizza.\""),
             select("When do you pay the Fanum Tax?", null, List.of("When you buy a car", "When you eat with friends", "When you go to Ohio", "When you sleep"), 1, "It refers to stealing a bite of food!"),
@@ -48,7 +63,6 @@ public class DataSeeder implements CommandLineRunner {
             translate("Translate this sentence", "Tax my fries", List.of("Fanum", "Tax", "my", "fries", "rizz", "sigma"), "Fanum Tax my fries", "Applying the slang directly to the sentence.")
         ));
 
-        // Lesson 3: Ohio Lore
         lessonService.addLesson(lesson("Ohio Lore", "purple", "Where everything weird happens.", "🌀"), List.of(
             intro("New Word: Ohio", "Ohio is used to describe anything weird or abnormal. It comes from memes suggesting that strange things only happen in Ohio.", "Example: \"That dog looks like it's from Ohio.\""),
             select("Ohio describes something that is...", null, List.of("Cool and trendy", "Weird or bizarre", "Expensive", "Delicious"), 1, "Ohio memes portray the state as a place where bizarre, surreal things happen."),
@@ -58,7 +72,6 @@ public class DataSeeder implements CommandLineRunner {
             translate("Translate this sentence", "This food is weird", List.of("This", "food", "is", "Ohio", "rizz", "skibidi"), "This food is Ohio", "Replace \"weird\" with \"Ohio\" for full slang usage.")
         ));
 
-        // Lesson 4: Skibidi 101
         lessonService.addLesson(lesson("Skibidi 101", "blue", "The chaotic viral word from the Skibidi Toilet universe.", "🚽"), List.of(
             intro("New Word: Skibidi", "Originating from a viral YouTube series about toilets with heads, \"Skibidi\" is often used as a general term for something bad or chaotic.", "Example: \"That's so skibidi.\""),
             select("\"Skibidi\" is generally used to describe something...", null, List.of("Awesome", "Delicious", "Weird or bad", "Fast"), 2, "Skibidi is generally used negatively to call something strange, bad, or cringe."),
@@ -68,7 +81,6 @@ public class DataSeeder implements CommandLineRunner {
             translate("Translate this sentence", "Stop being weird", List.of("Stop", "being", "skibidi", "Ohio", "mewing", "rizz"), "Stop being skibidi", "Skibidi is the adjective for weird in this context.")
         ));
 
-        // Lesson 5: Mewing Pro
         lessonService.addLesson(lesson("Mewing Pro", "teal", "The silent jaw exercise for the sigma grindset.", "🦷"), List.of(
             intro("New Word: Mewing", "Mewing is a tongue posture exercise meant to improve jawline definition. If someone is \"mewing\", they can't talk because their tongue is pressed to the roof of their mouth.", "Example: \"I can't answer, I'm mewing.\""),
             select("Mewing is done to improve your...", null, List.of("Abs", "Jawline", "Hair", "Eyesight"), 1, "Mewing is a tongue posture technique promoted to define the jawline."),
@@ -78,7 +90,6 @@ public class DataSeeder implements CommandLineRunner {
             translate("Translate this sentence", "Silence is the grind", List.of("Silence", "is", "mewing", "sigma", "rizz", "Ohio"), "Silence is mewing", "Mewing requires silence to maintain focus.")
         ));
 
-        // Lesson 6: Sigma Mindset
         lessonService.addLesson(lesson("Sigma Mindset", "gray", "The lone wolf who needs no one.", "🐺"), List.of(
             intro("New Word: Sigma", "A \"Sigma\" is a lone wolf who is successful and independent. While sometimes used seriously, it's often used ironically to describe someone acting cool.", "Example: \"He's a true sigma.\""),
             select("A Sigma is best described as...", null, List.of("A popular leader", "A lone wolf", "A follower", "A lazy person"), 1, "A Sigma succeeds independently, outside of social hierarchies."),
@@ -88,7 +99,6 @@ public class DataSeeder implements CommandLineRunner {
             translate("Translate this sentence", "Mindset of a lone wolf", List.of("Sigma", "mindset", "only", "rizz", "skibidi", "Ohio"), "Sigma mindset only", "Expressing the lone wolf approach.")
         ));
 
-        // Lesson 7: Delulu Land
         lessonService.addLesson(lesson("Delulu Land", "pink", "Delusional positivity is the solution.", "💭"), List.of(
             intro("New Word: Delulu", "Short for delusional. Being \"delulu\" means having unrealistic expectations or beliefs, especially about celebrities or crushes.", "Example: \"Stay delulu, it's the only way.\""),
             select("\"Delulu\" is short for...", null, List.of("Dedicated", "Delusional", "Deliberate", "Delighted"), 1, "'Delulu' is short for delusional — used when someone has unrealistic expectations."),
@@ -99,44 +109,140 @@ public class DataSeeder implements CommandLineRunner {
         ));
     }
 
-    // --- helpers ---
+    // ─── Terms ──────────────────────────────────────────────────────────────────
+
+    private void seedTerms() {
+        if (termRepository.count() >= 7) return;
+        termRepository.deleteAll();
+
+        List<Lesson> all = lessonRepository.findAll();
+        Lesson rizz    = lessonByTitle(all, "Rizz Basics");
+        Lesson fanum   = lessonByTitle(all, "Fanum Tax");
+        Lesson ohio    = lessonByTitle(all, "Ohio Lore");
+        Lesson skibidi = lessonByTitle(all, "Skibidi 101");
+        Lesson mewing  = lessonByTitle(all, "Mewing Pro");
+        Lesson sigma   = lessonByTitle(all, "Sigma Mindset");
+        Lesson delulu  = lessonByTitle(all, "Delulu Land");
+
+        termRepository.saveAll(List.of(
+            term("Rizz",      "Short for charisma. Ability to attract a romantic partner.",                              "He has so much rizz, he didn't even have to say anything.", Difficulty.EASY,   Category.NOUN,      rizz),
+            term("Skibidi",   "Often used to describe something bad/evil, from the Skibidi Toilet series.",              "That's so skibidi of you.",                                  Difficulty.MEDIUM, Category.ADJECTIVE, skibidi),
+            term("Gyatt",     "An exclamation used when seeing someone with a large posterior.",                          "Gyatt! Look at that!",                                       Difficulty.EASY,   Category.REACTION,  null),
+            term("Fanum Tax", "Stealing a portion of someone else's food, popularized by streamer Fanum.",               "You gotta pay the Fanum Tax on those fries.",                Difficulty.MEDIUM, Category.NOUN,      fanum),
+            term("Sigma",     "A lone wolf who is successful and independent. Often used ironically.",                   "He's such a sigma male.",                                    Difficulty.EASY,   Category.NOUN,      sigma),
+            term("Ohio",      "Used to describe something weird, cringey, or abnormal.",                                 "Only in Ohio would that happen.",                            Difficulty.MEDIUM, Category.ADJECTIVE, ohio),
+            term("Mewing",    "A tongue exercise meant to define the jawline. Associated with sigma culture.",           "I can't talk right now, I'm mewing.",                        Difficulty.HARD,   Category.NOUN,      mewing),
+            term("Delulu",    "Short for delusional. Often used in the context of fan culture or relationships.",        "She's so delulu if she thinks they're dating.",              Difficulty.EASY,   Category.ADJECTIVE, delulu)
+        ));
+    }
+
+    // ─── Daily Quiz ─────────────────────────────────────────────────────────────
+
+    private void seedDailyQuiz() {
+        boolean exists = quizRepository.findAll().stream().anyMatch(q -> q instanceof DailyQuiz);
+        if (exists) return;
+
+        DailyQuiz dq = new DailyQuiz();
+        dq.setDate(LocalDate.now());
+
+        SelectQuestion q1 = SelectQuestion.builder()
+            .title("Which of these correctly uses \"mewing\" in a sentence?")
+            .options(List.of("I mewed the exam", "He stays quiet because he's mewing", "She mewed to the party", "They mewed all the fries"))
+            .correctAnswer(1)
+            .explanation("Mewing requires silence — pressing the tongue to the roof of the mouth. \"He stays quiet because he's mewing\" is the correct usage.")
+            .quiz(dq).build();
+
+        SelectQuestion q2 = SelectQuestion.builder()
+            .title("\"The delulu is the solulu\" means...")
+            .options(List.of("Being realistic always wins", "Delusional positivity is somehow the answer", "You should face the truth", "Delulu people never succeed"))
+            .correctAnswer(1)
+            .explanation("This ironic phrase means sometimes delusional confidence is what gets you through — it's used humorously in Gen Z culture.")
+            .quiz(dq).build();
+
+        SelectQuestion q3 = SelectQuestion.builder()
+            .title("A true Sigma would most likely...")
+            .options(List.of("Lead a group project loudly", "Follow the most popular person", "Work alone without seeking approval", "Post on social media every day"))
+            .correctAnswer(2)
+            .explanation("A Sigma is a lone wolf who operates outside social hierarchies — self-sufficient, silent, and independent.")
+            .quiz(dq).build();
+
+        dq.setQuestions(List.of(q1, q2, q3));
+        quizRepository.save(dq);
+    }
+
+    // ─── Onboarding Quiz ────────────────────────────────────────────────────────
+
+    private void seedOnboardingQuiz() {
+        boolean exists = quizRepository.findAll().stream().anyMatch(q -> q instanceof OnboardingQuiz);
+        if (exists) return;
+
+        OnboardingQuiz oq = new OnboardingQuiz();
+
+        SelectQuestion q1 = SelectQuestion.builder()
+            .title("What is 'Fanum Tax'?")
+            .options(List.of("A government fee", "Stealing food", "Paying for fans", "A dance move"))
+            .correctAnswer(1).explanation("Fanum Tax means stealing a bite from someone else's food.").quiz(oq).build();
+
+        SelectQuestion q2 = SelectQuestion.builder()
+            .title("What is 'Rizz' short for?")
+            .options(List.of("Risk", "Charisma", "Rhythm", "Real"))
+            .correctAnswer(1).explanation("Rizz is short for cha-rizz-ma!").quiz(oq).build();
+
+        SelectQuestion q3 = SelectQuestion.builder()
+            .title("What does 'Skibidi' usually precede?")
+            .options(List.of("Toilet", "Bop", "Dop", "Yes"))
+            .correctAnswer(0).explanation("Skibidi Toilet is the viral YouTube series.").quiz(oq).build();
+
+        SelectQuestion q4 = SelectQuestion.builder()
+            .title("Mewing is done to improve...")
+            .options(List.of("Jawline", "Abs", "Hair", "Eyesight"))
+            .correctAnswer(0).explanation("Mewing is a tongue posture exercise to define the jawline.").quiz(oq).build();
+
+        SelectQuestion q5 = SelectQuestion.builder()
+            .title("What is a 'Sigma'?")
+            .options(List.of("A follower", "A lone wolf", "A loud person", "A lazy person"))
+            .correctAnswer(1).explanation("A Sigma is an independent lone wolf outside the social hierarchy.").quiz(oq).build();
+
+        oq.setQuestions(List.of(q1, q2, q3, q4, q5));
+        quizRepository.save(oq);
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    private Lesson lessonByTitle(List<Lesson> lessons, String title) {
+        return lessons.stream().filter(l -> title.equals(l.getTitle())).findFirst().orElse(null);
+    }
+
+    private Term term(String word, String definition, String example, Difficulty difficulty, Category category, Lesson lesson) {
+        return Term.builder().term(word).definition(definition).example(example)
+                .difficulty(difficulty).category(category).lesson(lesson).build();
+    }
 
     private LessonDTO lesson(String title, String colour, String story, String emoji) {
         LessonDTO dto = new LessonDTO();
-        dto.setTitle(title);
-        dto.setColour(colour);
-        dto.setStory(story);
-        dto.setEmoji(emoji);
+        dto.setTitle(title); dto.setColour(colour); dto.setStory(story); dto.setEmoji(emoji);
         return dto;
     }
 
     private IntroQuestionDTO intro(String title, String content, String explanation) {
         IntroQuestionDTO dto = new IntroQuestionDTO();
-        dto.setTitle(title);
-        dto.setContent(content);
-        dto.setExplanation(explanation);
+        dto.setTitle(title); dto.setContent(content); dto.setExplanation(explanation);
         dto.setQuestion_type("INTRO");
         return dto;
     }
 
     private SelectQuestionDTO select(String title, String content, List<String> options, int correctAnswer, String explanation) {
         SelectQuestionDTO dto = new SelectQuestionDTO();
-        dto.setTitle(title);
-        dto.setContent(content);
-        dto.setOptions(options);
-        dto.setCorrectAnswer(correctAnswer);
-        dto.setExplanation(explanation);
+        dto.setTitle(title); dto.setContent(content); dto.setOptions(options);
+        dto.setCorrectAnswer(correctAnswer); dto.setExplanation(explanation);
         dto.setQuestion_type("SELECT");
         return dto;
     }
 
     private TranslateQuestionDTO translate(String title, String content, List<String> wordbank, String target, String explanation) {
         TranslateQuestionDTO dto = new TranslateQuestionDTO();
-        dto.setTitle(title);
-        dto.setContent(content);
-        dto.setWordbank(wordbank);
-        dto.setTarget(target);
-        dto.setExplanation(explanation);
+        dto.setTitle(title); dto.setContent(content); dto.setWordbank(wordbank);
+        dto.setTarget(target); dto.setExplanation(explanation);
         dto.setQuestion_type("TRANSLATE");
         return dto;
     }

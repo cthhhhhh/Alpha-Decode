@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Rocket, Sparkles, Brain, ArrowRight, User } from 'lucide-react';
-import { ONBOARDING_QUESTIONS } from '../data';
 
 interface Props {
     show: boolean;
     qIndex: number;
     score: number;
     finished: boolean;
+    questions: { q: string; options: string[]; correct: number }[];
     onAnswer: (idx: number) => void;
     onComplete: () => void;
     onSkip: () => void;
@@ -30,7 +30,7 @@ const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { co
     />
 );
 
-const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, onSkip, onLogin }: Props) => {
+const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onSkip, onLogin }: Props) => {
     return (
         <AnimatePresence>
             {show && (
@@ -92,7 +92,7 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                     >
                         {/* Progress indicator */}
                         <div className="flex justify-center gap-3 mb-10">
-                            {ONBOARDING_QUESTIONS.map((_, i) => (
+                            {questions.map((_, i) => (
                                 <div
                                     key={i}
                                     className={`h-2.5 rounded-full transition-all duration-500 ${i === qIndex ? 'w-10 bg-brand-primary shadow-[0_0_15px_rgba(88,204,2,0.4)]' :
@@ -120,11 +120,11 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                                         <h2 className="text-4xl sm:text-5xl font-black text-slate-800 tracking-tight leading-tight uppercase">
                                             BRAIN <span className="text-brand-primary italic">ROT</span> CHECK
                                         </h2>
-                                        <p className="text-slate-500 text-xl font-bold leading-relaxed">{ONBOARDING_QUESTIONS[qIndex].q}</p>
+                                        <p className="text-slate-500 text-xl font-bold leading-relaxed">{questions[qIndex]?.q}</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 text-left">
-                                        {ONBOARDING_QUESTIONS[qIndex].options.map((opt, i) => (
+                                        {questions[qIndex]?.options.map((opt, i) => (
                                             <motion.button
                                                 key={i}
                                                 whileHover={{ scale: 1.02, backgroundColor: 'white' }}
@@ -169,7 +169,7 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                                         <p className="text-brand-primary font-black uppercase tracking-widest text-xs mb-3">Your Initial Rank</p>
                                         <div className="flex flex-col items-center">
                                             <span className="text-7xl font-black text-brand-primary tracking-tighter">LVL {score + 1}</span>
-                                            <p className="text-slate-400 font-bold mt-2">{score}/{ONBOARDING_QUESTIONS.length} Questions Correct</p>
+                                            <p className="text-slate-400 font-bold mt-2">{score}/{questions.length} Questions Correct</p>
                                         </div>
                                     </div>
 

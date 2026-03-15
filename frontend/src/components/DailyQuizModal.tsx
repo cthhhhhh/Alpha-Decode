@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
 import { X, CheckCircle2, XCircle, Trophy, Flame, Star } from 'lucide-react';
-import { DAILY_QUIZ_QUESTIONS } from '../data';
 
 interface Props {
     show: boolean;
     onClose: () => void;
     onComplete: (correct: number, total: number) => void;
+    questions: { q: string; options: string[]; correct: number; explanation: string }[];
 }
 
 // ── Fireworks canvas ───────────────────────────────────────────────────────
@@ -205,7 +205,7 @@ const ResultScreen = ({ correctCount, total, answerLog, isPerfect, onClose }:
 );
 
 // ── DailyQuizModal ─────────────────────────────────────────────────────────
-const DailyQuizModal = ({ show, onClose, onComplete }: Props) => {
+const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
     const [qIndex, setQIndex] = useState(0);
     const [selected, setSelected] = useState<number | null>(null);
     const [isChecked, setIsChecked] = useState(false);
@@ -213,8 +213,8 @@ const DailyQuizModal = ({ show, onClose, onComplete }: Props) => {
     const [answerLog, setAnswerLog] = useState<boolean[]>([]);
     const [finished, setFinished] = useState(false);
 
-    const total = DAILY_QUIZ_QUESTIONS.length;
-    const question = DAILY_QUIZ_QUESTIONS[qIndex];
+    const total = questions.length;
+    const question = questions[qIndex];
     const isCorrect = selected !== null && selected === question.correct;
     const isPerfect = correctCount === total;
     const isShowingConfetti = finished && isPerfect;
