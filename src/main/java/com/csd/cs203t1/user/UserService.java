@@ -4,4 +4,5 @@ public interface UserService {
     UserDTO.AuthResponse register(UserDTO.RegisterRequest request);
     UserDTO.AuthResponse login(UserDTO.LoginRequest request);
     User getCurrentUser();
+    UserDTO.AuthResponse updateXp(int xpToAdd);
 }

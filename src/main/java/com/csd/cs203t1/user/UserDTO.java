@@ -35,4 +35,11 @@ public class UserDTO {
         private Integer level;
         private Integer xp;
     }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class XpUpdateRequest {
+        private int xpToAdd;
+    }
 }

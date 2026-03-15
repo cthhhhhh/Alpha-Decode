@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Service
@@ -34,18 +35,18 @@ public class UserServiceImpl implements UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER); // Default to regular user
+        user.setRole(Role.USER);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
         if (request.getXp() != null) user.setXp(request.getXp());
 
         User savedUser = userRepository.save(user);
-        
+
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(savedUser.getUsername())
                 .password(savedUser.getPassword())
                 .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
                 .build();
-        
+
         String token = jwtUtil.generateToken(userDetails);
         return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp());
     }
@@ -71,8 +72,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getCurrentUser() {
-        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    @Override
+    public UserDTO.AuthResponse updateXp(int xpToAdd) {
+        User user = getCurrentUser();
+        user.setXp(user.getXp() + xpToAdd);
+        User savedUser = userRepository.save(user);
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(savedUser.getUsername())
+                .password(savedUser.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
+                .build();
+
+        String token = jwtUtil.generateToken(userDetails);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp());
     }
 }

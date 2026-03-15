@@ -28,8 +28,8 @@ export default function App() {
   const isLeaderboard = location.pathname.startsWith('/leaderboard');
   const isGlossary = location.pathname.startsWith('/glossary');
   const isLearn = !isLeaderboard && !isGlossary;
-  const [xp, setXp] = useState(50);
-  const [level, setLevel] = useState(5);
+  const [xp, setXp] = useState(() => parseInt(localStorage.getItem('xp') || '0'));
+  const [level, setLevel] = useState(() => parseInt(localStorage.getItem('level') || '1'));
   const [streak, setStreak] = useState(0);
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(false);
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
@@ -47,8 +47,14 @@ export default function App() {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
-    if (level !== undefined) setLevel(level);
-    if (xp !== undefined) setXp(xp);
+    if (level !== undefined) {
+      setLevel(level);
+      localStorage.setItem('level', level.toString());
+    }
+    if (xp !== undefined) {
+      setXp(xp);
+      localStorage.setItem('xp', xp.toString());
+    }
     navigate('/home');
   };
 
@@ -56,9 +62,13 @@ export default function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('username');
+    localStorage.removeItem('xp');
+    localStorage.removeItem('level');
     setAuthToken(null);
     setAuthRole(null);
     setAuthUsername(null);
+    setXp(0);
+    setLevel(1);
   };
 
   // --- Handlers ---
@@ -105,8 +115,23 @@ export default function App() {
     });
 
     // Add XP side-effect safely outside the updater ONLY if not previously completed
-    if (currentLesson && !wasAlreadyCompleted) {
-      setXp(prev => prev + correct);
+    if (currentLesson && !wasAlreadyCompleted && correct > 0) {
+      const newXp = xp + correct;
+      setXp(newXp);
+      localStorage.setItem('xp', newXp.toString());
+
+      // Persist to backend if logged in
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/xp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ xpToAdd: correct }),
+        }).catch(err => console.error('Failed to save XP:', err));
+      }
     }
 
     setActiveLessonId(null);
