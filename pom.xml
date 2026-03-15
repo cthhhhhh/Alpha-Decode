@@ -108,6 +108,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- dotenv: auto-loads .env file so mvn spring-boot:run works without setting env vars manually -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- health check -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
