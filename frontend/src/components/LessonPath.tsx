@@ -127,7 +127,7 @@ const LessonPath = ({ lessons, onStart }: Props) => {
 
                             {/* Level number bubble */}
                             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-slate-900 font-black text-xs border-2 border-slate-200 shadow-sm">
-                                {lesson.id}
+                                {i + 1}
                             </div>
                         </motion.button>
 
