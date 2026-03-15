@@ -118,6 +118,7 @@ export default function App() {
     setAuthUsername(null);
     setXp(0);
     setLevel(1);
+    navigate('/login');
   };
 
   // --- Handlers ---
@@ -221,13 +222,6 @@ export default function App() {
     localStorage.setItem('initialLevel', newLevel.toString());
     localStorage.setItem('initialXp', '0'); // Fresh level, 0 xp
     navigate('/register');
-  };
-
-  // Skip onboarding (go straight to app)
-  const handleSkipOnboarding = () => {
-    setShowOnboarding(false);
-    localStorage.setItem('onboardingFinished', 'true');
-    navigate('/home');
   };
 
   const handleBackToOnboarding = () => {
@@ -440,7 +434,7 @@ export default function App() {
       <Route path="/login" element={
         <LoginPage
           onLoginSuccess={handleAuthSuccess}
-          onGoToRegister={() => navigate('/register')}
+          onGoToRegister={() => navigate('/')}
           onBack={handleBackToOnboarding}
         />
       } />
@@ -461,22 +455,25 @@ export default function App() {
             questions={onboardingQuestions}
             onAnswer={handleOnboardingAnswer}
             onComplete={completeOnboarding}
-            onSkip={handleSkipOnboarding}
             onLogin={() => navigate('/login')}
           />
         </div>
       } />
       <Route path="/home/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
         (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       <Route path="/leaderboard/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
         (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       <Route path="/glossary/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
         (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
-      {/* Fallback to home if they visit a random bad URL */}
+      {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
         showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
       } />
     </Routes>

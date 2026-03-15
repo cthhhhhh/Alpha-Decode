@@ -9,7 +9,6 @@ interface Props {
     questions: { q: string; options: string[]; correct: number }[];
     onAnswer: (idx: number) => void;
     onComplete: () => void;
-    onSkip: () => void;
     onLogin: () => void;
 }
 
@@ -30,7 +29,7 @@ const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { co
     />
 );
 
-const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onSkip, onLogin }: Props) => {
+const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onLogin }: Props) => {
     return (
         <AnimatePresence>
             {show && (
@@ -41,16 +40,7 @@ const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, o
                     className="fixed inset-0 z-[200] bg-slate-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden"
                 >
                     {/* Header Buttons */}
-                    <div className="absolute top-8 left-8 right-8 z-[210] flex justify-between items-center pointer-events-none">
-                        <motion.button
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            onClick={onSkip}
-                            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-500 hover:bg-white hover:text-slate-800 transition-all shadow-sm group"
-                        >
-                            <span>Skip</span>
-                        </motion.button>
-
+                    <div className="absolute top-8 left-8 right-8 z-[210] flex justify-end items-center pointer-events-none">
                         <motion.button
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
