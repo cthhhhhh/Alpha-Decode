@@ -1,12 +1,5 @@
-export interface Term {
-    id: string;
-    term: string;
-    definition: string;
-    example: string;
-    difficulty: 'easy' | 'medium' | 'hard';
-    category: string;
-    lessonId?: string;
-}
+// Lesson is the only frontend type still needed — all others (Term, LessonStep, LessonContent)
+// are now replaced by inline interfaces that match backend API responses.
 
 export interface Lesson {
     id: string;
@@ -15,21 +8,3 @@ export interface Lesson {
     completed: boolean;
     x: number;
 }
-
-export interface LessonStep {
-    type: 'intro' | 'select' | 'translate';
-    title: string;
-    content?: string;
-    explanation?: string;
-    options?: string[];
-    correctAnswer?: number;
-    wordBank?: string[];
-    targetSentence?: string;
-}
-
-export interface LessonContent {
-    id: string;
-    name: string;
-    steps: LessonStep[];
-}
-

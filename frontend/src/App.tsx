@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
 import type { Lesson } from './types';
 
-
 import Header from './components/Header';
 import DailyWord from './components/DailyWord';
 import LessonPath from './components/LessonPath';
