@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -42,6 +42,10 @@ import lombok.experimental.SuperBuilder;
 @Table(name="questions")
 public abstract class Question {
 	private @Id @GeneratedValue (strategy = GenerationType.IDENTITY) Long id;
+
+	// Exposes the Hibernate discriminator column as a JSON property
+	@Column(name = "question_type", insertable = false, updatable = false)
+	private String question_type;
 
 	@NonNull
 	@Column(nullable=false)

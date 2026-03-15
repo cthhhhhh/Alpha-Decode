@@ -22,9 +22,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (lessonRepository.count() >= 7) return; // already fully seeded
-
-        // Clear any partial/incomplete lessons and start fresh
+        // Always clean and reseed to ensure correct data
         lessonRepository.deleteAll();
 
         // Lesson 1: Rizz Basics
