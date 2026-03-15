@@ -1,23 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { TERMS, LESSONS } from '../data';
+import { TERMS } from '../data';
 
-const LESSON_ORDER: Record<string, number> = LESSONS.reduce((acc, lesson, index) => {
-    acc[lesson.id] = index;
-    return acc;
-}, {} as Record<string, number>);
-
-const LESSON_TITLES: Record<string, string> = LESSONS.reduce((acc, lesson) => {
-    acc[lesson.id] = lesson.title.toLowerCase();
-    return acc;
-}, {} as Record<string, string>);
-
-// 1-based lesson number for display (e.g. lessonId '1' → Lesson 1)
-const LESSON_NUMBER: Record<string, number> = LESSONS.reduce((acc, lesson, index) => {
-    acc[lesson.id] = index + 1;
-    return acc;
-}, {} as Record<string, number>);
+// Lesson order and number are derived from the numeric lessonId (1-based from DB)
+const lessonOrder = (lessonId?: string) => lessonId ? parseInt(lessonId) - 1 : Number.MAX_SAFE_INTEGER;
+const lessonNumber = (lessonId?: string) => lessonId ? parseInt(lessonId) : 0;
 
 const DIFFICULTY_ORDER: Record<string, number> = {
     easy: 1,
@@ -41,8 +29,7 @@ const Glossary = () => {
         const matchesDefinition = t.definition.toLowerCase().includes(queryLower);
         const matchesExample = t.example.toLowerCase().includes(queryLower);
         const matchesCategory = t.category ? t.category.toLowerCase().includes(queryLower) : false;
-        const lessonTitle = t.lessonId ? LESSON_TITLES[t.lessonId] : '';
-        const matchesLessonTitle = lessonTitle ? lessonTitle.includes(queryLower) : false;
+        const matchesLessonTitle = false; // lesson titles skipped (loaded from API)
         const matchesCategoryFilter = categoryFilter ? t.category === categoryFilter : true;
 
         return (matchesTerm || matchesDefinition || matchesExample || matchesCategory || matchesLessonTitle) && matchesCategoryFilter;
@@ -50,14 +37,8 @@ const Glossary = () => {
 
     const sorted = [...filtered].sort((a, b) => {
         if (sortMode === 'lesson') {
-            const aRank =
-                a.lessonId !== undefined && LESSON_ORDER[a.lessonId] !== undefined
-                    ? LESSON_ORDER[a.lessonId]
-                    : Number.MAX_SAFE_INTEGER;
-            const bRank =
-                b.lessonId !== undefined && LESSON_ORDER[b.lessonId] !== undefined
-                    ? LESSON_ORDER[b.lessonId]
-                    : Number.MAX_SAFE_INTEGER;
+            const aRank = lessonOrder(a.lessonId);
+            const bRank = lessonOrder(b.lessonId);
 
             if (aRank !== bRank) {
                 return aRank - bRank;
@@ -213,9 +194,9 @@ const Glossary = () => {
                         <div className="flex justify-between items-start mb-2">
                             <div className="flex flex-col gap-1">
                                 <h3 className="text-xl font-black">{term.term}</h3>
-                                {term.lessonId && LESSON_NUMBER[term.lessonId] !== undefined && (
+                                {term.lessonId && lessonNumber(term.lessonId) > 0 && (
                                     <span className="text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full w-fit uppercase tracking-wide">
-                                        Lesson {LESSON_NUMBER[term.lessonId]}
+                                        Lesson {lessonNumber(term.lessonId)}
                                     </span>
                                 )}
                             </div>
