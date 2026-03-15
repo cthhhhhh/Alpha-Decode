@@ -30,8 +30,11 @@ export default function App() {
   const isLearn = !isLeaderboard && !isGlossary;
   const [xp, setXp] = useState(() => parseInt(localStorage.getItem('xp') || '0'));
   const [level, setLevel] = useState(() => parseInt(localStorage.getItem('level') || '1'));
-  const [streak, setStreak] = useState(0);
-  const [dailyQuizCompleted, setDailyQuizCompleted] = useState(false);
+  const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
+  const [dailyQuizCompleted, setDailyQuizCompleted] = useState(() => {
+    const saved = localStorage.getItem('dailyQuizDate');
+    return saved === new Date().toDateString();
+  });
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => {
     // Show onboarding if they haven't finished it OR if they explicitly visit the root URL
@@ -64,6 +67,8 @@ export default function App() {
     localStorage.removeItem('username');
     localStorage.removeItem('xp');
     localStorage.removeItem('level');
+    localStorage.removeItem('streak');
+    localStorage.removeItem('dailyQuizDate');
     setAuthToken(null);
     setAuthRole(null);
     setAuthUsername(null);
@@ -75,9 +80,23 @@ export default function App() {
 
   const handleDailyQuizComplete = (correct: number, total: number) => {
     if (correct === total) {
-      setXp(prev => prev + 10);
-      setStreak(prev => prev + 1);
+      const newXp = xp + 10;
+      const newStreak = streak + 1;
+      setXp(newXp);
+      setStreak(newStreak);
+      localStorage.setItem('xp', newXp.toString());
+      localStorage.setItem('streak', newStreak.toString());
+      // Persist XP bonus to backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/xp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ xpToAdd: 10 }),
+        }).catch(err => console.error('Failed to save quiz XP:', err));
+      }
     }
+    localStorage.setItem('dailyQuizDate', new Date().toDateString());
     setDailyQuizCompleted(true);
     setShowDailyQuiz(false);
   };
