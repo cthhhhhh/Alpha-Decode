@@ -8,6 +8,7 @@ import com.csd.cs203t1.question.*;
 import com.csd.cs203t1.quiz.DailyQuiz;
 import com.csd.cs203t1.quiz.OnboardingQuiz;
 import com.csd.cs203t1.quiz.QuizRepository;
+import com.csd.cs203t1.quiz.RevisionQuiz;
 import com.csd.cs203t1.term.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,7 @@ public class DataSeeder implements CommandLineRunner {
         seedTerms();
         seedDailyQuiz();
         seedOnboardingQuiz();
+        seedRevisionQuiz();
     }
 
     // ─── Lessons ────────────────────────────────────────────────────────────────
@@ -205,6 +207,54 @@ public class DataSeeder implements CommandLineRunner {
 
         oq.setQuestions(List.of(q1, q2, q3, q4, q5));
         quizRepository.save(oq);
+    }
+
+    // ─── Revision Quiz ──────────────────────────────────────────────────────────
+
+    private void seedRevisionQuiz() {
+        boolean exists = quizRepository.findAll().stream().anyMatch(q -> q instanceof RevisionQuiz);
+        if (exists) return;
+
+        RevisionQuiz rq = new RevisionQuiz();
+        rq.setAfterLessonIndex(6); // after all 7 current lessons (0-based)
+
+        SelectQuestion q1 = SelectQuestion.builder()
+            .title("Which term means having natural charm without trying?")
+            .options(List.of("Sigma", "Rizz", "Mewing", "Delulu"))
+            .correctAnswer(1).explanation("Rizz is short for cha-rizz-ma — natural social charm.").quiz(rq).build();
+
+        SelectQuestion q2 = SelectQuestion.builder()
+            .title("Your friend grabs a handful of your fries without asking. What just happened?")
+            .options(List.of("An Ohio moment", "Fanum Tax", "Sigma move", "Skibidi behaviour"))
+            .correctAnswer(1).explanation("Fanum Tax = taking someone else's food, popularised by streamer Fanum.").quiz(rq).build();
+
+        SelectQuestion q3 = SelectQuestion.builder()
+            .title("She truly believes her celebrity crush is secretly in love with her. She is...")
+            .options(List.of("Sigma", "Ohio", "Delulu", "Mewing"))
+            .correctAnswer(2).explanation("Delulu (delusional) describes someone with wildly unrealistic beliefs, often about relationships.").quiz(rq).build();
+
+        SelectQuestion q4 = SelectQuestion.builder()
+            .title("A video shows a cat riding a skateboard through a thunderstorm. That's very...")
+            .options(List.of("Rizz", "Sigma", "Ohio", "Mewing"))
+            .correctAnswer(2).explanation("Ohio = weird, cringey, or abnormal. Classic Ohio behaviour.").quiz(rq).build();
+
+        SelectQuestion q5 = SelectQuestion.builder()
+            .title("He works in silence, needs no validation, and grinds alone. He has the ____ mindset.")
+            .options(List.of("Fanum", "Skibidi", "Delulu", "Sigma"))
+            .correctAnswer(3).explanation("The Sigma is the lone wolf — self-sufficient, independent, outside social hierarchies.").quiz(rq).build();
+
+        SelectQuestion q6 = SelectQuestion.builder()
+            .title("She can't talk right now — she's focused on her tongue posture. She is...")
+            .options(List.of("Mewing", "Ohio", "Rizz", "Skibidi"))
+            .correctAnswer(0).explanation("Mewing = pressing tongue to roof of mouth to define the jawline. Requires silence.").quiz(rq).build();
+
+        SelectQuestion q7 = SelectQuestion.builder()
+            .title("The viral YouTube series featuring heads emerging from toilets is called ____ Toilet.")
+            .options(List.of("Ohio", "Sigma", "Skibidi", "Rizz"))
+            .correctAnswer(2).explanation("Skibidi Toilet is the viral animated series — skibidi now means something bad or cringe.").quiz(rq).build();
+
+        rq.setQuestions(List.of(q1, q2, q3, q4, q5, q6, q7));
+        quizRepository.save(rq);
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────────

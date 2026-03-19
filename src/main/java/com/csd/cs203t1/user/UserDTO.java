@@ -43,6 +43,7 @@ public class UserDTO {
     @NoArgsConstructor
     public static class XpUpdateRequest {
         private int xpToAdd;
+        private Integer maxUnlockedLessonIndex;
     }
 
     @Data

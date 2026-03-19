@@ -5,6 +5,6 @@ public interface UserService {
     UserDTO.AuthResponse registerAdmin(UserDTO.RegisterRequest request);
     UserDTO.AuthResponse login(UserDTO.LoginRequest request);
     User getCurrentUser();
-    UserDTO.AuthResponse updateXp(int xpToAdd);
+    UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request);
     UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex);
 }

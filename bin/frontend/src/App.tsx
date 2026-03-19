@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -14,7 +14,6 @@ import RevisionQuizModal from './components/RevisionQuizModal';
 import Glossary from './components/Glossary';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
-import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const navigate = useNavigate();
@@ -54,7 +53,7 @@ export default function App() {
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   // { q, options, correct } shaped for modals
   type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
-  type OnbQ = { q: string; options: string[]; correct: number };
+  type OnbQ  = { q: string; options: string[]; correct: number };
   const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
   const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
   // DB lesson id → 1-based position for Glossary
@@ -69,14 +68,11 @@ export default function App() {
         const pos: Record<string, number> = {};
         data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
         setLessonIdToPosition(pos);
-
-        const unlockedIndex = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-
         setLessons(data.map((l, i) => ({
           id: String(l.id),
           title: l.title,
-          locked: i > unlockedIndex,
-          completed: i < unlockedIndex,
+          locked: i !== 0,
+          completed: false,
           x: xOffsets[i % xOffsets.length],
         })));
       })
@@ -89,7 +85,7 @@ export default function App() {
       .then(r => r.json())
       .then((data: { title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
         setDailyQuizQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
-      ).catch(() => { });
+      ).catch(() => {});
   }, []);
 
   // Fetch revision quizzes
@@ -111,10 +107,10 @@ export default function App() {
       .then(r => r.json())
       .then((data: { title: string; options: string[]; correctAnswer: number }[]) =>
         setOnboardingQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer })))
-      ).catch(() => { });
+      ).catch(() => {});
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number) => {
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
@@ -126,18 +122,6 @@ export default function App() {
       setXp(xp);
       localStorage.setItem('xp', xp.toString());
     }
-    if (maxUnlockedLessonIndex !== undefined) {
-      localStorage.setItem('maxUnlockedLessonIndex', maxUnlockedLessonIndex.toString());
-      // Re-trigger useEffect lesson fetching based on updated localStorage
-      const idx = maxUnlockedLessonIndex;
-      setLessons(prev => prev.map((l, i) => ({
-        ...l,
-        locked: i > idx,
-        completed: i < idx
-      })));
-    }
-    setShowOnboarding(false);
-    localStorage.setItem('onboardingFinished', 'true');
     navigate('/home');
   };
 
@@ -150,7 +134,6 @@ export default function App() {
     localStorage.removeItem('streak');
     localStorage.removeItem('dailyQuizDate');
     localStorage.removeItem('completedRevisionQuizIds');
-    localStorage.removeItem('maxUnlockedLessonIndex');
     setAuthToken(null);
     setAuthRole(null);
     setAuthUsername(null);
@@ -223,57 +206,25 @@ export default function App() {
     const currentLesson = lessons.find(l => l.id === lessonId);
     const wasAlreadyCompleted = currentLesson?.completed;
 
-    // Compute new maxUnlockedLessonIndex before setLessons
-    const idx = lessons.findIndex(l => l.id === lessonId);
-    const newMaxUnlocked = (passed && idx !== -1 && idx + 1 < lessons.length) ? idx + 1 : undefined;
-    if (newMaxUnlocked !== undefined) {
-      const currentMax = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-      if (newMaxUnlocked > currentMax) {
-        localStorage.setItem('maxUnlockedLessonIndex', newMaxUnlocked.toString());
-      }
-    }
-
     setLessons(prev => {
       const updated = [...prev];
-      const lessonIdx = updated.findIndex(l => l.id === lessonId);
-      if (lessonIdx !== -1) {
+      const idx = updated.findIndex(l => l.id === lessonId);
+      if (idx !== -1) {
         // Mark completed only if perfect
         if (correct === total && total > 0) {
-          updated[lessonIdx] = { ...updated[lessonIdx], completed: true };
+          updated[idx] = { ...updated[idx], completed: true };
         }
 
         // Unlock next lesson ONLY if 100% correct
-        if (passed && lessonIdx + 1 < updated.length) {
-          updated[lessonIdx + 1] = { ...updated[lessonIdx + 1], locked: false };
+        if (passed && idx + 1 < updated.length) {
+          updated[idx + 1] = { ...updated[idx + 1], locked: false };
         }
       }
       return updated;
     });
 
-    // ALWAYS ensure the local storage unlocks the next lesson if they get 100/100!
-    if (passed && total > 0) {
-      const currentIdx = lessons.findIndex(l => l.id === lessonId);
-      const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-      if (currentIdx !== -1 && currentIdx + 1 > savedUnlock) {
-        localStorage.setItem('maxUnlockedLessonIndex', String(currentIdx + 1));
-
-        // Persist to backend if logged in
-        const token = localStorage.getItem('token');
-        if (token) {
-          fetch('/api/auth/lesson-progress', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ maxUnlockedLessonIndex: currentIdx + 1 }),
-          }).catch(err => console.error('Failed to save progress:', err));
-        }
-      }
-    }
-
     // Add XP side-effect safely outside the updater ONLY if not previously completed
-    if (currentLesson && !wasAlreadyCompleted && passed && total > 0) {
+    if (currentLesson && !wasAlreadyCompleted && correct > 0) {
       const newXp = xp + correct;
       setXp(newXp);
       localStorage.setItem('xp', newXp.toString());
@@ -281,14 +232,13 @@ export default function App() {
       // Persist to backend if logged in
       const token = localStorage.getItem('token');
       if (token) {
-        const currentMax = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
         fetch('/api/auth/xp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ xpToAdd: correct, maxUnlockedLessonIndex: newMaxUnlocked !== undefined ? Math.max(newMaxUnlocked, currentMax) : undefined }),
+          body: JSON.stringify({ xpToAdd: correct }),
         }).catch(err => console.error('Failed to save XP:', err));
       }
     }
@@ -505,17 +455,6 @@ export default function App() {
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
           </motion.button>
-          {authRole === 'ADMIN' && (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => navigate('/admin')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${location.pathname.startsWith('/admin') ? 'text-purple-500 bg-purple-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
-            >
-              <Shield size={24} />
-              <span className="text-[10px] font-black uppercase">Admin</span>
-            </motion.button>
-          )}
         </div>
       </nav>
 
@@ -540,18 +479,13 @@ export default function App() {
       />
 
       {/* Revision Quiz Modal */}
-      <AnimatePresence>
-        {activeRevisionQuiz && (
-          <RevisionQuizModal
-            key={activeRevisionQuiz.id}
-            quiz={activeRevisionQuiz}
-            onClose={() => setActiveRevisionQuiz(null)}
-            onComplete={(correct, total) =>
-              handleRevisionQuizComplete(activeRevisionQuiz.id, correct, total)
-            }
-          />
-        )}
-      </AnimatePresence>
+      <RevisionQuizModal
+        quiz={activeRevisionQuiz}
+        onClose={() => setActiveRevisionQuiz(null)}
+        onComplete={(correct, total) => {
+          if (activeRevisionQuiz) handleRevisionQuizComplete(activeRevisionQuiz.id, correct, total);
+        }}
+      />
     </div>
   );
 
@@ -587,24 +521,20 @@ export default function App() {
       } />
       <Route path="/home/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       <Route path="/leaderboard/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       <Route path="/glossary/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
-      } />
-      <Route path="/admin/*" element={
-        (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
-          <AdminPanel onBack={() => navigate('/home')} />
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
+        showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
       } />
     </Routes>
   );

@@ -51,7 +51,6 @@ public class UserServiceImpl implements UserService {
         String token = jwtUtil.generateToken(userDetails);
         return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
     }
-
     @Override
     public UserDTO.AuthResponse registerAdmin(UserDTO.RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -108,9 +107,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO.AuthResponse updateXp(int xpToAdd) {
+    public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
         User user = getCurrentUser();
-        user.setXp(user.getXp() + xpToAdd);
+        user.setXp(user.getXp() + request.getXpToAdd());
+        if (request.getMaxUnlockedLessonIndex() != null
+                && request.getMaxUnlockedLessonIndex() > user.getMaxUnlockedLessonIndex()) {
+            user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
+        }
         User savedUser = userRepository.save(user);
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()

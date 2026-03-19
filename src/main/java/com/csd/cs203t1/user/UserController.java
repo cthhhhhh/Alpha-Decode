@@ -56,7 +56,7 @@ public class UserController {
     @PostMapping("/xp")
     public ResponseEntity<?> addXp(@RequestBody UserDTO.XpUpdateRequest request) {
         try {
-            UserDTO.AuthResponse response = userService.updateXp(request.getXpToAdd());
+            UserDTO.AuthResponse response = userService.updateXp(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
