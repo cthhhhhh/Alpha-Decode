@@ -1,6 +1,7 @@
 package com.csd.cs203t1.user;
 
 import java.util.Optional;
+import com.csd.cs203t1.common.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     boolean existsByUsername(String username);
+
+    long countByRole(Role role);
 }

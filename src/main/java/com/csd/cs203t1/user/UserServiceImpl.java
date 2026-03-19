@@ -53,6 +53,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserDTO.AuthResponse registerAdmin(UserDTO.RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username is already taken");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.ADMIN);
+        if (request.getLevel() != null) user.setLevel(request.getLevel());
+        if (request.getXp() != null) user.setXp(request.getXp());
+
+        User savedUser = userRepository.save(user);
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(savedUser.getUsername())
+                .password(savedUser.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
+                .build();
+
+        String token = jwtUtil.generateToken(userDetails);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
+    }
+
+    @Override
     public UserDTO.AuthResponse login(UserDTO.LoginRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));

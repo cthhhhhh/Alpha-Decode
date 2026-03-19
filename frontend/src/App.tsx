@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield } from 'lucide-react';
 import type { Lesson } from './types';
 
 import Header from './components/Header';
@@ -13,6 +13,7 @@ import DailyQuizModal from './components/DailyQuizModal';
 import Glossary from './components/Glossary';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import AdminPanel from './components/AdminPanel';
 
 export default function App() {
   const navigate = useNavigate();
@@ -200,7 +201,7 @@ export default function App() {
       const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
       if (currentIdx !== -1 && currentIdx + 1 > savedUnlock) {
         localStorage.setItem('maxUnlockedLessonIndex', String(currentIdx + 1));
-        
+
         // Persist to backend if logged in
         const token = localStorage.getItem('token');
         if (token) {
@@ -442,6 +443,17 @@ export default function App() {
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
           </motion.button>
+          {authRole === 'ADMIN' && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/admin')}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${location.pathname.startsWith('/admin') ? 'text-purple-500 bg-purple-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              <Shield size={24} />
+              <span className="text-[10px] font-black uppercase">Admin</span>
+            </motion.button>
+          )}
         </div>
       </nav>
 
@@ -508,6 +520,10 @@ export default function App() {
       <Route path="/glossary/*" element={
         !authToken ? <Navigate to="/login" replace /> :
           (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      <Route path="/admin/*" element={
+        (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
+          <AdminPanel onBack={() => navigate('/home')} />
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={
