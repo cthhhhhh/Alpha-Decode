@@ -1,5 +1,6 @@
 package com.csd.cs203t1.security;
 
+import com.csd.cs203t1.admin.SessionTracker;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +19,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final SessionTracker sessionTracker;
 
-    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService, SessionTracker sessionTracker) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.sessionTracker = sessionTracker;
     }
 
     @Override
@@ -38,6 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
             jwt = authHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
+                sessionTracker.recordActivity(username);
             } catch (Exception e) {
                 // Invalid token – continue without authentication
             }

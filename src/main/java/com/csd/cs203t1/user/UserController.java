@@ -23,6 +23,16 @@ public class UserController {
         }
     }
 
+    @PostMapping("/register-admin")
+    public ResponseEntity<?> registerAdmin(@RequestBody UserDTO.RegisterRequest request) {
+        try {
+            UserDTO.AuthResponse response = userService.registerAdmin(request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDTO.LoginRequest request) {
         try {
