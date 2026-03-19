@@ -1,15 +1,15 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Rocket, Sparkles, Brain, ArrowRight, User } from 'lucide-react';
-import { ONBOARDING_QUESTIONS } from '../data';
 
 interface Props {
     show: boolean;
     qIndex: number;
     score: number;
     finished: boolean;
+    questions: { q: string; options: string[]; correct: number }[];
     onAnswer: (idx: number) => void;
     onComplete: () => void;
-    onSkip: () => void;
+    onLogin: () => void;
 }
 
 const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { color: string; size: string; top?: string; left?: string; bottom?: string; right?: string; delay: number }) => (
@@ -29,11 +29,7 @@ const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { co
     />
 );
 
-const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, onSkip }: Props) => {
-    const handleLoginRedirect = () => {
-        window.location.href = '/login';
-    };
-
+const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onLogin }: Props) => {
     return (
         <AnimatePresence>
             {show && (
@@ -44,20 +40,11 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                     className="fixed inset-0 z-[200] bg-slate-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden"
                 >
                     {/* Header Buttons */}
-                    <div className="absolute top-8 left-8 right-8 z-[210] flex justify-between items-center pointer-events-none">
-                        <motion.button
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            onClick={onSkip}
-                            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-500 hover:bg-white hover:text-slate-800 transition-all shadow-sm group"
-                        >
-                            <span>Skip</span>
-                        </motion.button>
-
+                    <div className="absolute top-8 left-8 right-8 z-[210] flex justify-end items-center pointer-events-none">
                         <motion.button
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            onClick={handleLoginRedirect}
+                            onClick={onLogin}
                             className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-600 hover:bg-white hover:text-brand-primary transition-all shadow-sm group"
                         >
                             <User size={18} className="group-hover:scale-110 transition-transform" />
@@ -95,7 +82,7 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                     >
                         {/* Progress indicator */}
                         <div className="flex justify-center gap-3 mb-10">
-                            {ONBOARDING_QUESTIONS.map((_, i) => (
+                            {questions.map((_, i) => (
                                 <div
                                     key={i}
                                     className={`h-2.5 rounded-full transition-all duration-500 ${i === qIndex ? 'w-10 bg-brand-primary shadow-[0_0_15px_rgba(88,204,2,0.4)]' :
@@ -123,11 +110,11 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                                         <h2 className="text-4xl sm:text-5xl font-black text-slate-800 tracking-tight leading-tight uppercase">
                                             BRAIN <span className="text-brand-primary italic">ROT</span> CHECK
                                         </h2>
-                                        <p className="text-slate-500 text-xl font-bold leading-relaxed">{ONBOARDING_QUESTIONS[qIndex].q}</p>
+                                        <p className="text-slate-500 text-xl font-bold leading-relaxed">{questions[qIndex]?.q}</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 text-left">
-                                        {ONBOARDING_QUESTIONS[qIndex].options.map((opt, i) => (
+                                        {questions[qIndex]?.options.map((opt, i) => (
                                             <motion.button
                                                 key={i}
                                                 whileHover={{ scale: 1.02, backgroundColor: 'white' }}
@@ -172,7 +159,7 @@ const OnboardingModal = ({ show, qIndex, score, finished, onAnswer, onComplete, 
                                         <p className="text-brand-primary font-black uppercase tracking-widest text-xs mb-3">Your Initial Rank</p>
                                         <div className="flex flex-col items-center">
                                             <span className="text-7xl font-black text-brand-primary tracking-tighter">LVL {score + 1}</span>
-                                            <p className="text-slate-400 font-bold mt-2">{score}/{ONBOARDING_QUESTIONS.length} Questions Correct</p>
+                                            <p className="text-slate-400 font-bold mt-2">{score}/{questions.length} Questions Correct</p>
                                         </div>
                                     </div>
 

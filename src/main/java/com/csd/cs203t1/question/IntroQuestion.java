@@ -1,11 +1,7 @@
 package com.csd.cs203t1.question;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.DiscriminatorValue;
-
-
-
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -15,8 +11,6 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @DiscriminatorValue("INTRO")
 @SuperBuilder
-public class IntroQuestion extends Question{
-	@NonNull
-	private String content;
-
+public class IntroQuestion extends Question {
+    // content is inherited from Question base class — no duplicate field needed
 }

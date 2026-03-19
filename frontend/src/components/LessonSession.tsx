@@ -1,7 +1,25 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, CheckCircle2, XCircle, Star, Trophy } from 'lucide-react';
-import { LESSON_CONTENT } from '../data';
+
+interface Step {
+    question_type: 'INTRO' | 'SELECT' | 'TRANSLATE';
+    title: string;
+    content?: string;
+    explanation: string;
+    options?: string[];
+    correctAnswer?: number;
+    wordbank?: string[];
+    target?: string;
+}
+
+interface LessonData {
+    id: number;
+    title: string;
+    quiz?: {
+        questions: Step[];
+    };
+}
 
 interface Props {
     lessonId: string;
@@ -11,33 +29,49 @@ interface Props {
 }
 
 const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Props) => {
-    const lesson = LESSON_CONTENT.find(l => l.id === lessonId);
+    const [steps, setSteps] = useState<Step[]>([]);
+    const [loading, setLoading] = useState(true);
+
     const [stepIdx, setStepIdx] = useState(0);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [wordBankSelection, setWordBankSelection] = useState<string[]>([]);
     const [isChecked, setIsChecked] = useState(false);
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-    // Track score for graded steps (select + translate)
     const [correctCount, setCorrectCount] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
 
-    if (!lesson) return null;
+    useEffect(() => {
+        fetch(`/api/lessons/questions/${lessonId}`)
+            .then(r => r.json())
+            .then((data: LessonData) => {
+                setSteps(data.quiz?.questions ?? []);
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
+    }, [lessonId]);
 
-    const step = lesson.steps[stepIdx];
+    if (loading) return (
+        <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
+            <div className="text-2xl font-black text-slate-400 animate-pulse">Loading...</div>
+        </div>
+    );
 
-    const totalGraded = lesson.steps.filter(s => s.type !== 'intro').length;
-    const currentGradedIdx = lesson.steps.slice(0, stepIdx + 1).filter(s => s.type !== 'intro').length;
-    const isGradedStep = step.type !== 'intro';
+    if (steps.length === 0) return null;
+
+    const step = steps[stepIdx];
+    const totalGraded = steps.filter(s => s.question_type !== 'INTRO').length;
+    const currentGradedIdx = steps.slice(0, stepIdx + 1).filter(s => s.question_type !== 'INTRO').length;
+    const isGradedStep = step.question_type !== 'INTRO';
 
     const handleCheck = () => {
         let correct = false;
-        if (step.type === 'intro') {
-            correct = true; // intros are always "correct", not graded
-        } else if (step.type === 'select') {
+        if (step.question_type === 'INTRO') {
+            correct = true;
+        } else if (step.question_type === 'SELECT') {
             correct = selectedOption === step.correctAnswer;
             if (correct) setCorrectCount(c => c + 1);
-        } else if (step.type === 'translate') {
-            correct = wordBankSelection.join(' ') === step.targetSentence;
+        } else if (step.question_type === 'TRANSLATE') {
+            correct = wordBankSelection.join(' ') === step.target;
             if (correct) setCorrectCount(c => c + 1);
         }
         setIsCorrect(correct);
@@ -45,7 +79,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
     };
 
     const handleContinue = () => {
-        if (stepIdx < lesson.steps.length - 1) {
+        if (stepIdx < steps.length - 1) {
             setStepIdx(s => s + 1);
             setSelectedOption(null);
             setWordBankSelection([]);
@@ -66,9 +100,9 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
     };
 
     const canCheck =
-        step.type === 'intro' ||
-        (step.type === 'select' && selectedOption !== null) ||
-        (step.type === 'translate' && wordBankSelection.length > 0);
+        step.question_type === 'INTRO' ||
+        (step.question_type === 'SELECT' && selectedOption !== null) ||
+        (step.question_type === 'TRANSLATE' && wordBankSelection.length > 0);
 
     return (
         <motion.div
@@ -82,11 +116,10 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                     <XCircle size={32} />
                 </button>
                 <div className="flex-1 flex items-center gap-1.5">
-                    {lesson.steps.map((_, i) => (
+                    {steps.map((_, i) => (
                         <div
                             key={i}
-                            className={`flex-1 h-3.5 rounded-full transition-all duration-500 ${i < stepIdx ? 'bg-green-500' : 'bg-slate-200'
-                                }`}
+                            className={`flex-1 h-3.5 rounded-full transition-all duration-500 ${i < stepIdx ? 'bg-green-500' : 'bg-slate-200'}`}
                         />
                     ))}
                 </div>
@@ -116,30 +149,26 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                             exit={{ opacity: 0, x: -20 }}
                             className={`flex-1 ${isFinished ? 'hidden' : ''}`}
                         >
-                            {/* ── Intro slide ── */}
-                            {step.type === 'intro' && (
+                            {/* Intro */}
+                            {step.question_type === 'INTRO' && (
                                 <div className="space-y-8">
                                     <div className="bg-slate-50 p-8 rounded-3xl border-2 border-slate-100 flex items-start gap-6">
                                         <div className="w-16 h-16 bg-brand-primary rounded-2xl flex items-center justify-center text-white shrink-0">
                                             <BookOpen size={32} />
                                         </div>
                                         <div>
-                                            <p className="text-xl text-slate-700 leading-relaxed font-medium">
-                                                {step.content}
-                                            </p>
+                                            <p className="text-xl text-slate-700 leading-relaxed font-medium">{step.content}</p>
                                         </div>
                                     </div>
                                     <div className="bg-brand-primary/10 p-6 rounded-2xl border-2 border-brand-primary/20">
-                                        <p className="text-xs font-black text-brand-primary uppercase mb-2 tracking-widest">
-                                            Usage Example
-                                        </p>
+                                        <p className="text-xs font-black text-brand-primary uppercase mb-2 tracking-widest">Usage Example</p>
                                         <p className="text-2xl font-bold text-slate-800 italic">"{step.explanation}"</p>
                                     </div>
                                 </div>
                             )}
 
-                            {/* ── Select slide ── */}
-                            {step.type === 'select' && (
+                            {/* Select */}
+                            {step.question_type === 'SELECT' && (
                                 <div className="space-y-8">
                                     {step.content && (
                                         <div className="bg-slate-50 p-8 rounded-3xl border-2 border-slate-100">
@@ -153,13 +182,11 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                                                 disabled={isChecked}
                                                 onClick={() => setSelectedOption(i)}
                                                 className={`
-                        p-6 rounded-2xl border-2 text-left font-bold text-xl transition-all
-                        ${selectedOption === i
-                                                        ? 'border-brand-primary bg-brand-primary/5 text-brand-primary'
-                                                        : 'border-slate-200 hover:bg-slate-50 text-slate-700'}
-                        ${isChecked && i === step.correctAnswer ? 'border-green-500 bg-green-50' : ''}
-                        ${isChecked && selectedOption === i && i !== step.correctAnswer ? 'border-red-500 bg-red-50' : ''}
-                      `}
+                          p-6 rounded-2xl border-2 text-left font-bold text-xl transition-all
+                          ${selectedOption === i ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200 hover:bg-slate-50 text-slate-700'}
+                          ${isChecked && i === step.correctAnswer ? 'border-green-500 bg-green-50' : ''}
+                          ${isChecked && selectedOption === i && i !== step.correctAnswer ? 'border-red-500 bg-red-50' : ''}
+                        `}
                                             >
                                                 <span className="mr-4 text-slate-300">{i + 1}</span>
                                                 {opt}
@@ -169,14 +196,12 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                                 </div>
                             )}
 
-                            {/* ── Translate slide ── */}
-                            {step.type === 'translate' && (
+                            {/* Translate */}
+                            {step.question_type === 'TRANSLATE' && (
                                 <div className="space-y-12">
                                     <div className="bg-slate-50 p-8 rounded-3xl border-2 border-slate-100">
                                         <p className="text-2xl font-bold text-slate-700">{step.content}</p>
                                     </div>
-
-                                    {/* Answer area */}
                                     <div className="min-h-[80px] border-b-2 border-slate-200 flex flex-wrap gap-2 p-2">
                                         {wordBankSelection.map(word => (
                                             <button
@@ -188,19 +213,15 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                                             </button>
                                         ))}
                                     </div>
-
-                                    {/* Word bank */}
                                     <div className="flex flex-wrap justify-center gap-3">
-                                        {step.wordBank?.map(word => (
+                                        {step.wordbank?.map(word => (
                                             <button
                                                 key={word}
                                                 disabled={wordBankSelection.includes(word) || isChecked}
                                                 onClick={() => toggleWord(word)}
                                                 className={`
                           px-4 py-2 rounded-xl font-bold text-lg border-2 border-b-4 transition-all
-                          ${wordBankSelection.includes(word)
-                                                        ? 'bg-slate-100 border-slate-100 text-transparent border-b-0'
-                                                        : 'bg-white border-slate-200 hover:bg-slate-50 active:translate-y-1 active:border-b-2'}
+                          ${wordBankSelection.includes(word) ? 'bg-slate-100 border-slate-100 text-transparent border-b-0' : 'bg-white border-slate-200 hover:bg-slate-50 active:translate-y-1 active:border-b-2'}
                         `}
                                             >
                                                 {word}
@@ -212,7 +233,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* ── Summary view ── */}
+                    {/* Summary */}
                     {isFinished && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -222,12 +243,10 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                             <div className="w-24 h-24 bg-brand-yellow rounded-3xl flex items-center justify-center text-white shadow-xl rotate-6 animate-bounce">
                                 <Trophy size={48} fill="currentColor" />
                             </div>
-
                             <div className="space-y-2">
                                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">Lesson Complete!</h2>
                                 <p className="text-xl text-slate-500 font-bold">You're leveling up your brain.</p>
                             </div>
-
                             <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
                                 <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
                                     <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
@@ -246,7 +265,6 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                                     )}
                                 </div>
                             </div>
-
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -262,10 +280,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
 
             {/* Footer */}
             {!isFinished && (
-                <div className={`border-t-2 p-6 transition-colors ${!isChecked ? 'bg-white border-slate-100'
-                    : isCorrect ? 'bg-green-100 border-green-200'
-                        : 'bg-red-100 border-red-200'
-                    }`}>
+                <div className={`border-t-2 p-6 transition-colors ${!isChecked ? 'bg-white border-slate-100' : isCorrect ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}`}>
                     <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
                         {isChecked && (
                             <div className="flex items-center gap-4">
@@ -278,30 +293,23 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                                     </p>
                                     {!isCorrect && (
                                         <p className="text-red-700 font-bold">
-                                            {step.type === 'select' && step.options && step.correctAnswer !== undefined
+                                            {step.question_type === 'SELECT' && step.options && step.correctAnswer !== undefined
                                                 ? step.options[step.correctAnswer]
-                                                : step.targetSentence}
+                                                : step.target}
                                         </p>
                                     )}
-                                    <p className={`text-sm ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                                        {step.explanation}
-                                    </p>
+                                    <p className={`text-sm ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>{step.explanation}</p>
                                 </div>
                             </div>
                         )}
-
                         <button
                             onClick={isChecked ? handleContinue : handleCheck}
                             disabled={!isChecked && !canCheck}
                             className={`
               ml-auto px-12 py-4 rounded-2xl font-black text-xl transition-all
               ${!isChecked
-                                    ? (!canCheck
-                                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                        : 'bg-brand-primary text-white shadow-[0_6px_0_#46a302]')
-                                    : (isCorrect
-                                        ? 'bg-green-500 text-white shadow-[0_6px_0_#3d8b02]'
-                                        : 'bg-red-500 text-white shadow-[0_6px_0_#c40000]')}
+                                ? (!canCheck ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-brand-primary text-white shadow-[0_6px_0_#46a302]')
+                                : (isCorrect ? 'bg-green-500 text-white shadow-[0_6px_0_#3d8b02]' : 'bg-red-500 text-white shadow-[0_6px_0_#c40000]')}
               active:translate-y-1 active:shadow-none
             `}
                         >

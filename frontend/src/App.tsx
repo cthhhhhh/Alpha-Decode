@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star, Flame } from 'lucide-react';
-import { LESSONS, ONBOARDING_QUESTIONS } from './data';
 import type { Lesson } from './types';
 
 import Header from './components/Header';
@@ -11,39 +11,140 @@ import LessonSession from './components/LessonSession';
 import OnboardingModal from './components/OnboardingModal';
 import DailyQuizModal from './components/DailyQuizModal';
 import Glossary from './components/Glossary';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'dict'>('learn');
-  const [xp, setXp] = useState(50);
-  const [level, setLevel] = useState(5);
-  const [streak, setStreak] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Daily Quiz logic: reset on refresh
-  const [dailyQuizCompleted, setDailyQuizCompleted] = useState(false);
+  // --- Auth State ---
+  const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [authRole, setAuthRole] = useState<string | null>(() => localStorage.getItem('role'));
+  const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
+
+  // --- Active Tab State (derived from URL) ---
+  const isLeaderboard = location.pathname.startsWith('/leaderboard');
+  const isGlossary = location.pathname.startsWith('/glossary');
+  const isLearn = !isLeaderboard && !isGlossary;
+  const [xp, setXp] = useState(() => parseInt(localStorage.getItem('xp') || '0'));
+  const [level, setLevel] = useState(() => parseInt(localStorage.getItem('level') || '1'));
+  const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
+  const [dailyQuizCompleted, setDailyQuizCompleted] = useState(() => {
+    const saved = localStorage.getItem('dailyQuizDate');
+    return saved === new Date().toDateString();
+  });
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
-
-  const handleDailyQuizComplete = (correct: number, total: number) => {
-    if (correct === total) {
-      setXp(prev => prev + 10);
-      setStreak(prev => prev + 1);
-    }
-    setDailyQuizCompleted(true);
-    setShowDailyQuiz(false);
-  };
-
-  // Onboarding — reset on refresh
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    // Show onboarding if they haven't finished it OR if they explicitly visit the root URL
+    return localStorage.getItem('onboardingFinished') !== 'true';
+  });
   const [onboardingQIndex, setOnboardingQIndex] = useState(0);
   const [onboardingScore, setOnboardingScore] = useState(0);
   const [onboardingFinished, setOnboardingFinished] = useState(false);
-
-  // Learning Path
-  const [lessons, setLessons] = useState<Lesson[]>(LESSONS);
-
-  // Lesson Session
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  // { q, options, correct } shaped for modals
+  type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
+  type OnbQ  = { q: string; options: string[]; correct: number };
+  const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
+  const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
+  // DB lesson id → 1-based position for Glossary
+  const [lessonIdToPosition, setLessonIdToPosition] = useState<Record<string, number>>({});
+
+  // Fetch lesson list from backend on mount
+  useEffect(() => {
+    fetch('/api/lessons/')
+      .then(r => r.json())
+      .then((data: { id: number; title: string }[]) => {
+        const xOffsets = [0, 40, -40, 0, 40, -40, 0];
+        const pos: Record<string, number> = {};
+        data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
+        setLessonIdToPosition(pos);
+        setLessons(data.map((l, i) => ({
+          id: String(l.id),
+          title: l.title,
+          locked: i !== 0,
+          completed: false,
+          x: xOffsets[i % xOffsets.length],
+        })));
+      })
+      .catch(() => setLessons([]));
+  }, []);
+
+  // Fetch daily quiz questions
+  useEffect(() => {
+    fetch('/api/quiz/daily')
+      .then(r => r.json())
+      .then((data: { title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
+        setDailyQuizQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
+      ).catch(() => {});
+  }, []);
+
+  // Fetch onboarding questions
+  useEffect(() => {
+    fetch('/api/quiz/onboarding')
+      .then(r => r.json())
+      .then((data: { title: string; options: string[]; correctAnswer: number }[]) =>
+        setOnboardingQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer })))
+      ).catch(() => {});
+  }, []);
+
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
+    setAuthToken(token);
+    setAuthRole(role);
+    setAuthUsername(username);
+    if (level !== undefined) {
+      setLevel(level);
+      localStorage.setItem('level', level.toString());
+    }
+    if (xp !== undefined) {
+      setXp(xp);
+      localStorage.setItem('xp', xp.toString());
+    }
+    navigate('/home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('username');
+    localStorage.removeItem('xp');
+    localStorage.removeItem('level');
+    localStorage.removeItem('streak');
+    localStorage.removeItem('dailyQuizDate');
+    setAuthToken(null);
+    setAuthRole(null);
+    setAuthUsername(null);
+    setXp(0);
+    setLevel(1);
+    navigate('/login');
+  };
 
   // --- Handlers ---
+
+  const handleDailyQuizComplete = (correct: number, total: number) => {
+    if (correct === total) {
+      const newXp = xp + 10;
+      const newStreak = streak + 1;
+      setXp(newXp);
+      setStreak(newStreak);
+      localStorage.setItem('xp', newXp.toString());
+      localStorage.setItem('streak', newStreak.toString());
+      // Persist XP bonus to backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/xp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ xpToAdd: 10 }),
+        }).catch(err => console.error('Failed to save quiz XP:', err));
+      }
+    }
+    localStorage.setItem('dailyQuizDate', new Date().toDateString());
+    setDailyQuizCompleted(true);
+    setShowDailyQuiz(false);
+  };
 
   const startLesson = (lessonId: string) => {
     setActiveLessonId(lessonId);
@@ -78,8 +179,23 @@ export default function App() {
     });
 
     // Add XP side-effect safely outside the updater ONLY if not previously completed
-    if (currentLesson && !wasAlreadyCompleted) {
-      setXp(prev => prev + correct);
+    if (currentLesson && !wasAlreadyCompleted && correct > 0) {
+      const newXp = xp + correct;
+      setXp(newXp);
+      localStorage.setItem('xp', newXp.toString());
+
+      // Persist to backend if logged in
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/xp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ xpToAdd: correct }),
+        }).catch(err => console.error('Failed to save XP:', err));
+      }
     }
 
     setActiveLessonId(null);
@@ -87,44 +203,60 @@ export default function App() {
 
 
   const handleOnboardingAnswer = (idx: number) => {
-    if (idx === ONBOARDING_QUESTIONS[onboardingQIndex].correct) {
+    if (idx === onboardingQuestions[onboardingQIndex]?.correct) {
       setOnboardingScore(s => s + 1);
     }
-    if (onboardingQIndex + 1 < ONBOARDING_QUESTIONS.length) {
+    if (onboardingQIndex + 1 < onboardingQuestions.length) {
       setOnboardingQIndex(i => i + 1);
     } else {
       setOnboardingFinished(true);
     }
   };
 
+  // Finish onboarding completely (go to register)
   const completeOnboarding = () => {
     const newLevel = onboardingScore + 1;
     setLevel(newLevel);
     setShowOnboarding(false);
-    window.location.href = '/signup';
+    localStorage.setItem('onboardingFinished', 'true');
+    localStorage.setItem('initialLevel', newLevel.toString());
+    localStorage.setItem('initialXp', '0'); // Fresh level, 0 xp
+    navigate('/register');
   };
 
-  const handleSkipOnboarding = () => {
-    setShowOnboarding(false);
+  const handleBackToOnboarding = () => {
+    setOnboardingQIndex(0);
+    setOnboardingScore(0);
+    setOnboardingFinished(false);
+    setShowOnboarding(true); // Force it back open
+    navigate('/');
   };
 
-  return (
+  const mainApp = (
     <div className="min-h-screen bg-slate-50 flex flex-col">
 
-      <Header streak={streak} xp={xp} level={level} />
+      <Header
+        streak={streak}
+        xp={xp}
+        level={level}
+        authToken={authToken}
+        authUsername={authUsername}
+        authRole={authRole}
+        onLogout={handleLogout}
+      />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 pb-32">
         <AnimatePresence mode="wait">
 
           {/* Learn Tab */}
-          {activeTab === 'learn' && (
+          {isLearn && (
             <motion.div
               key="learn"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <DailyWord onLearnMore={() => setActiveTab('dict')} />
+              <DailyWord onLearnMore={() => navigate('/glossary')} />
 
               {/* Daily Quiz CTA */}
               {!dailyQuizCompleted && (
@@ -212,7 +344,7 @@ export default function App() {
           )}
 
           {/* Glossary Tab */}
-          {activeTab === 'dict' && (
+          {isGlossary && (
             <motion.div
               key="dict"
               initial={{ opacity: 0, y: 20 }}
@@ -221,12 +353,12 @@ export default function App() {
             >
               <h2 className="text-3xl font-black mb-2">The Alpha Glossary</h2>
               <p className="text-slate-500 mb-8">Master the vocabulary of the new generation.</p>
-              <Glossary />
+              <Glossary lessonIdToPosition={lessonIdToPosition} />
             </motion.div>
           )}
 
           {/* Leaderboard Tab */}
-          {activeTab === 'leaderboard' && (
+          {isLeaderboard && (
             <motion.div
               key="leaderboard"
               initial={{ opacity: 0, y: 20 }}
@@ -248,8 +380,8 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setActiveTab('learn')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'learn' ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            onClick={() => navigate('/home')}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isLearn ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <BookOpen size={24} />
             <span className="text-[10px] font-black uppercase">Learn</span>
@@ -257,8 +389,8 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setActiveTab('leaderboard')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'leaderboard' ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            onClick={() => navigate('/leaderboard')}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isLeaderboard ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Trophy size={24} />
             <span className="text-[10px] font-black uppercase">Ranks</span>
@@ -266,8 +398,8 @@ export default function App() {
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setActiveTab('dict')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${activeTab === 'dict' ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            onClick={() => navigate('/glossary')}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isGlossary ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
@@ -292,18 +424,58 @@ export default function App() {
         show={showDailyQuiz}
         onClose={() => setShowDailyQuiz(false)}
         onComplete={handleDailyQuizComplete}
-      />
-
-      {/* Onboarding Modal */}
-      <OnboardingModal
-        show={showOnboarding}
-        qIndex={onboardingQIndex}
-        score={onboardingScore}
-        finished={onboardingFinished}
-        onAnswer={handleOnboardingAnswer}
-        onComplete={completeOnboarding}
-        onSkip={handleSkipOnboarding}
+        questions={dailyQuizQuestions}
       />
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/login" element={
+        <LoginPage
+          onLoginSuccess={handleAuthSuccess}
+          onGoToRegister={() => navigate('/')}
+          onBack={handleBackToOnboarding}
+        />
+      } />
+      <Route path="/register" element={
+        <RegisterPage
+          onRegisterSuccess={handleAuthSuccess}
+          onGoToLogin={() => navigate('/login')}
+          onBack={handleBackToOnboarding}
+        />
+      } />
+      <Route path="/" element={
+        <div className="min-h-screen bg-slate-50 flex flex-col">
+          <OnboardingModal
+            show={true}
+            qIndex={onboardingQIndex}
+            score={onboardingScore}
+            finished={onboardingFinished}
+            questions={onboardingQuestions}
+            onAnswer={handleOnboardingAnswer}
+            onComplete={completeOnboarding}
+            onLogin={() => navigate('/login')}
+          />
+        </div>
+      } />
+      <Route path="/home/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      <Route path="/leaderboard/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      <Route path="/glossary/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
+        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
+      {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
+      <Route path="/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
+        showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
+      } />
+    </Routes>
   );
 }
