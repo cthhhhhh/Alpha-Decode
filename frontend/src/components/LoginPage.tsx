@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { LogIn, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 
 interface LoginPageProps {
-  onLoginSuccess: (token: string, role: string, username: string, level?: number, xp?: number) => void;
+  onLoginSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number) => void;
   onGoToRegister: () => void;
   onBack: () => void;
 }
@@ -42,7 +42,7 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
       localStorage.setItem('username', data.username);
-      onLoginSuccess(data.token, data.role, data.username, data.level, data.xp);
+      onLoginSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {

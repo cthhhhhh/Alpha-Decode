@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(Role.USER);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
         if (request.getXp() != null) user.setXp(request.getXp());
+        if (request.getMaxUnlockedLessonIndex() != null) user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
 
         User savedUser = userRepository.save(user);
 
@@ -48,7 +49,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp());
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
     }
 
     @Override
@@ -67,7 +68,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, user.getRole().name(), user.getUsername(), user.getLevel(), user.getXp());
+        return new UserDTO.AuthResponse(token, user.getRole().name(), user.getUsername(), user.getLevel(), user.getXp(), user.getMaxUnlockedLessonIndex());
     }
 
     @Override
@@ -90,6 +91,24 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp());
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
+    }
+
+    @Override
+    public UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex) {
+        User user = getCurrentUser();
+        if (maxUnlockedLessonIndex > user.getMaxUnlockedLessonIndex()) {
+            user.setMaxUnlockedLessonIndex(maxUnlockedLessonIndex);
+        }
+        User savedUser = userRepository.save(user);
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(savedUser.getUsername())
+                .password(savedUser.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
+                .build();
+
+        String token = jwtUtil.generateToken(userDetails);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
     }
 }

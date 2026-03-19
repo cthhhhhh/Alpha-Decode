@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 
 interface RegisterPageProps {
-  onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number) => void;
+  onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number) => void;
   onGoToLogin: () => void;
   onBack: () => void;
 }
@@ -54,7 +54,7 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
       localStorage.setItem('username', data.username);
       localStorage.removeItem('initialLevel');
       localStorage.removeItem('initialXp');
-      onRegisterSuccess(data.token, data.role, data.username, data.level, data.xp);
+      onRegisterSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {

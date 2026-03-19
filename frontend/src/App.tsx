@@ -93,7 +93,7 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number) => {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
@@ -104,6 +104,16 @@ export default function App() {
     if (xp !== undefined) {
       setXp(xp);
       localStorage.setItem('xp', xp.toString());
+    }
+    if (maxUnlockedLessonIndex !== undefined) {
+      localStorage.setItem('maxUnlockedLessonIndex', maxUnlockedLessonIndex.toString());
+      // Re-trigger useEffect lesson fetching based on updated localStorage
+      const idx = maxUnlockedLessonIndex;
+      setLessons(prev => prev.map((l, i) => ({
+        ...l,
+        locked: i > idx,
+        completed: i < idx
+      })));
     }
     setShowOnboarding(false);
     localStorage.setItem('onboardingFinished', 'true');
@@ -190,6 +200,19 @@ export default function App() {
       const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
       if (currentIdx !== -1 && currentIdx + 1 > savedUnlock) {
         localStorage.setItem('maxUnlockedLessonIndex', String(currentIdx + 1));
+        
+        // Persist to backend if logged in
+        const token = localStorage.getItem('token');
+        if (token) {
+          fetch('/api/auth/lesson-progress', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ maxUnlockedLessonIndex: currentIdx + 1 }),
+          }).catch(err => console.error('Failed to save progress:', err));
+        }
       }
     }
 

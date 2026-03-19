@@ -15,6 +15,7 @@ public class UserDTO {
         private String password;
         private Integer level;
         private Integer xp;
+        private Integer maxUnlockedLessonIndex;
     }
 
     @Data
@@ -34,6 +35,7 @@ public class UserDTO {
         private String username;
         private Integer level;
         private Integer xp;
+        private Integer maxUnlockedLessonIndex;
     }
 
     @Data
@@ -41,5 +43,12 @@ public class UserDTO {
     @NoArgsConstructor
     public static class XpUpdateRequest {
         private int xpToAdd;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class LessonProgressUpdateRequest {
+        private int maxUnlockedLessonIndex;
     }
 }

@@ -52,6 +52,9 @@ public class User {
 	@Column(nullable = false)
 	private int xp = 0;
 
+	@Column(columnDefinition = "integer default 0", nullable = false)
+	private int maxUnlockedLessonIndex = 0;
+
 	@Column(nullable=false, unique=true, updatable=false)
 	private UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
 

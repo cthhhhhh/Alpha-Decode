@@ -37,7 +37,7 @@ public class UserController {
     public ResponseEntity<?> getCurrentUser() {
         try {
             User user = userService.getCurrentUser();
-            return ResponseEntity.ok(new UserDTO.AuthResponse(null, user.getRole().name(), user.getUsername(), user.getLevel(), user.getXp()));
+            return ResponseEntity.ok(new UserDTO.AuthResponse(null, user.getRole().name(), user.getUsername(), user.getLevel(), user.getXp(), user.getMaxUnlockedLessonIndex()));
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
@@ -47,6 +47,16 @@ public class UserController {
     public ResponseEntity<?> addXp(@RequestBody UserDTO.XpUpdateRequest request) {
         try {
             UserDTO.AuthResponse response = userService.updateXp(request.getXpToAdd());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+    }
+
+    @PostMapping("/lesson-progress")
+    public ResponseEntity<?> updateLessonProgress(@RequestBody UserDTO.LessonProgressUpdateRequest request) {
+        try {
+            UserDTO.AuthResponse response = userService.updateLessonProgress(request.getMaxUnlockedLessonIndex());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
