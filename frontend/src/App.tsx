@@ -61,11 +61,14 @@ export default function App() {
         const pos: Record<string, number> = {};
         data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
         setLessonIdToPosition(pos);
+        
+        const unlockedIndex = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
+        
         setLessons(data.map((l, i) => ({
           id: String(l.id),
           title: l.title,
-          locked: i !== 0,
-          completed: false,
+          locked: i > unlockedIndex,
+          completed: i < unlockedIndex,
           x: xOffsets[i % xOffsets.length],
         })));
       })
@@ -113,6 +116,7 @@ export default function App() {
     localStorage.removeItem('level');
     localStorage.removeItem('streak');
     localStorage.removeItem('dailyQuizDate');
+    localStorage.removeItem('maxUnlockedLessonIndex');
     setAuthToken(null);
     setAuthRole(null);
     setAuthUsername(null);
@@ -178,8 +182,17 @@ export default function App() {
       return updated;
     });
 
+    // ALWAYS ensure the local storage unlocks the next lesson if they get 100/100!
+    if (passed && total > 0) {
+      const currentIdx = lessons.findIndex(l => l.id === lessonId);
+      const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
+      if (currentIdx !== -1 && currentIdx + 1 > savedUnlock) {
+        localStorage.setItem('maxUnlockedLessonIndex', String(currentIdx + 1));
+      }
+    }
+
     // Add XP side-effect safely outside the updater ONLY if not previously completed
-    if (currentLesson && !wasAlreadyCompleted && correct > 0) {
+    if (currentLesson && !wasAlreadyCompleted && passed && total > 0) {
       const newXp = xp + correct;
       setXp(newXp);
       localStorage.setItem('xp', newXp.toString());
