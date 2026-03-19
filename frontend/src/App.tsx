@@ -46,7 +46,7 @@ export default function App() {
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   // { q, options, correct } shaped for modals
   type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
-  type OnbQ  = { q: string; options: string[]; correct: number };
+  type OnbQ = { q: string; options: string[]; correct: number };
   const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
   const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
   // DB lesson id → 1-based position for Glossary
@@ -61,9 +61,9 @@ export default function App() {
         const pos: Record<string, number> = {};
         data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
         setLessonIdToPosition(pos);
-        
+
         const unlockedIndex = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-        
+
         setLessons(data.map((l, i) => ({
           id: String(l.id),
           title: l.title,
@@ -81,7 +81,7 @@ export default function App() {
       .then(r => r.json())
       .then((data: { title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
         setDailyQuizQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
-      ).catch(() => {});
+      ).catch(() => { });
   }, []);
 
   // Fetch onboarding questions
@@ -90,7 +90,7 @@ export default function App() {
       .then(r => r.json())
       .then((data: { title: string; options: string[]; correctAnswer: number }[]) =>
         setOnboardingQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer })))
-      ).catch(() => {});
+      ).catch(() => { });
   }, []);
 
   const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number) => {
@@ -105,6 +105,8 @@ export default function App() {
       setXp(xp);
       localStorage.setItem('xp', xp.toString());
     }
+    setShowOnboarding(false);
+    localStorage.setItem('onboardingFinished', 'true');
     navigate('/home');
   };
 
@@ -474,20 +476,20 @@ export default function App() {
       } />
       <Route path="/home/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       <Route path="/leaderboard/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       <Route path="/glossary/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-        (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-        showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
+          showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
       } />
     </Routes>
   );
