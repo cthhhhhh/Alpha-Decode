@@ -35,7 +35,8 @@ export default function App() {
   // --- Active Tab State (derived from URL) ---
   const isLeaderboard = location.pathname.startsWith('/leaderboard');
   const isGlossary = location.pathname.startsWith('/glossary');
-  const isLearn = !isLeaderboard && !isGlossary;
+  const isAdmin = location.pathname.startsWith('/admin');
+  const isLearn = !isLeaderboard && !isGlossary && !isAdmin;
   const [xp, setXp] = useState(() => parseInt(localStorage.getItem('xp') || '0'));
   const [level, setLevel] = useState(() => parseInt(localStorage.getItem('level') || '1'));
   const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
@@ -489,6 +490,18 @@ export default function App() {
               </div>
             </motion.div>
           )}
+
+          {/* Admin Tab */}
+          {isAdmin && (
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <AdminPanel />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -635,7 +648,7 @@ export default function App() {
       } />
       <Route path="/admin/*" element={
         (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
-          <AdminPanel onBack={() => navigate('/home')} />
+          mainApp
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={

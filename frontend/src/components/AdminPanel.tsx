@@ -18,7 +18,7 @@ interface UserData {
   xp: number;
 }
 
-export default function AdminPanel({ onBack }: { onBack: () => void }) {
+export default function AdminPanel({ onBack }: { onBack?: () => void }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<UserData[]>([]);
   const [error, setError] = useState('');
@@ -127,9 +127,11 @@ export default function AdminPanel({ onBack }: { onBack: () => void }) {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center p-8">
+      {onBack && (
         <button onClick={onBack} className="self-start mb-6 flex items-center gap-2 px-5 py-2 bg-white rounded-full font-bold text-slate-500 shadow-sm">
           <ArrowLeft size={18} /> Back
         </button>
+      )}
         <div className="bg-red-50 text-red-500 border border-red-200 rounded-2xl px-5 py-4 font-bold text-center">
           {error}
         </div>
@@ -138,36 +140,26 @@ export default function AdminPanel({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center">
+    <div className="w-full">
       
       {/* Top Banner */}
-      <div className="w-full bg-brand-primary text-white border-b-4 border-[#46a302] py-8 px-4 text-center relative overflow-hidden">
+      <div className="w-full bg-green-500 text-white rounded-3xl py-6 px-4 text-center relative overflow-hidden shadow-lg shadow-green-500/20 mb-6">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_10%,transparent_80%)]"></div>
         <div className="relative z-10 flex flex-col items-center">
-          <Shield size={48} className="mb-4 opacity-90 drop-shadow-md" />
-          <h1 className="text-4xl font-black tracking-tighter uppercase drop-shadow-sm mb-2">
+          <Shield size={32} className="mb-2 opacity-90 drop-shadow-md" />
+          <h1 className="text-3xl font-black tracking-tighter uppercase drop-shadow-sm">
             Alpha Decode <span className="italic text-brand-yellow">Admin</span>
           </h1>
-          <p className="text-xl font-bold opacity-90">{stats?.message || "Welcome to the Admin Dashboard!"}</p>
+          <p className="text-base font-bold opacity-90">{stats?.message || "Welcome to the Admin Dashboard!"}</p>
         </div>
       </div>
 
-      <div className="w-full max-w-5xl px-4 py-8">
+      <div className="w-full">
         
-        <div className="flex items-center justify-between mb-8">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={onBack}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all shadow-sm"
-          >
-            <ArrowLeft size={18} />
-            <span>Back to App</span>
-          </motion.button>
-        </div>
+
 
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <motion.div whileHover={{ y: -5 }} className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-400 uppercase tracking-wider text-sm mb-1">Standard Users</h3>
