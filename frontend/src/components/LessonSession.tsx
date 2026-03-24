@@ -1,8 +1,41 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { BookOpen, CheckCircle2, XCircle, Star, Trophy } from 'lucide-react';
+import { BookOpen, CheckCircle2, XCircle, Star, Trophy, Flag } from 'lucide-react';
+import FlagModal from './FlagModal';
+
+function fisherYates<T>(arr: T[]): void {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+function shuffleSteps(steps: Step[]): Step[] {
+    if (steps.length === 0) return steps;
+    const intro = steps.filter(s => s.question_type === 'INTRO');
+    const rest = steps.filter(s => s.question_type !== 'INTRO');
+    fisherYates(rest);
+    return [...intro, ...rest].map(step => {
+        if (step.question_type === 'SELECT' && step.options) {
+            const paired = step.options.map((opt, i) => ({ opt, isCorrect: i === step.correctAnswer }));
+            fisherYates(paired);
+            return {
+                ...step,
+                options: paired.map(p => p.opt),
+                correctAnswer: paired.findIndex(p => p.isCorrect),
+            };
+        }
+        if (step.question_type === 'TRANSLATE' && step.wordbank) {
+            const wb = [...step.wordbank];
+            fisherYates(wb);
+            return { ...step, wordbank: wb };
+        }
+        return step;
+    });
+}
 
 interface Step {
+    id?: number;
     question_type: 'INTRO' | 'SELECT' | 'TRANSLATE';
     title: string;
     content?: string;
@@ -39,12 +72,13 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
     const [correctCount, setCorrectCount] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
+    const [showFlag, setShowFlag] = useState(false);
 
     useEffect(() => {
         fetch(`/api/lessons/questions/${lessonId}`)
             .then(r => r.json())
             .then((data: LessonData) => {
-                setSteps(data.quiz?.questions ?? []);
+                setSteps(shuffleSteps(data.quiz?.questions ?? []));
                 setLoading(false);
             })
             .catch(() => setLoading(false));
@@ -124,8 +158,17 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                     ))}
                 </div>
                 {isGradedStep && !isFinished && (
-                    <div className="flex items-center gap-1 text-slate-500 font-bold whitespace-nowrap">
+                    <div className="flex items-center gap-2 text-slate-500 font-bold whitespace-nowrap">
                         <span>Question {currentGradedIdx} of {totalGraded}</span>
+                        {step.id && (
+                            <button
+                                onClick={() => setShowFlag(true)}
+                                className="text-slate-300 hover:text-red-400 transition-colors"
+                                title="Flag this question"
+                            >
+                                <Flag size={16} />
+                            </button>
+                        )}
                     </div>
                 )}
                 {!isGradedStep && !isFinished && (
@@ -135,6 +178,13 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                     </div>
                 )}
             </div>
+
+            <FlagModal
+                show={showFlag}
+                contentType="QUESTION"
+                contentId={step.id ?? 0}
+                onClose={() => setShowFlag(false)}
+            />
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-4 py-8">

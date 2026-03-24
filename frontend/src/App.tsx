@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield, ChevronUp } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield, ChevronUp, User } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -15,6 +15,14 @@ import Glossary from './components/Glossary';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import AdminPanel from './components/AdminPanel';
+import Leaderboard from './components/Leaderboard';
+import ProfilePage from './components/ProfilePage';
+
+interface NewAchievement {
+  name: string;
+  icon: string;
+  description: string;
+}
 
 export default function App() {
   const navigate = useNavigate();
@@ -35,8 +43,9 @@ export default function App() {
   // --- Active Tab State (derived from URL) ---
   const isLeaderboard = location.pathname.startsWith('/leaderboard');
   const isGlossary = location.pathname.startsWith('/glossary');
-  const isAdmin = location.pathname.startsWith('/admin');
-  const isLearn = !isLeaderboard && !isGlossary && !isAdmin;
+  const isProfile = location.pathname.startsWith('/profile');
+  const isLearn = !isLeaderboard && !isGlossary && !isProfile;
+
   const [xp, setXp] = useState(() => parseInt(localStorage.getItem('xp') || '0'));
   const [level, setLevel] = useState(() => parseInt(localStorage.getItem('level') || '1'));
   const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
@@ -56,7 +65,6 @@ export default function App() {
   });
   const [activeRevisionQuiz, setActiveRevisionQuiz] = useState<RevisionQuiz | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
-    // Show onboarding if they haven't finished it OR if they explicitly visit the root URL
     return localStorage.getItem('onboardingFinished') !== 'true';
   });
   const [onboardingQIndex, setOnboardingQIndex] = useState(0);
@@ -64,13 +72,24 @@ export default function App() {
   const [onboardingFinished, setOnboardingFinished] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-  // { q, options, correct } shaped for modals
   type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
   type OnbQ = { q: string; options: string[]; correct: number };
   const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
   const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
-  // DB lesson id → 1-based position for Glossary
   const [lessonIdToPosition, setLessonIdToPosition] = useState<Record<string, number>>({});
+
+  // Achievement toasts
+  const [achievementToasts, setAchievementToasts] = useState<NewAchievement[]>([]);
+
+  const showAchievementToasts = (achievements: NewAchievement[]) => {
+    if (!achievements || achievements.length === 0) return;
+    setAchievementToasts(prev => [...prev, ...achievements]);
+    achievements.forEach((_, i) => {
+      setTimeout(() => {
+        setAchievementToasts(prev => prev.slice(1));
+      }, 3000 + i * 500);
+    });
+  };
 
   // Fetch lesson list from backend on mount
   useEffect(() => {
@@ -127,10 +146,13 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number) => {
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number) => {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
+    localStorage.setItem('token', token);
+    localStorage.setItem('role', role);
+    localStorage.setItem('username', username);
     if (level !== undefined) {
       setLevel(level);
       localStorage.setItem('level', level.toString());
@@ -139,9 +161,12 @@ export default function App() {
       setXp(xp);
       localStorage.setItem('xp', xp.toString());
     }
+    if (streak !== undefined) {
+      setStreak(streak);
+      localStorage.setItem('streak', streak.toString());
+    }
     if (maxUnlockedLessonIndex !== undefined) {
       localStorage.setItem('maxUnlockedLessonIndex', maxUnlockedLessonIndex.toString());
-      // Re-trigger useEffect lesson fetching based on updated localStorage
       const idx = maxUnlockedLessonIndex;
       setLessons(prev => prev.map((l, i) => ({
         ...l,
@@ -170,6 +195,7 @@ export default function App() {
     setAuthUsername(null);
     setXp(0);
     setLevel(1);
+    setStreak(0);
     navigate('/login');
   };
 
@@ -183,14 +209,26 @@ export default function App() {
       setStreak(newStreak);
       localStorage.setItem('xp', newXp.toString());
       localStorage.setItem('streak', newStreak.toString());
-      // Persist XP bonus to backend
       const token = localStorage.getItem('token');
       if (token) {
         fetch('/api/auth/xp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ xpToAdd: 10 }),
-        }).catch(err => console.error('Failed to save quiz XP:', err));
+          body: JSON.stringify({ xpToAdd: 10, streakToSet: newStreak, dailyQuizCountIncrement: true }),
+        })
+          .then(r => r.json())
+          .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+          .catch(err => console.error('Failed to save quiz XP:', err));
+      }
+    } else {
+      // Still count the daily quiz attempt even on imperfect score
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('/api/auth/xp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ xpToAdd: 0, dailyQuizCountIncrement: true }),
+        }).catch(() => {});
       }
     }
     localStorage.setItem('dailyQuizDate', new Date().toDateString());
@@ -210,7 +248,10 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ xpToAdd: correct }),
-        }).catch(err => console.error('Failed to save revision XP:', err));
+        })
+          .then(r => r.json())
+          .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+          .catch(err => console.error('Failed to save revision XP:', err));
       }
     }
     setCompletedRevisionIds(prev => {
@@ -281,7 +322,10 @@ export default function App() {
               'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ maxUnlockedLessonIndex: currentIdx + 1 }),
-          }).catch(err => console.error('Failed to save progress:', err));
+          })
+            .then(r => r.json())
+            .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+            .catch(err => console.error('Failed to save progress:', err));
         }
       }
     }
@@ -303,7 +347,10 @@ export default function App() {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({ xpToAdd: correct, maxUnlockedLessonIndex: newMaxUnlocked !== undefined ? Math.max(newMaxUnlocked, currentMax) : undefined }),
-        }).catch(err => console.error('Failed to save XP:', err));
+        })
+          .then(r => r.json())
+          .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+          .catch(err => console.error('Failed to save XP:', err));
       }
     }
 
@@ -352,6 +399,7 @@ export default function App() {
         authUsername={authUsername}
         authRole={authRole}
         onLogout={handleLogout}
+        onViewProfile={() => navigate('/profile')}
       />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 pb-32">
@@ -484,22 +532,32 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <div className="flex flex-col items-center justify-center py-20 text-slate-300">
-                <Trophy size={48} className="mb-4 opacity-50" />
-                <p className="font-bold">Leaderboard coming soon.</p>
-              </div>
+              <h2 className="text-3xl font-black mb-2">Leaderboard</h2>
+              <p className="text-slate-500 mb-8">Top players ranked by stars earned.</p>
+              <Leaderboard authUsername={authUsername} />
             </motion.div>
           )}
 
-          {/* Admin Tab */}
-          {isAdmin && (
+          {/* Profile Tab */}
+          {isProfile && (
             <motion.div
-              key="admin"
+              key="profile"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <AdminPanel />
+              <h2 className="text-3xl font-black mb-2">My Profile</h2>
+              <p className="text-slate-500 mb-8">Your progress and achievements.</p>
+              <ProfilePage
+                authUsername={authUsername}
+                authToken={authToken}
+                onUsernameUpdate={(newUsername, newToken) => {
+                  setAuthUsername(newUsername);
+                  setAuthToken(newToken);
+                  localStorage.setItem('username', newUsername);
+                  localStorage.setItem('token', newToken);
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -534,6 +592,15 @@ export default function App() {
           >
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate('/profile')}
+            className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isProfile ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+          >
+            <User size={24} />
+            <span className="text-[10px] font-black uppercase">Profile</span>
           </motion.button>
           {authRole === 'ADMIN' && (
             <motion.button
@@ -601,6 +668,29 @@ export default function App() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* Achievement Toasts */}
+      <div className="fixed top-20 right-4 z-[300] flex flex-col gap-2 pointer-events-none">
+        <AnimatePresence>
+          {achievementToasts.slice(0, 3).map((a, i) => (
+            <motion.div
+              key={`${a.name}-${i}`}
+              initial={{ opacity: 0, x: 80, scale: 0.8 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 80, scale: 0.8 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+              className="bg-white border-2 border-brand-yellow/40 rounded-2xl px-4 py-3 shadow-xl flex items-center gap-3 min-w-[220px]"
+            >
+              <span className="text-2xl">{a.icon}</span>
+              <div>
+                <p className="text-[10px] font-black text-brand-yellow uppercase tracking-wide">Achievement Unlocked!</p>
+                <p className="text-sm font-black text-slate-900">{a.name}</p>
+                <p className="text-[11px] text-slate-500">{a.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 
@@ -646,9 +736,13 @@ export default function App() {
         !authToken ? <Navigate to="/login" replace /> :
           (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
       } />
+      <Route path="/profile/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
+          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+      } />
       <Route path="/admin/*" element={
         (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
-          mainApp
+          <AdminPanel onBack={() => navigate('/home')} />
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={

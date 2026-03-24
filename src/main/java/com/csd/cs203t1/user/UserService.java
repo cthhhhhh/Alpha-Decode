@@ -7,4 +7,5 @@ public interface UserService {
     User getCurrentUser();
     UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request);
     UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex);
+    UserDTO.AuthResponse updateProfile(UserDTO.UpdateProfileRequest request);
 }

@@ -2,6 +2,8 @@ package com.csd.cs203t1.user;
 
 import java.util.Optional;
 import com.csd.cs203t1.common.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     long countByRole(Role role);
+
+    Page<User> findAllByOrderByXpDescLevelDesc(Pageable pageable);
 }

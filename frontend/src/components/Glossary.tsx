@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, Flag } from 'lucide-react';
+import FlagModal from './FlagModal';
 
 interface ApiTerm {
     id: number;
@@ -24,6 +25,7 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
     const [sortMode, setSortMode] = useState<'lesson' | 'alpha' | 'difficulty'>('lesson');
     const [showFilters, setShowFilters] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+    const [flagTarget, setFlagTarget] = useState<number | null>(null);
 
     useEffect(() => {
         fetch('/api/terms/')
@@ -130,6 +132,13 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
                 </div>
             </div>
 
+            <FlagModal
+                show={flagTarget !== null}
+                contentType="TERM"
+                contentId={flagTarget ?? 0}
+                onClose={() => setFlagTarget(null)}
+            />
+
             {/* Terms grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sorted.map(term => {
@@ -151,12 +160,21 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
                                         </span>
                                     )}
                                 </div>
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase shrink-0
-                                    ${term.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                                    term.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'}`}>
-                                    {term.difficulty}
-                                </span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase
+                                        ${term.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                                        term.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-red-100 text-red-700'}`}>
+                                        {term.difficulty}
+                                    </span>
+                                    <button
+                                        onClick={e => { e.stopPropagation(); setFlagTarget(term.id); }}
+                                        className="text-slate-300 hover:text-red-400 transition-colors"
+                                        title="Flag this term"
+                                    >
+                                        <Flag size={14} />
+                                    </button>
+                                </div>
                             </div>
                             <p className="text-slate-600 mb-4 text-sm leading-relaxed">{term.definition}</p>
                             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">

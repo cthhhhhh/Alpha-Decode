@@ -47,7 +47,9 @@ public class UserController {
     public ResponseEntity<?> getCurrentUser() {
         try {
             User user = userService.getCurrentUser();
-            return ResponseEntity.ok(new UserDTO.AuthResponse(null, user.getRole().name(), user.getUsername(), user.getLevel(), user.getXp(), user.getMaxUnlockedLessonIndex()));
+            return ResponseEntity.ok(new UserDTO.AuthResponse(null, user.getRole().name(),
+                    user.getUsername(), user.getLevel(), user.getXp(),
+                    user.getMaxUnlockedLessonIndex(), user.getStreak()));
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
@@ -68,6 +70,18 @@ public class UserController {
         try {
             UserDTO.AuthResponse response = userService.updateLessonProgress(request.getMaxUnlockedLessonIndex());
             return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UserDTO.UpdateProfileRequest request) {
+        try {
+            UserDTO.AuthResponse response = userService.updateProfile(request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }

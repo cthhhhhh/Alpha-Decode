@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
     BookOpen,
@@ -8,9 +9,11 @@ import {
     Trophy,
     Info,
     Shield,
+    Flag,
     type LucideIcon,
 } from 'lucide-react';
 import type { Lesson, RevisionQuiz } from '../types';
+import FlagModal from './FlagModal';
 
 interface Props {
     lessons: Lesson[];
@@ -40,6 +43,8 @@ type PathNode =
     | { kind: 'checkpoint'; quiz: RevisionQuiz; isCompleted: boolean };
 
 const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision }: Props) => {
+    const [flagTarget, setFlagTarget] = useState<number | null>(null);
+
     const buildNodes = (): PathNode[] => {
         const nodes: PathNode[] = [];
         let visibleIdx = 0;
@@ -154,9 +159,18 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                 </div>
                             </motion.button>
 
-                            <span className="mt-4 font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap bg-white/90 text-slate-600 border-slate-100">
-                                {lesson.title}
-                            </span>
+                            <div className="mt-4 flex items-center gap-1">
+                                <span className="font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap bg-white/90 text-slate-600 border-slate-100">
+                                    {lesson.title}
+                                </span>
+                                <button
+                                    onClick={e => { e.stopPropagation(); setFlagTarget(parseInt(lesson.id)); }}
+                                    className="text-slate-300 hover:text-red-400 transition-colors p-0.5"
+                                    title="Flag this lesson"
+                                >
+                                    <Flag size={12} />
+                                </button>
+                            </div>
                         </div>
                     );
                 }
@@ -189,6 +203,12 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                     </div>
                 );
             })}
+            <FlagModal
+                show={flagTarget !== null}
+                contentType="LESSON"
+                contentId={flagTarget ?? 0}
+                onClose={() => setFlagTarget(null)}
+            />
         </div>
     );
 };
