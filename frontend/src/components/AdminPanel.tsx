@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Shield, Users, Activity, ArrowLeft, Trash2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Trash2, ArrowUpCircle, ArrowDownCircle, Search, SlidersHorizontal } from 'lucide-react';
 
 interface AdminStats {
   totalUsers: number;
@@ -23,6 +23,10 @@ export default function AdminPanel({ onBack }: { onBack: () => void }) {
   const [users, setUsers] = useState<UserData[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+  const [sortMode, setSortMode] = useState<'id' | 'alpha' | 'level'>('id');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'ADMIN' | 'USER'>('ALL');
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -97,6 +101,20 @@ export default function AdminPanel({ onBack }: { onBack: () => void }) {
       alert(err.message);
     }
   };
+
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.username.toLowerCase().includes(query.toLowerCase()) || 
+                          u.email.toLowerCase().includes(query.toLowerCase());
+    const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (sortMode === 'id') return a.id - b.id;
+    if (sortMode === 'alpha') return a.username.localeCompare(b.username);
+    if (sortMode === 'level') return b.level - a.level || b.xp - a.xp;
+    return 0;
+  });
 
   if (loading) {
     return (
@@ -174,15 +192,71 @@ export default function AdminPanel({ onBack }: { onBack: () => void }) {
           </div>
         )}
 
-        <div className="bg-white border-2 border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-8">
-          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+        <div className="bg-white border-2 border-slate-200 rounded-3xl shadow-sm mb-8 relative">
+          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-t-[22px]">
             <h2 className="text-xl font-black text-slate-800">User Management</h2>
-            <div className="text-sm font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-200">
-              {users.length} Total Accounts
+            
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search user..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:border-brand-primary outline-none transition-all w-48 sm:w-64"
+                />
+              </div>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded-xl border-2 transition-all ${showFilters ? 'border-brand-primary bg-brand-primary/10 text-brand-primary' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+                >
+                  <SlidersHorizontal size={20} />
+                </button>
+
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute right-0 mt-2 w-64 bg-white border-2 border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden"
+                  >
+                    <div className="p-4 border-b border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Arrange By</p>
+                      <div className="flex flex-col gap-1">
+                        {(['id', 'alpha', 'level'] as const).map(mode => (
+                          <button
+                            key={mode}
+                            onClick={() => { setSortMode(mode); setShowFilters(false); }}
+                            className={`text-left px-3 py-2 rounded-xl text-xs font-bold transition-all ${sortMode === mode ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'}`}
+                          >
+                            {mode === 'id' ? 'ID (Number)' : mode === 'alpha' ? 'A–Z (Username)' : 'Level / XP'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-slate-50">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Filter By Role</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(['ALL', 'ADMIN', 'USER'] as const).map(role => (
+                          <button
+                            key={role}
+                            onClick={() => { setRoleFilter(role); setShowFilters(false); }}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border-2 transition-all ${roleFilter === role ? 'bg-brand-primary border-brand-primary text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                          >
+                            {role}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-b-[22px]">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-white border-b border-slate-100 text-xs uppercase tracking-wider font-black text-slate-400">
@@ -195,7 +269,7 @@ export default function AdminPanel({ onBack }: { onBack: () => void }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {users.map(user => (
+                {sortedUsers.map(user => (
                   <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-500">#{user.id}</td>
                     <td className="px-6 py-4 font-bold text-slate-800">{user.username}</td>

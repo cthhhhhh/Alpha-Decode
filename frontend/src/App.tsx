@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield, ChevronUp } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -19,6 +19,13 @@ import AdminPanel from './components/AdminPanel';
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 200);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // --- Auth State ---
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
@@ -34,6 +41,10 @@ export default function App() {
   const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(() => {
     const saved = localStorage.getItem('dailyQuizDate');
+    return saved === new Date().toDateString();
+  });
+  const [dailyQuizStarted, setDailyQuizStarted] = useState(() => {
+    const saved = localStorage.getItem('dailyQuizStartedDate');
     return saved === new Date().toDateString();
   });
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
@@ -70,18 +81,19 @@ export default function App() {
         data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
         setLessonIdToPosition(pos);
 
+        const isAdmin = authRole === 'ADMIN';
         const unlockedIndex = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
 
         setLessons(data.map((l, i) => ({
           id: String(l.id),
           title: l.title,
-          locked: i > unlockedIndex,
-          completed: i < unlockedIndex,
+          locked: isAdmin ? false : i > unlockedIndex,
+          completed: isAdmin ? true : i < unlockedIndex,
           x: xOffsets[i % xOffsets.length],
         })));
       })
       .catch(() => setLessons([]));
-  }, []);
+  }, [authToken, authRole]);
 
   // Fetch daily quiz questions
   useEffect(() => {
@@ -148,7 +160,8 @@ export default function App() {
     localStorage.removeItem('xp');
     localStorage.removeItem('level');
     localStorage.removeItem('streak');
-    localStorage.removeItem('dailyQuizDate');
+    // NOTE: dailyQuizDate and dailyQuizStartedDate are intentionally kept
+    // so the quiz lock persists across same-day re-logins.
     localStorage.removeItem('completedRevisionQuizIds');
     localStorage.removeItem('maxUnlockedLessonIndex');
     setAuthToken(null);
@@ -354,7 +367,7 @@ export default function App() {
               <DailyWord onLearnMore={() => navigate('/glossary')} />
 
               {/* Daily Quiz CTA */}
-              {!dailyQuizCompleted && (
+              {(authRole === 'ADMIN' || (!dailyQuizCompleted && !dailyQuizStarted)) && (
                 <div className="relative rounded-3xl p-6 mb-8 overflow-hidden bg-brand-secondary shadow-xl shadow-brand-secondary/30">
                   {/* Decorative blobs */}
                   <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
@@ -389,7 +402,11 @@ export default function App() {
                     <motion.button
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowDailyQuiz(true)}
+                      onClick={() => {
+                        localStorage.setItem('dailyQuizStartedDate', new Date().toDateString());
+                        setDailyQuizStarted(true);
+                        setShowDailyQuiz(true);
+                      }}
                       className="shrink-0 bg-white text-brand-secondary px-7 py-3.5 rounded-2xl font-black text-base shadow-[0_4px_0_rgba(0,0,0,0.25)] active:translate-y-1 active:shadow-none transition-all"
                     >
                       Start Quiz →
@@ -477,12 +494,12 @@ export default function App() {
 
       {/* Bottom Navigation — matches CS203T1-main */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 px-4 py-2 sm:py-4 z-50 shadow-[0_-1px_0_rgba(0,0,0,0.05)]">
-        <div className="max-w-md mx-auto flex justify-between items-center">
+        <div className="max-w-md mx-auto flex items-center">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate('/home')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isLearn ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isLearn ? 'text-brand-primary bg-brand-primary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <BookOpen size={24} />
             <span className="text-[10px] font-black uppercase">Learn</span>
@@ -491,7 +508,7 @@ export default function App() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate('/leaderboard')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isLeaderboard ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isLeaderboard ? 'text-brand-secondary bg-brand-secondary/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Trophy size={24} />
             <span className="text-[10px] font-black uppercase">Ranks</span>
@@ -500,7 +517,7 @@ export default function App() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate('/glossary')}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isGlossary ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isGlossary ? 'text-brand-accent bg-brand-accent/10' : 'text-slate-400 hover:bg-slate-50'}`}
           >
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
@@ -510,7 +527,7 @@ export default function App() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate('/admin')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${location.pathname.startsWith('/admin') ? 'text-purple-500 bg-purple-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${location.pathname.startsWith('/admin') ? 'text-purple-500 bg-purple-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               <Shield size={24} />
               <span className="text-[10px] font-black uppercase">Admin</span>
@@ -550,6 +567,25 @@ export default function App() {
               handleRevisionQuizComplete(activeRevisionQuiz.id, correct, total)
             }
           />
+        )}
+      </AnimatePresence>
+      {/* Scroll-to-top button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            key="scrolltop"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            whileHover={{ scale: 1.12 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-24 right-5 z-50 w-12 h-12 bg-brand-primary text-white rounded-2xl shadow-lg shadow-brand-primary/40 flex items-center justify-center"
+            aria-label="Back to top"
+          >
+            <ChevronUp size={22} strokeWidth={3} />
+          </motion.button>
         )}
       </AnimatePresence>
     </div>
