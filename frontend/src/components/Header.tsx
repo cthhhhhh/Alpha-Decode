@@ -53,7 +53,7 @@ const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout
                                 onClick={() => setShowUserMenu(v => !v)}
                                 className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 transition-colors px-3 py-1.5 rounded-xl text-sm font-bold text-slate-700"
                             >
-                                <span>{authRole === 'admin' ? '👑' : '🎓'} {authUsername}</span>
+                                <span>{authRole?.toUpperCase() === 'ADMIN' ? '👑' : '🎓'} {authUsername}</span>
                                 <ChevronDown size={14} />
                             </motion.button>
 
@@ -68,7 +68,7 @@ const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout
                                     >
                                         <div className="px-3 py-2 border-b border-slate-100">
                                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                {authRole === 'admin' ? 'Admin' : 'User'}
+                                                {authRole?.toUpperCase() === 'ADMIN' ? 'Admin' : 'User'}
                                             </p>
                                             <p className="text-sm font-black text-slate-800 truncate">{authUsername}</p>
                                         </div>
