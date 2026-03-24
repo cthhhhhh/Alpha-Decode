@@ -1,4 +1,4 @@
-import { Flame, Star, Zap, LogOut, ChevronDown } from 'lucide-react';
+import { Flame, Star, Zap, LogOut, ChevronDown, User } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -10,9 +10,10 @@ interface Props {
     authUsername: string | null;
     authRole: string | null;
     onLogout: () => void;
+    onViewProfile?: () => void;
 }
 
-const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout }: Props) => {
+const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout, onViewProfile }: Props) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     return (
@@ -72,6 +73,15 @@ const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout
                                             </p>
                                             <p className="text-sm font-black text-slate-800 truncate">{authUsername}</p>
                                         </div>
+                                        {onViewProfile && (
+                                            <button
+                                                onClick={() => { onViewProfile(); setShowUserMenu(false); }}
+                                                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                            >
+                                                <User size={15} />
+                                                View Profile
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => { onLogout(); setShowUserMenu(false); }}
                                             className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors"

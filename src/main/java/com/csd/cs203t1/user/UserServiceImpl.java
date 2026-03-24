@@ -1,5 +1,7 @@
 package com.csd.cs203t1.user;
 
+import com.csd.cs203t1.achievement.Achievement;
+import com.csd.cs203t1.achievement.AchievementService;
 import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,17 +11,23 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AchievementService achievementService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                           JwtUtil jwtUtil, AchievementService achievementService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.achievementService = achievementService;
     }
 
     @Override
@@ -41,16 +49,11 @@ public class UserServiceImpl implements UserService {
         if (request.getMaxUnlockedLessonIndex() != null) user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
 
         User savedUser = userRepository.save(user);
-
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(savedUser.getUsername())
-                .password(savedUser.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
-                .build();
-
-        String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
+        String token = generateToken(savedUser);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
+                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
     }
+
     @Override
     public UserDTO.AuthResponse registerAdmin(UserDTO.RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -69,15 +72,9 @@ public class UserServiceImpl implements UserService {
         if (request.getXp() != null) user.setXp(request.getXp());
 
         User savedUser = userRepository.save(user);
-
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(savedUser.getUsername())
-                .password(savedUser.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
-                .build();
-
-        String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
+        String token = generateToken(savedUser);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
+                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
     }
 
     @Override
@@ -89,14 +86,9 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-                .build();
-
-        String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, user.getRole().name(), user.getUsername(), user.getLevel(), user.getXp(), user.getMaxUnlockedLessonIndex());
+        String token = generateToken(user);
+        return new UserDTO.AuthResponse(token, user.getRole().name(), user.getUsername(),
+                user.getLevel(), user.getXp(), user.getMaxUnlockedLessonIndex(), user.getStreak());
     }
 
     @Override
@@ -110,20 +102,26 @@ public class UserServiceImpl implements UserService {
     public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
         User user = getCurrentUser();
         user.setXp(user.getXp() + request.getXpToAdd());
+
         if (request.getMaxUnlockedLessonIndex() != null
                 && request.getMaxUnlockedLessonIndex() > user.getMaxUnlockedLessonIndex()) {
             user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
         }
+        if (request.getStreakToSet() != null) {
+            user.setStreak(request.getStreakToSet());
+        }
+        if (request.isDailyQuizCountIncrement()) {
+            user.setDailyQuizCount(user.getDailyQuizCount() + 1);
+        }
+
         User savedUser = userRepository.save(user);
+        List<Achievement> newAchievements = achievementService.checkAndUnlock(savedUser);
+        List<UserDTO.NewAchievementDTO> notifs = toNotifDTOs(newAchievements);
 
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(savedUser.getUsername())
-                .password(savedUser.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
-                .build();
-
-        String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
+        String token = generateToken(savedUser);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
+                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(),
+                savedUser.getStreak(), notifs.isEmpty() ? null : notifs);
     }
 
     @Override
@@ -133,14 +131,45 @@ public class UserServiceImpl implements UserService {
             user.setMaxUnlockedLessonIndex(maxUnlockedLessonIndex);
         }
         User savedUser = userRepository.save(user);
+        List<Achievement> newAchievements = achievementService.checkAndUnlock(savedUser);
+        List<UserDTO.NewAchievementDTO> notifs = toNotifDTOs(newAchievements);
 
+        String token = generateToken(savedUser);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
+                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(),
+                savedUser.getStreak(), notifs.isEmpty() ? null : notifs);
+    }
+
+    @Override
+    public UserDTO.AuthResponse updateProfile(UserDTO.UpdateProfileRequest request) {
+        User user = getCurrentUser();
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            if (!request.getUsername().equals(user.getUsername())
+                    && userRepository.existsByUsername(request.getUsername())) {
+                throw new IllegalArgumentException("Username is already taken");
+            }
+            user.setUsername(request.getUsername());
+        }
+        User savedUser = userRepository.save(user);
+        String token = generateToken(savedUser);
+        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
+                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────────────────────
+
+    private String generateToken(User user) {
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(savedUser.getUsername())
-                .password(savedUser.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
                 .build();
+        return jwtUtil.generateToken(userDetails);
+    }
 
-        String token = jwtUtil.generateToken(userDetails);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(), savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex());
+    private List<UserDTO.NewAchievementDTO> toNotifDTOs(List<Achievement> achievements) {
+        return achievements.stream()
+                .map(a -> new UserDTO.NewAchievementDTO(a.getName(), a.getIcon(), a.getDescription()))
+                .collect(Collectors.toList());
     }
 }
