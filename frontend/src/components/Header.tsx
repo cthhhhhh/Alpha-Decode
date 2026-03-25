@@ -20,7 +20,7 @@ const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout
         if (streak <= 0) return false;
         const dailyQuizDate = localStorage.getItem('dailyQuizDate');
         const today = new Date().toISOString().slice(0, 10);
-        if (dailyQuizDate === today) return false;
+        if (!dailyQuizDate || dailyQuizDate === today) return false;
         return new Date().getHours() >= 18;
     }, [streak]);
 

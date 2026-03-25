@@ -18,8 +18,18 @@ public class FlagServiceImpl implements FlagService {
 
     @Override
     public FlagDTO.FlagResponse createFlag(FlagDTO.CreateFlagRequest request, User reporter) {
-        ContentType contentType = ContentType.valueOf(request.getContentType().toUpperCase());
-        FlagReason reason = FlagReason.valueOf(request.getReason().toUpperCase());
+        ContentType contentType;
+        FlagReason reason;
+        try {
+            contentType = ContentType.valueOf(request.getContentType().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid content type: " + request.getContentType());
+        }
+        try {
+            reason = FlagReason.valueOf(request.getReason().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid reason: " + request.getReason());
+        }
 
         // Prevent duplicate flags from same user on same content
         flagRepository.findByReportedByAndContentTypeAndContentId(reporter, contentType, request.getContentId())
@@ -55,7 +65,12 @@ public class FlagServiceImpl implements FlagService {
 
     @Override
     public boolean hasUserFlagged(User user, String contentType, Long contentId) {
-        ContentType ct = ContentType.valueOf(contentType.toUpperCase());
+        ContentType ct;
+        try {
+            ct = ContentType.valueOf(contentType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid content type: " + contentType);
+        }
         return flagRepository.findByReportedByAndContentTypeAndContentId(user, ct, contentId).isPresent();
     }
 

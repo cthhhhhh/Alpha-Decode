@@ -81,9 +81,14 @@ public class LeaderboardController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getMyRank(@RequestParam(defaultValue = "xp") String sort) {
         User currentUser = userService.getCurrentUser();
-        long rank = "streak".equals(sort)
-                ? userRepository.countByStreakGreaterThan(currentUser.getStreak()) + 1
-                : userRepository.countByXpGreaterThan(currentUser.getXp()) + 1;
+        long rank;
+        if ("streak".equals(sort)) {
+            long streakGreater = userRepository.countByStreakGreaterThan(currentUser.getStreak());
+            long sameStreakBetterXp = userRepository.countByStreakAndXpGreaterThan(currentUser.getStreak(), currentUser.getXp());
+            rank = streakGreater + sameStreakBetterXp + 1;
+        } else {
+            rank = userRepository.countByXpGreaterThan(currentUser.getXp()) + 1;
+        }
 
         Map<String, Object> result = new HashMap<>();
         result.put("rank", rank);

@@ -33,4 +33,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByXpGreaterThan(int xp);
 
     long countByStreakGreaterThan(int streak);
+
+    long countByStreakAndXpGreaterThan(int streak, int xp);
 }

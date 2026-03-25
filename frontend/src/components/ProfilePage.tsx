@@ -23,6 +23,7 @@ const TOTAL_LESSONS = 20;
 
 const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [fetchError, setFetchError] = useState(false);
     const [editingName, setEditingName] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [saveError, setSaveError] = useState('');
@@ -41,9 +42,16 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
             headers: { 'Authorization': `Bearer ${authToken}` },
         })
             .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: UserProfile) => setProfile(data))
-            .catch(() => {});
+            .catch(() => setFetchError(true));
     }, [authToken, authUsername]);
+
+    if (fetchError) return (
+        <div className="flex items-center justify-center py-20">
+            <div className="text-lg font-black text-slate-400">Failed to load profile. Please refresh the page.</div>
+        </div>
+    );
 
     if (!profile) return (
         <div className="flex items-center justify-center py-20">
@@ -136,6 +144,7 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
                                     onChange={e => setNewUsername(e.target.value)}
                                     onKeyDown={e => { if (e.key === 'Enter') handleEditSave(); if (e.key === 'Escape') setEditingName(false); }}
                                     className="flex-1 border-2 border-brand-primary rounded-xl px-3 py-1.5 font-black text-lg outline-none"
+                                    maxLength={30}
                                     autoFocus
                                 />
                                 <button onClick={handleEditSave} disabled={saving} className="text-green-500 hover:text-green-600">

@@ -18,7 +18,7 @@ public class StreakScheduler {
     @Scheduled(cron = "0 5 0 * * *")
     public void resetMissedStreaks() {
         List<User> toReset = userRepository.findByStreakGreaterThanAndDailyQuizLastDateBefore(
-                0, LocalDate.now().minusDays(1));
+                0, LocalDate.now());
         toReset.forEach(u -> u.setStreak(0));
         userRepository.saveAll(toReset);
     }

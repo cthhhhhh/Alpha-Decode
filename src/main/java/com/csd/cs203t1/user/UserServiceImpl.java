@@ -11,6 +11,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -100,6 +102,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
         User user = getCurrentUser();
         user.setXp(user.getXp() + request.getXpToAdd());
@@ -129,6 +132,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex) {
         User user = getCurrentUser();
         if (maxUnlockedLessonIndex > user.getMaxUnlockedLessonIndex()) {

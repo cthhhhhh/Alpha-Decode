@@ -10,9 +10,18 @@ interface DailyWordProps {
 const DailyWord = ({ onLearnMore }: DailyWordProps) => {
     const [dailyTerm, setDailyTerm] = useState<ApiTerm | null>(null);
 
+    const handleShare = () => {
+        const text = `Today's word on Alpha Decode: "${dailyTerm?.term}" — ${dailyTerm?.definition}`;
+        if (navigator.share) {
+            navigator.share({ title: 'Alpha Decode Word of the Day', text });
+        } else {
+            navigator.clipboard.writeText(text);
+        }
+    };
+
     useEffect(() => {
         fetch('/api/terms/')
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: ApiTerm[]) => {
                 if (data.length > 0) {
                     // Pick a term based on day-of-year so it changes daily but is consistent
@@ -46,7 +55,7 @@ const DailyWord = ({ onLearnMore }: DailyWordProps) => {
                     <button onClick={onLearnMore} className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-slate-100 transition-colors">
                         Learn More
                     </button>
-                    <button className="border border-white/20 px-6 py-3 rounded-full font-bold hover:bg-white/10 transition-colors">
+                    <button onClick={handleShare} className="border border-white/20 px-6 py-3 rounded-full font-bold hover:bg-white/10 transition-colors">
                         Share
                     </button>
                 </div>

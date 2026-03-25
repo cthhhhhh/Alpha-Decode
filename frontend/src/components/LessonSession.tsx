@@ -75,13 +75,17 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
     const [showFlag, setShowFlag] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
         fetch(`/api/lessons/questions/${lessonId}`)
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: LessonData) => {
-                setSteps(shuffleSteps(data.quiz?.questions ?? []));
-                setLoading(false);
+                if (isMounted) {
+                    setSteps(shuffleSteps(data.quiz?.questions ?? []));
+                    setLoading(false);
+                }
             })
-            .catch(() => setLoading(false));
+            .catch(() => { if (isMounted) setLoading(false); });
+        return () => { isMounted = false; };
     }, [lessonId]);
 
     if (loading) return (

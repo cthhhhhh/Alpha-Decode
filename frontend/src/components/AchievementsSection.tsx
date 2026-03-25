@@ -29,9 +29,9 @@ const AchievementsSection = () => {
         const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
 
         Promise.all([
-            fetch('/api/achievements').then(r => r.json()),
+            fetch('/api/achievements').then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
             token
-                ? fetch('/api/achievements/me', { headers }).then(r => r.json())
+                ? fetch('/api/achievements/me', { headers }).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
                 : Promise.resolve([]),
         ]).then(([allData, unlockedData]: [AchievementInfo[], UserAchievementInfo[]]) => {
             setAll(allData);

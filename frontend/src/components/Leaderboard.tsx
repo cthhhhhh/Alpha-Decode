@@ -36,7 +36,7 @@ const Leaderboard = ({ authUsername }: Props) => {
         fetch(`/api/leaderboard?period=${period}&sort=${sort}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         })
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: LeaderboardEntry[]) => { setEntries(data); setLoading(false); })
             .catch(() => { setError(true); setLoading(false); });
     }, [period, sort]);
@@ -249,8 +249,17 @@ const Leaderboard = ({ authUsername }: Props) => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                                <Star size={16} className="text-brand-yellow" fill="currentColor" />
-                                <span className="font-black text-slate-700">{myRank.entry.xp}</span>
+                                {sort === 'streak' ? (
+                                    <>
+                                        <Flame size={16} className="text-orange-400" fill="currentColor" />
+                                        <span className="font-black text-slate-700">{myRank.entry.streak}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Star size={16} className="text-brand-yellow" fill="currentColor" />
+                                        <span className="font-black text-slate-700">{myRank.entry.xp}</span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </motion.div>

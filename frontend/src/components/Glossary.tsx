@@ -29,7 +29,7 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
 
     useEffect(() => {
         fetch('/api/terms/')
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: ApiTerm[]) => setTerms(data))
             .catch(() => {});
     }, []);

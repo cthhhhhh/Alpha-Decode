@@ -24,6 +24,8 @@ interface NewAchievement {
   description: string;
 }
 
+type ToastItem = NewAchievement & { _toastId: string };
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +59,15 @@ export default function App() {
     const saved = localStorage.getItem('dailyQuizStartedDate');
     return saved === new Date().toISOString().slice(0, 10);
   });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const today = new Date().toISOString().slice(0, 10);
+      setDailyQuizCompleted(localStorage.getItem('dailyQuizDate') === today);
+      setDailyQuizStarted(localStorage.getItem('dailyQuizStartedDate') === today);
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
   const [revisionQuizzes, setRevisionQuizzes] = useState<RevisionQuiz[]>([]);
   const [completedRevisionIds, setCompletedRevisionIds] = useState<Set<string>>(() => {
@@ -79,14 +90,15 @@ export default function App() {
   const [lessonIdToPosition, setLessonIdToPosition] = useState<Record<string, number>>({});
 
   // Achievement toasts
-  const [achievementToasts, setAchievementToasts] = useState<NewAchievement[]>([]);
+  const [achievementToasts, setAchievementToasts] = useState<ToastItem[]>([]);
 
   const showAchievementToasts = (achievements: NewAchievement[]) => {
     if (!achievements || achievements.length === 0) return;
-    setAchievementToasts(prev => [...prev, ...achievements]);
-    achievements.forEach((_, i) => {
+    const withIds: ToastItem[] = achievements.map(a => ({ ...a, _toastId: crypto.randomUUID() }));
+    setAchievementToasts(prev => [...prev, ...withIds]);
+    withIds.forEach((a, i) => {
       setTimeout(() => {
-        setAchievementToasts(prev => prev.slice(1));
+        setAchievementToasts(prev => prev.filter(t => t._toastId !== a._toastId));
       }, 3000 + i * 500);
     });
   };
@@ -94,7 +106,7 @@ export default function App() {
   // Fetch lesson list from backend on mount
   useEffect(() => {
     fetch('/api/lessons/')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: { id: number; title: string }[]) => {
         const xOffsets = [0, 40, -40, 0, 40, -40, 0];
         const pos: Record<string, number> = {};
@@ -118,7 +130,7 @@ export default function App() {
   // Fetch daily quiz questions
   useEffect(() => {
     fetch('/api/quiz/daily')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: { title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
         setDailyQuizQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
       ).catch(() => { });
@@ -127,7 +139,7 @@ export default function App() {
   // Fetch revision quizzes
   useEffect(() => {
     fetch('/api/quiz/revision')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: { id: number; afterLessonIndex: number; questions: RevisionQuizQuestion[] }[]) =>
         setRevisionQuizzes(data.map(rq => ({
           id: String(rq.id),
@@ -140,7 +152,7 @@ export default function App() {
   // Fetch onboarding questions
   useEffect(() => {
     fetch('/api/quiz/onboarding')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: { title: string; options: string[]; correctAnswer: number }[]) =>
         setOnboardingQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer })))
       ).catch(() => { });
@@ -675,9 +687,9 @@ export default function App() {
       {/* Achievement Toasts */}
       <div className="fixed top-20 right-4 z-[300] flex flex-col gap-2 pointer-events-none">
         <AnimatePresence>
-          {achievementToasts.slice(0, 3).map((a, i) => (
+          {achievementToasts.slice(0, 3).map((a) => (
             <motion.div
-              key={`${a.name}-${i}`}
+              key={a._toastId}
               initial={{ opacity: 0, x: 80, scale: 0.8 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 80, scale: 0.8 }}

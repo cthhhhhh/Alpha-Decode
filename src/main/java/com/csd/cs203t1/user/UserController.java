@@ -58,8 +58,11 @@ public class UserController {
     @PostMapping("/xp")
     public ResponseEntity<?> addXp(@RequestBody UserDTO.XpUpdateRequest request) {
         try {
+            if (request.getXpToAdd() < 0) throw new IllegalArgumentException("XP to add must be non-negative");
             UserDTO.AuthResponse response = userService.updateXp(request);
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
@@ -70,6 +73,8 @@ public class UserController {
         try {
             UserDTO.AuthResponse response = userService.updateLessonProgress(request.getMaxUnlockedLessonIndex());
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }

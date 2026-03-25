@@ -20,7 +20,7 @@ const FlagModal = ({ show, contentType, contentId, onClose }: Props) => {
     useEffect(() => {
         if (!show) return;
         fetch('/api/flags/reasons')
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: string[]) => setReasons(data))
             .catch(() => setReasons([]));
         // Reset state on open
