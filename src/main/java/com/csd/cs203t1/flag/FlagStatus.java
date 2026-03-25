@@ -1,7 +1,7 @@
 package com.csd.cs203t1.flag;
 
 public enum FlagStatus {
-    PENDING, REVIEWED, DISMISSED;
+    PENDING, REVIEWED, DISMISSED, RESOLVED;
 
     @Override
     public String toString() {

@@ -310,4 +310,24 @@ public class UserServiceImpl implements UserService {
                 .map(a -> new UserDTO.NewAchievementDTO(a.getName(), a.getIcon(), a.getDescription()))
                 .collect(Collectors.toList());
     }
+    @Override
+    @Transactional
+    public void resetProgress(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setXp(0);
+        user.setLevel(1);
+        user.setStreak(0);
+        user.setMaxUnlockedLessonIndex(0);
+        user.setDailyQuizCount(0);
+        user.setDailyQuizLastDate(null);
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void setUserEnabled(Long id, boolean enabled) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setEnabled(enabled);
+        userRepository.save(user);
+    }
 }

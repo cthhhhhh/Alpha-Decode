@@ -14,4 +14,6 @@ public interface UserService {
     void resetPassword(UserDTO.ResetPasswordRequest request);
     void deleteCurrentUser();
     void deleteUserById(Long id);
+    void resetProgress(Long id);
+    void setUserEnabled(Long id, boolean enabled);
 }

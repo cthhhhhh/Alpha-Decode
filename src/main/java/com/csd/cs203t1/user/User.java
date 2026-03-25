@@ -68,6 +68,9 @@ public class User {
 	@Column
 	private String profilePic;
 
+	@Column(nullable = false, columnDefinition = "boolean default true")
+	private boolean enabled = true;
+
 	@jakarta.persistence.Transient
 	private UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
 

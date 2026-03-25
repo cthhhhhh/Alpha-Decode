@@ -1,0 +1,55 @@
+export interface AdminStats {
+  totalUsers: number;
+  contributors: number;
+  activeSessions: number;
+  systemHealth: string;
+  message: string;
+}
+
+export interface UserData {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  level: number;
+  xp: number;
+  enabled: boolean;
+  isOnline: boolean;
+}
+
+export interface UserStats {
+  xp: number;
+  level: number;
+  streak: number;
+  lessonsCompleted: number;
+  dailyQuizzesTaken: number;
+  lastActive: string;
+}
+
+export interface FlagItem {
+  id: number;
+  reason: string;
+  details: string;
+  status: string;
+  createdAt: string;
+  reportedBy: string;
+  contentType: string;
+  contentId: number;
+}
+
+export interface Lesson {
+  id: number;
+  title: string;
+  story?: string;
+  emoji?: string;
+}
+
+export interface Term {
+  id: number;
+  term: string;
+  definition: string;
+  example: string;
+  difficulty: string;
+}
+
+export type Tab = 'dashboard' | 'users' | 'reports' | 'content';
