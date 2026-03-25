@@ -45,13 +45,13 @@ const Leaderboard = ({ authUsername }: Props) => {
         if (!authUsername) return;
         const token = localStorage.getItem('token');
         if (!token) return;
-        fetch('/api/leaderboard/me', {
+        fetch(`/api/leaderboard/me?sort=${sort}`, {
             headers: { 'Authorization': `Bearer ${token}` },
         })
             .then(r => r.ok ? r.json() : null)
             .then((data: MyRankResponse | null) => setMyRank(data))
             .catch(() => {});
-    }, [authUsername]);
+    }, [authUsername, sort]);
 
     if (loading) return (
         <div className="flex items-center justify-center py-20">

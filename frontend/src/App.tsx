@@ -51,11 +51,11 @@ export default function App() {
   const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(() => {
     const saved = localStorage.getItem('dailyQuizDate');
-    return saved === new Date().toDateString();
+    return saved === new Date().toISOString().slice(0, 10);
   });
   const [dailyQuizStarted, setDailyQuizStarted] = useState(() => {
     const saved = localStorage.getItem('dailyQuizStartedDate');
-    return saved === new Date().toDateString();
+    return saved === new Date().toISOString().slice(0, 10);
   });
   const [showDailyQuiz, setShowDailyQuiz] = useState(false);
   const [revisionQuizzes, setRevisionQuizzes] = useState<RevisionQuiz[]>([]);
@@ -231,7 +231,7 @@ export default function App() {
         }).catch(() => {});
       }
     }
-    localStorage.setItem('dailyQuizDate', new Date().toDateString());
+    localStorage.setItem('dailyQuizDate', new Date().toISOString().slice(0, 10));
     setDailyQuizCompleted(true);
     setShowDailyQuiz(false);
   };
@@ -349,7 +349,10 @@ export default function App() {
           body: JSON.stringify({ xpToAdd: correct, maxUnlockedLessonIndex: newMaxUnlocked !== undefined ? Math.max(newMaxUnlocked, currentMax) : undefined }),
         })
           .then(r => r.json())
-          .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+          .then(data => {
+            if (data.newAchievements) showAchievementToasts(data.newAchievements);
+            if (data.level) { localStorage.setItem('level', String(data.level)); setLevel(data.level); }
+          })
           .catch(err => console.error('Failed to save XP:', err));
       }
     }
@@ -452,7 +455,7 @@ export default function App() {
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
-                        localStorage.setItem('dailyQuizStartedDate', new Date().toDateString());
+                        localStorage.setItem('dailyQuizStartedDate', new Date().toISOString().slice(0, 10));
                         setDailyQuizStarted(true);
                         setShowDailyQuiz(true);
                       }}

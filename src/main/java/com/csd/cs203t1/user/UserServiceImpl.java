@@ -103,6 +103,8 @@ public class UserServiceImpl implements UserService {
     public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
         User user = getCurrentUser();
         user.setXp(user.getXp() + request.getXpToAdd());
+        int newLevel = user.getXp() / 20 + 1;
+        user.setLevel(newLevel);
 
         if (request.getMaxUnlockedLessonIndex() != null
                 && request.getMaxUnlockedLessonIndex() > user.getMaxUnlockedLessonIndex()) {
