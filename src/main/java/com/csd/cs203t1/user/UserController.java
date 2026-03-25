@@ -86,4 +86,16 @@ public class UserController {
             return ResponseEntity.status(401).body("Not authenticated");
         }
     }
+
+    @PatchMapping("/password")
+    public ResponseEntity<?> changePassword(@RequestBody UserDTO.ChangePasswordRequest request) {
+        try {
+            userService.changePassword(request);
+            return ResponseEntity.ok("Password updated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+    }
 }

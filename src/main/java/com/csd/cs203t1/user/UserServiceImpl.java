@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,6 +113,7 @@ public class UserServiceImpl implements UserService {
         }
         if (request.isDailyQuizCountIncrement()) {
             user.setDailyQuizCount(user.getDailyQuizCount() + 1);
+            user.setDailyQuizLastDate(LocalDate.now());
         }
 
         User savedUser = userRepository.save(user);
@@ -154,6 +156,19 @@ public class UserServiceImpl implements UserService {
         String token = generateToken(savedUser);
         return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
                 savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
+    }
+
+    @Override
+    public void changePassword(UserDTO.ChangePasswordRequest request) {
+        User user = getCurrentUser();
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────────

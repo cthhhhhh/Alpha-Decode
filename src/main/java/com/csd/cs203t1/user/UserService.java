@@ -8,4 +8,5 @@ public interface UserService {
     UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request);
     UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex);
     UserDTO.AuthResponse updateProfile(UserDTO.UpdateProfileRequest request);
+    void changePassword(UserDTO.ChangePasswordRequest request);
 }

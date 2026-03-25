@@ -80,4 +80,12 @@ public class UserDTO {
     public static class UpdateProfileRequest {
         private String username;
     }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ChangePasswordRequest {
+        private String currentPassword;
+        private String newPassword;
+    }
 }

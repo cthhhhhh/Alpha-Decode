@@ -28,6 +28,13 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
     const [saveError, setSaveError] = useState('');
     const [saving, setSaving] = useState(false);
 
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
+    const [savingPassword, setSavingPassword] = useState(false);
+
     useEffect(() => {
         if (!authToken) return;
         fetch('/api/auth/me', {
@@ -75,6 +82,36 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
             setSaveError('Network error');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handlePasswordSave = async () => {
+        setPasswordError('');
+        setPasswordSuccess('');
+        if (!currentPassword || !newPassword) { setPasswordError('Both fields are required'); return; }
+        setSavingPassword(true);
+        try {
+            const res = await fetch('/api/auth/password', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({ currentPassword, newPassword }),
+            });
+            if (res.ok) {
+                setPasswordSuccess('Password updated successfully');
+                setCurrentPassword('');
+                setNewPassword('');
+                setShowPasswordForm(false);
+            } else {
+                const msg = await res.text();
+                setPasswordError(msg || 'Failed to update password');
+            }
+        } catch {
+            setPasswordError('Network error');
+        } finally {
+            setSavingPassword(false);
         }
     };
 
@@ -174,6 +211,62 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
                         ))}
                     </div>
                 </div>
+            </motion.div>
+
+            {/* Password Change */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                className="bg-white rounded-3xl border-2 border-slate-100 p-6"
+            >
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-slate-500 uppercase tracking-wide">Change Password</h3>
+                    <button
+                        onClick={() => { setShowPasswordForm(v => !v); setPasswordError(''); setPasswordSuccess(''); }}
+                        className="text-xs font-bold text-brand-primary hover:underline"
+                    >
+                        {showPasswordForm ? 'Cancel' : 'Change'}
+                    </button>
+                </div>
+                {passwordSuccess && !showPasswordForm && (
+                    <p className="text-xs text-green-600 font-bold mt-2">{passwordSuccess}</p>
+                )}
+                {showPasswordForm && (
+                    <div className="mt-4 space-y-3">
+                        <input
+                            type="password"
+                            placeholder="Current password"
+                            value={currentPassword}
+                            onChange={e => setCurrentPassword(e.target.value)}
+                            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-brand-primary"
+                        />
+                        <input
+                            type="password"
+                            placeholder="New password (min 6 characters)"
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handlePasswordSave(); }}
+                            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-brand-primary"
+                        />
+                        {passwordError && <p className="text-xs text-red-500 font-bold">{passwordError}</p>}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handlePasswordSave}
+                                disabled={savingPassword}
+                                className="flex items-center gap-1.5 text-green-500 hover:text-green-600 font-bold text-sm"
+                            >
+                                <Check size={16} /> Save
+                            </button>
+                            <button
+                                onClick={() => { setShowPasswordForm(false); setPasswordError(''); }}
+                                className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600 font-bold text-sm"
+                            >
+                                <X size={16} /> Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
             </motion.div>
 
             {/* Achievements */}

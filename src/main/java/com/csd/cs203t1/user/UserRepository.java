@@ -1,5 +1,7 @@
 package com.csd.cs203t1.user;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import com.csd.cs203t1.common.Role;
 import org.springframework.data.domain.Page;
@@ -21,4 +23,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRole(Role role);
 
     Page<User> findAllByOrderByXpDescLevelDesc(Pageable pageable);
+
+    List<User> findByStreakGreaterThanAndDailyQuizLastDateBefore(int streak, LocalDate date);
+
+    Page<User> findByDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(LocalDate since, Pageable pageable);
+
+    Page<User> findAllByOrderByStreakDescXpDesc(Pageable pageable);
+
+    long countByXpGreaterThan(int xp);
+
+    long countByStreakGreaterThan(int streak);
 }

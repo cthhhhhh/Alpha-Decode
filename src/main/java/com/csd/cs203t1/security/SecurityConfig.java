@@ -19,6 +19,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -58,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/terms/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/quiz/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/achievements")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/questions/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/flags/reasons")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/flags")).authenticated()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/api/flags/**")).hasRole("ADMIN")

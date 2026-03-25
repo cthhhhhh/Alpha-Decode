@@ -9,7 +9,7 @@ public interface QuestionService {
 
 	void deleteQuestion(Long id);
 
-	// Question addQuestion(Long quiz_id, Question question);
+	Question addQuestion(Long quizId, QuestionDTO dto);
 
-	
+	Question updateQuestion(Long id, QuestionDTO dto);
 }

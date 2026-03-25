@@ -9,5 +9,7 @@ public interface TermService {
 
 	Term getTerm(Long id);
 
-	Term addTerm(Long lessonId,Term term);
+	Term addTerm(Long lessonId, Term term);
+
+	Term updateTerm(Long id, Term term);
 }

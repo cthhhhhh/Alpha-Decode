@@ -21,7 +21,7 @@ public interface LessonService {
      */
     Lesson addLesson(LessonDTO lessonDTO, List<QuestionDTO> questionDTOs);
 
+    Lesson updateLesson(Long id, LessonDTO dto);
 
-    
     void deleteLesson(Long id);
 }

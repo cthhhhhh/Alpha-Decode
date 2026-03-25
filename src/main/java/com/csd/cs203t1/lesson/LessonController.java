@@ -77,6 +77,13 @@ public class LessonController {
 	}
 
 	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
+	@PutMapping("/{id}")
+	public ResponseEntity<Lesson> updateLesson(@PathVariable Long id, @RequestBody LessonDTO dto) {
+		Lesson updated = lessonService.updateLesson(id, dto);
+		return ResponseEntity.ok(updated);
+	}
+
+	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
 	@PostMapping("/create")
 	public ResponseEntity<Lesson> createLesson(@RequestBody CreateLessonRequest request) {
 		// Delegate the work to the service

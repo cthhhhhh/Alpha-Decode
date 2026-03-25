@@ -1,5 +1,5 @@
 import { Flame, Star, Zap, LogOut, ChevronDown, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
@@ -16,6 +16,14 @@ interface Props {
 const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout, onViewProfile }: Props) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
 
+    const streakAtRisk = useMemo(() => {
+        if (streak <= 0) return false;
+        const dailyQuizDate = localStorage.getItem('dailyQuizDate');
+        const today = new Date().toISOString().slice(0, 10);
+        if (dailyQuizDate === today) return false;
+        return new Date().getHours() >= 18;
+    }, [streak]);
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3">
             <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -31,9 +39,12 @@ const Header = ({ streak, xp, level, authToken, authUsername, authRole, onLogout
                 <div className="flex items-center gap-4">
                     {/* Stats */}
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5 text-orange-500 font-bold">
+                        <div className="relative flex items-center gap-1.5 text-orange-500 font-bold">
                             <Flame size={20} fill="currentColor" />
                             <span>{streak}</span>
+                            {streakAtRisk && (
+                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                            )}
                         </div>
                         <div className="flex items-center gap-1.5 text-brand-yellow font-bold">
                             <Star size={20} fill="currentColor" />

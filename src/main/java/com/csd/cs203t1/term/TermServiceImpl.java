@@ -48,4 +48,15 @@ public class TermServiceImpl implements TermService {
 		}
 		terms.deleteById(id);
 	}
+
+	@Override
+	public Term updateTerm(Long id, Term incoming) {
+		Term existing = getTerm(id);
+		if (incoming.getTerm() != null) existing.setTerm(incoming.getTerm());
+		if (incoming.getDefinition() != null) existing.setDefinition(incoming.getDefinition());
+		if (incoming.getExample() != null) existing.setExample(incoming.getExample());
+		if (incoming.getDifficulty() != null) existing.setDifficulty(incoming.getDifficulty());
+		if (incoming.getCategory() != null) existing.setCategory(incoming.getCategory());
+		return terms.save(existing);
+	}
 }

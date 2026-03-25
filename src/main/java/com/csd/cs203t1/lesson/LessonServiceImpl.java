@@ -4,15 +4,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.csd.cs203t1.question.IntroQuestion;
-import com.csd.cs203t1.question.IntroQuestionDTO;
 import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.QuestionDTO;
+import com.csd.cs203t1.question.QuestionMapper;
 import com.csd.cs203t1.question.QuestionRepository;
-import com.csd.cs203t1.question.SelectQuestion;
-import com.csd.cs203t1.question.SelectQuestionDTO;
-import com.csd.cs203t1.question.TranslateQuestion;
-import com.csd.cs203t1.question.TranslateQuestionDTO;
 import com.csd.cs203t1.quiz.LessonQuiz;
 import com.csd.cs203t1.quiz.QuizRepository;
 
@@ -49,6 +44,17 @@ public class LessonServiceImpl implements LessonService {
 
 
 	@Override
+	public Lesson updateLesson(Long id, LessonDTO dto) {
+		Lesson lesson = lessons.findById(id)
+			.orElseThrow(() -> new RuntimeException("Lesson not found"));
+		if (dto.getTitle() != null) lesson.setTitle(dto.getTitle());
+		if (dto.getColour() != null) lesson.setColour(dto.getColour());
+		if (dto.getStory() != null) lesson.setStory(dto.getStory());
+		if (dto.getEmoji() != null) lesson.setEmoji(dto.getEmoji());
+		return lessons.save(lesson);
+	}
+
+	@Override
 	public void deleteLesson(Long id){
 		if(!lessons.existsById(id)){
 			throw new RuntimeException("Lesson not found");
@@ -75,7 +81,7 @@ public class LessonServiceImpl implements LessonService {
 		//step3 make all the questions, add quiz to each
 		//questions can be of 3 different sub-classes
 		List<Question> questions = questionDTOs.stream()
-            .map(dto -> mapToEntity(dto, quiz))
+            .map(dto -> QuestionMapper.mapToEntity(dto, quiz))
             .collect(Collectors.toList());
 		quiz.setQuestions(questions);
 
@@ -84,36 +90,4 @@ public class LessonServiceImpl implements LessonService {
 
 	}
 
-	//helper
-	private Question mapToEntity(QuestionDTO dto, LessonQuiz quiz) {
-    if (dto instanceof IntroQuestionDTO introDto) {
-        return IntroQuestion.builder()
-                
-                .explanation(introDto.getExplanation())
-                .quiz(quiz)
-				.title(introDto.getTitle())
-				.content(introDto.getContent())
-                .build();
-    } else if (dto instanceof SelectQuestionDTO selectDto) {
-        return SelectQuestion.builder()
-                .explanation(selectDto.getExplanation())
-                .quiz(quiz)
-				.title(selectDto.getTitle())
-                .options(selectDto.getOptions())
-				.correctAnswer(selectDto.getCorrectAnswer())
-				.content(selectDto.getContent())
-                .build();
-    } else if (dto instanceof TranslateQuestionDTO transDto) {
-        return TranslateQuestion.builder()
-                .explanation(transDto.getExplanation())
-                .quiz(quiz)
-				.title(transDto.getTitle())
-                .target(transDto.getTarget())
-				.wordbank(transDto.getWordbank())
-				.content(transDto.getContent())
-                .build();
-    } else {
-        throw new IllegalArgumentException("Invalid type: ");
-    }
-}
 }

@@ -10,6 +10,11 @@ interface LeaderboardEntry {
     streak: number;
 }
 
+interface MyRankResponse {
+    rank: number;
+    entry: LeaderboardEntry;
+}
+
 interface Props {
     authUsername: string | null;
 }
@@ -21,16 +26,32 @@ const Leaderboard = ({ authUsername }: Props) => {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [period, setPeriod] = useState<'allTime' | 'weekly'>('allTime');
+    const [sort, setSort] = useState<'xp' | 'streak'>('xp');
+    const [myRank, setMyRank] = useState<MyRankResponse | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        fetch('/api/leaderboard', {
+        setLoading(true);
+        fetch(`/api/leaderboard?period=${period}&sort=${sort}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         })
             .then(r => r.json())
             .then((data: LeaderboardEntry[]) => { setEntries(data); setLoading(false); })
             .catch(() => { setError(true); setLoading(false); });
-    }, []);
+    }, [period, sort]);
+
+    useEffect(() => {
+        if (!authUsername) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        fetch('/api/leaderboard/me', {
+            headers: { 'Authorization': `Bearer ${token}` },
+        })
+            .then(r => r.ok ? r.json() : null)
+            .then((data: MyRankResponse | null) => setMyRank(data))
+            .catch(() => {});
+    }, [authUsername]);
 
     if (loading) return (
         <div className="flex items-center justify-center py-20">
@@ -45,9 +66,38 @@ const Leaderboard = ({ authUsername }: Props) => {
     );
 
     const top3 = entries.slice(0, 3);
+    const isInTopList = entries.some(e => e.username === authUsername);
 
     return (
         <div className="max-w-2xl mx-auto">
+            {/* Filter toggles */}
+            <div className="flex items-center justify-between mb-6 gap-3">
+                <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden">
+                    {(['allTime', 'weekly'] as const).map(p => (
+                        <button
+                            key={p}
+                            onClick={() => setPeriod(p)}
+                            className={`px-4 py-1.5 text-xs font-black uppercase tracking-wide transition-colors
+                                ${period === p ? 'bg-brand-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                        >
+                            {p === 'allTime' ? 'All Time' : 'This Week'}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden">
+                    {(['xp', 'streak'] as const).map(s => (
+                        <button
+                            key={s}
+                            onClick={() => setSort(s)}
+                            className={`px-4 py-1.5 text-xs font-black uppercase tracking-wide transition-colors
+                                ${sort === s ? 'bg-brand-primary text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                        >
+                            {s === 'xp' ? 'XP' : 'Streak'}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* Podium */}
             {top3.length > 0 && (
                 <motion.div
@@ -141,10 +191,19 @@ const Leaderboard = ({ authUsername }: Props) => {
                                 </div>
                             </div>
 
-                            {/* XP */}
+                            {/* XP or Streak value based on sort */}
                             <div className="flex items-center gap-1 shrink-0">
-                                <Star size={16} className="text-brand-yellow" fill="currentColor" />
-                                <span className="font-black text-slate-700">{entry.xp}</span>
+                                {sort === 'streak' ? (
+                                    <>
+                                        <Flame size={16} className="text-orange-400" fill="currentColor" />
+                                        <span className="font-black text-slate-700">{entry.streak}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Star size={16} className="text-brand-yellow" fill="currentColor" />
+                                        <span className="font-black text-slate-700">{entry.xp}</span>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     );
@@ -155,6 +214,46 @@ const Leaderboard = ({ authUsername }: Props) => {
                         <Trophy size={40} className="mx-auto mb-3 opacity-30" />
                         <p className="font-bold">No players yet. Be the first!</p>
                     </div>
+                )}
+
+                {/* My Rank card — shown when current user is not in the visible list */}
+                {authUsername && myRank && !isInTopList && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-4 border-t-2 border-dashed border-slate-200 pt-4"
+                    >
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-wide mb-2">Your Rank</p>
+                        <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-brand-primary bg-brand-primary/5 shadow-lg shadow-brand-primary/10">
+                            <div className="w-8 text-center">
+                                <span className="font-black text-slate-400 text-sm">#{myRank.rank}</span>
+                            </div>
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-base shrink-0 bg-brand-primary">
+                                <Crown size={18} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-black truncate text-brand-primary">
+                                    {myRank.entry.username} (You)
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <div className="flex items-center gap-0.5">
+                                        <Zap size={11} className="text-brand-accent" />
+                                        <span className="text-[11px] font-bold text-slate-400">LVL {myRank.entry.level}</span>
+                                    </div>
+                                    {myRank.entry.streak > 0 && (
+                                        <div className="flex items-center gap-0.5">
+                                            <Flame size={11} className="text-orange-400" fill="currentColor" />
+                                            <span className="text-[11px] font-bold text-slate-400">{myRank.entry.streak}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                                <Star size={16} className="text-brand-yellow" fill="currentColor" />
+                                <span className="font-black text-slate-700">{myRank.entry.xp}</span>
+                            </div>
+                        </div>
+                    </motion.div>
                 )}
             </div>
         </div>
