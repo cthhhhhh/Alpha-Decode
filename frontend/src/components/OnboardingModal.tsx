@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Rocket, Sparkles, Brain, ArrowRight, User } from 'lucide-react';
+import { Trophy, Rocket, Sparkles, Brain, ArrowRight, User, ArrowLeft } from 'lucide-react';
 
 interface Props {
     show: boolean;
@@ -10,6 +10,7 @@ interface Props {
     onAnswer: (idx: number) => void;
     onComplete: () => void;
     onLogin: () => void;
+    onBack: () => void;
 }
 
 const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { color: string; size: string; top?: string; left?: string; bottom?: string; right?: string; delay: number }) => (
@@ -29,7 +30,7 @@ const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { co
     />
 );
 
-const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onLogin }: Props) => {
+const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onLogin, onBack }: Props) => {
     return (
         <AnimatePresence>
             {show && (
@@ -40,7 +41,17 @@ const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, o
                     className="fixed inset-0 z-[200] bg-slate-50 flex items-center justify-center p-4 sm:p-6 overflow-hidden"
                 >
                     {/* Header Buttons */}
-                    <div className="absolute top-8 left-8 right-8 z-[210] flex justify-end items-center pointer-events-none">
+                    <div className="absolute top-8 left-8 right-8 z-[210] flex justify-between items-center pointer-events-none">
+                        <motion.button
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            onClick={onBack}
+                            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-600 hover:bg-white hover:text-brand-primary transition-all shadow-sm group"
+                        >
+                            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                            <span>Back</span>
+                        </motion.button>
+
                         <motion.button
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}

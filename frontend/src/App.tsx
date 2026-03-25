@@ -18,6 +18,7 @@ import RegisterPage from './components/RegisterPage';
 import AdminPanel from './components/AdminPanel';
 import Leaderboard from './components/Leaderboard';
 import ProfilePage from './components/ProfilePage';
+import HomePage from './components/HomePage';
 
 interface NewAchievement {
   name: string;
@@ -508,13 +509,6 @@ export default function App() {
     navigate('/register');
   };
 
-  const handleBackToOnboarding = () => {
-    setOnboardingQIndex(0);
-    setOnboardingScore(0);
-    setOnboardingFinished(false);
-    setShowOnboarding(true); // Force it back open
-    navigate('/');
-  };
 
   const mainApp = (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -870,18 +864,18 @@ export default function App() {
       <Route path="/login" element={
         <LoginPage
           onLoginSuccess={handleAuthSuccess}
-          onGoToRegister={() => navigate('/')}
-          onBack={handleBackToOnboarding}
+          onGoToRegister={() => navigate('/onboarding')}
+          onBack={() => navigate('/')}
         />
       } />
       <Route path="/register" element={
         <RegisterPage
           onRegisterSuccess={handleAuthSuccess}
           onGoToLogin={() => navigate('/login')}
-          onBack={handleBackToOnboarding}
+          onBack={() => navigate('/')}
         />
       } />
-      <Route path="/" element={
+      <Route path="/onboarding" element={
         <div className="min-h-screen bg-slate-50 flex flex-col">
           <OnboardingModal
             show={true}
@@ -892,33 +886,37 @@ export default function App() {
             onAnswer={handleOnboardingAnswer}
             onComplete={completeOnboarding}
             onLogin={() => navigate('/login')}
+            onBack={() => navigate('/')}
           />
         </div>
       } />
+      <Route path="/" element={
+        authToken ? <Navigate to="/home" replace /> : <HomePage authToken={authToken} />
+      } />
       <Route path="/home/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       <Route path="/leaderboard/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       <Route path="/glossary/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       <Route path="/profile/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       <Route path="/admin/*" element={
         (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
-          (!showOnboarding || location.pathname === '/') ? mainApp : <Navigate to="/" replace />
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}
       <Route path="/*" element={
         !authToken ? <Navigate to="/login" replace /> :
-          showOnboarding ? <Navigate to="/" replace /> : <Navigate to="/home" replace />
+          showOnboarding ? <Navigate to="/onboarding" replace /> : <Navigate to="/home" replace />
       } />
     </Routes>
   );
