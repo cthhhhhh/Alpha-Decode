@@ -39,12 +39,25 @@ public class UserDTO {
         private Integer xp;
         private Integer maxUnlockedLessonIndex;
         private Integer streak;
+        private String profilePic;
+        private String dailyQuizLastDate;
+        private Boolean dailyQuizCompletedToday;
         private List<NewAchievementDTO> newAchievements;
 
         // Backwards-compatible constructor for endpoints that don't check achievements
         public AuthResponse(String token, String role, String username,
+                            Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak, String profilePic) {
+            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, null, null, null);
+        }
+
+        public AuthResponse(String token, String role, String username,
+                            Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak, String profilePic, String dailyQuizLastDate) {
+            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null);
+        }
+
+        public AuthResponse(String token, String role, String username,
                             Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, null);
+            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, null, null, null, null);
         }
     }
 
@@ -79,6 +92,7 @@ public class UserDTO {
     @NoArgsConstructor
     public static class UpdateProfileRequest {
         private String username;
+        private String profilePic;
     }
 
     @Data
@@ -86,6 +100,22 @@ public class UserDTO {
     @NoArgsConstructor
     public static class ChangePasswordRequest {
         private String currentPassword;
+        private String newPassword;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class VerifyUserRequest {
+        private String username;
+        private String email;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ResetPasswordRequest {
+        private String username;
         private String newPassword;
     }
 }

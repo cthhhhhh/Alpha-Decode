@@ -12,4 +12,5 @@ public interface FlagRepository extends JpaRepository<Flag, Long> {
     List<Flag> findAllByOrderByCreatedAtDesc();
     Optional<Flag> findByReportedByAndContentTypeAndContentId(User user, ContentType contentType, Long contentId);
     List<Flag> findByReportedBy(User user);
+    void deleteByReportedBy(User user);
 }

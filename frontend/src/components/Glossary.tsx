@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Search, SlidersHorizontal, Flag, Bookmark } from 'lucide-react';
+import { Search, SlidersHorizontal, Flag, Bookmark, Lock } from 'lucide-react';
 import FlagModal from './FlagModal';
 
 interface ApiTerm {
@@ -15,15 +15,27 @@ interface ApiTerm {
 
 interface Props {
     lessonIdToPosition: Record<string, number>;
+    completedLessonIds: Set<string>;
 }
 
 const DIFFICULTY_ORDER: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
 
-const Glossary = ({ lessonIdToPosition }: Props) => {
+const Glossary = ({ lessonIdToPosition, completedLessonIds }: Props) => {
     const [terms, setTerms] = useState<ApiTerm[]>([]);
     const [query, setQuery] = useState('');
     const [sortMode, setSortMode] = useState<'lesson' | 'alpha' | 'difficulty'>('lesson');
     const [showFilters, setShowFilters] = useState(false);
+    const filterRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
     const [flagTarget, setFlagTarget] = useState<number | null>(null);
     const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
@@ -138,7 +150,7 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
                     </button>
                 )}
 
-                <div className="relative">
+                <div className="relative" ref={filterRef}>
                     <button
                         type="button"
                         onClick={() => setShowFilters(prev => !prev)}
@@ -203,54 +215,74 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sorted.map(term => {
                     const lessonPos = term.lesson_id !== null ? lessonIdToPosition[String(term.lesson_id)] : undefined;
+                    const isLocked = term.lesson_id !== null && !completedLessonIds.has(String(term.lesson_id));
                     const isBookmarked = bookmarkedIds.has(term.id);
                     return (
                         <motion.div
                             layout
                             key={term.id}
                             whileHover={{ y: -5, scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="duo-card hover:shadow-xl hover:shadow-slate-200/50 transition-shadow"
+                            whileTap={!isLocked ? { scale: 0.98 } : {}}
+                            className={`duo-card hover:shadow-xl hover:shadow-slate-200/50 transition-all ${isLocked ? 'bg-slate-50/50 border-dashed border-slate-200 opacity-80' : ''}`}
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black">{term.term}</h3>
+                                    <h3 className={`text-xl font-black ${isLocked ? 'text-slate-400' : ''}`}>{term.term}</h3>
                                     {lessonPos !== undefined && (
-                                        <span className="text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full w-fit uppercase tracking-wide px-1">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit uppercase tracking-wide px-1 ${isLocked ? 'bg-slate-200 text-slate-500' : 'text-brand-primary bg-brand-primary/10'}`}>
                                             Lesson {lessonPos}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase
-                                        ${term.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                                        term.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                            'bg-red-100 text-red-700'}`}>
-                                        {term.difficulty}
-                                    </span>
-                                    {localStorage.getItem('token') && (
-                                        <button
-                                            onClick={e => { e.stopPropagation(); handleBookmark(term.id); }}
-                                            className={`transition-colors ${isBookmarked ? 'text-brand-yellow' : 'text-slate-300 hover:text-brand-yellow'}`}
-                                            title={isBookmarked ? 'Remove bookmark' : 'Bookmark this term'}
-                                        >
-                                            <Bookmark size={15} fill={isBookmarked ? 'currentColor' : 'none'} />
-                                        </button>
+                                    {!isLocked ? (
+                                        <>
+                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase
+                                                ${term.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                                                term.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'}`}>
+                                                {term.difficulty}
+                                            </span>
+                                            {localStorage.getItem('token') && (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); handleBookmark(term.id); }}
+                                                    className={`transition-colors ${isBookmarked ? 'text-brand-yellow' : 'text-slate-300 hover:text-brand-yellow'}`}
+                                                    title={isBookmarked ? 'Remove bookmark' : 'Bookmark this term'}
+                                                >
+                                                    <Bookmark size={15} fill={isBookmarked ? 'currentColor' : 'none'} />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={e => { e.stopPropagation(); setFlagTarget(term.id); }}
+                                                className="text-slate-300 hover:text-red-400 transition-colors"
+                                                title="Flag this term"
+                                            >
+                                                <Flag size={14} />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <Lock size={14} className="text-slate-400" />
+                                        </div>
                                     )}
-                                    <button
-                                        onClick={e => { e.stopPropagation(); setFlagTarget(term.id); }}
-                                        className="text-slate-300 hover:text-red-400 transition-colors"
-                                        title="Flag this term"
-                                    >
-                                        <Flag size={14} />
-                                    </button>
                                 </div>
                             </div>
-                            <p className="text-slate-600 mb-4 text-sm leading-relaxed">{term.definition}</p>
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Example</p>
-                                <p className="text-sm italic text-slate-700">"{term.example}"</p>
-                            </div>
+                            
+                            {isLocked ? (
+                                <div className="py-4 flex flex-col items-center justify-center text-center">
+                                    <p className="text-xs font-bold text-slate-400">
+                                        Complete Lesson {lessonPos} to unlock this slang.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-slate-600 mb-4 text-sm leading-relaxed">{term.definition}</p>
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Example</p>
+                                        <p className="text-sm italic text-slate-700">"{term.example}"</p>
+                                    </div>
+                                </>
+                            )}
                         </motion.div>
                     );
                 })}

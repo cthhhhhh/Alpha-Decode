@@ -46,10 +46,8 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
-            User user = userService.getCurrentUser();
-            return ResponseEntity.ok(new UserDTO.AuthResponse(null, user.getRole().name(),
-                    user.getUsername(), user.getLevel(), user.getXp(),
-                    user.getMaxUnlockedLessonIndex(), user.getStreak()));
+            UserDTO.AuthResponse response = userService.getMe();
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
@@ -102,5 +100,38 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deleteAccount() {
+        try {
+            userService.deleteCurrentUser();
+            return ResponseEntity.ok("Account deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+    }
+
+    @PostMapping("/verify-user")
+    public ResponseEntity<?> verifyUser(@RequestBody UserDTO.VerifyUserRequest request) {
+        if (userService.verifyUserForReset(request)) {
+            return ResponseEntity.ok("User verified");
+        }
+        return ResponseEntity.badRequest().body("Invalid username or email");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody UserDTO.ResetPasswordRequest request) {
+        try {
+            userService.resetPassword(request);
+            return ResponseEntity.ok("Password reset successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/ping")
+    public ResponseEntity<?> ping() {
+        return ResponseEntity.ok().build();
     }
 }

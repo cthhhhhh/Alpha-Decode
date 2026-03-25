@@ -20,6 +20,7 @@ import com.csd.cs203t1.term.Difficulty;
 import com.csd.cs203t1.term.Term;
 import com.csd.cs203t1.term.TermRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -33,25 +34,39 @@ public class DataSeeder implements CommandLineRunner {
     private final TermRepository termRepository;
     private final QuizRepository quizRepository;
     private final AchievementRepository achievementRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
                       TermRepository termRepository, QuizRepository quizRepository,
-                      AchievementRepository achievementRepository) {
+                      AchievementRepository achievementRepository, JdbcTemplate jdbcTemplate) {
         this.lessonService = lessonService;
         this.lessonRepository = lessonRepository;
         this.termRepository = termRepository;
         this.quizRepository = quizRepository;
         this.achievementRepository = achievementRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public void run(String... args) {
+        dropLegacyColumns();
         seedLessons();
         seedTerms();
         seedDailyQuiz();
         seedOnboardingQuiz();
         seedRevisionQuiz();
         seedAchievements();
+    }
+
+    private void dropLegacyColumns() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE users DROP COLUMN IF EXISTS last_daily_quiz_completed_date");
+            jdbcTemplate.execute("ALTER TABLE users DROP COLUMN IF EXISTS last_daily_quiz_started_date");
+            System.out.println("Dropped legacy daily quiz columns from users table.");
+        } catch (Exception e) {
+            // Fails silently if table/columns don't exist or syntax unrecognised (e.g. H2 in mem vs Postgres)
+            System.out.println("No legacy columns to drop or syntax unsupported: " + e.getMessage());
+        }
     }
 
     // ─── Lessons ────────────────────────────────────────────────────────────────

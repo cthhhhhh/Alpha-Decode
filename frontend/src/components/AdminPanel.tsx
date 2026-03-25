@@ -16,6 +16,7 @@ interface UserData {
   role: string;
   level: number;
   xp: number;
+  isOnline: boolean;
 }
 
 export default function AdminPanel({ onBack }: { onBack?: () => void }) {
@@ -58,6 +59,8 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 30_000); // Auto-refresh every 30s
+    return () => clearInterval(interval);
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -74,8 +77,8 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
       } else {
         throw new Error('Failed to delete user');
       }
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'An unknown error occurred');
     }
   };
 
@@ -97,8 +100,8 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
       } else {
         throw new Error('Failed to change role');
       }
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'An unknown error occurred');
     }
   };
 
@@ -264,7 +267,17 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
                 {sortedUsers.map(user => (
                   <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-500">#{user.id}</td>
-                    <td className="px-6 py-4 font-bold text-slate-800">{user.username}</td>
+                    <td className="px-6 py-4 font-bold text-slate-800">
+                      <div className="flex items-center gap-2">
+                        {user.username}
+                        <div className="relative flex items-center justify-center">
+                          <div className={`w-2 h-2 rounded-full ${user.isOnline ? 'bg-green-500' : 'bg-slate-300'}`} />
+                          {user.isOnline && (
+                            <div className="absolute w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                          )}
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-sm font-medium text-slate-500">{user.email}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${

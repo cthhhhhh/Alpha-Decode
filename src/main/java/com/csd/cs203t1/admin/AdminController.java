@@ -16,10 +16,12 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final SessionTracker sessionTracker;
+    private final com.csd.cs203t1.user.UserService userService;
 
-    public AdminController(UserRepository userRepository, SessionTracker sessionTracker) {
+    public AdminController(UserRepository userRepository, SessionTracker sessionTracker, com.csd.cs203t1.user.UserService userService) {
         this.userRepository = userRepository;
         this.sessionTracker = sessionTracker;
+        this.userService = userService;
     }
 
     @GetMapping("/stats")
@@ -42,13 +44,14 @@ public class AdminController {
             "email", user.getEmail(),
             "role", user.getRole().name(),
             "level", user.getLevel(),
-            "xp", user.getXp()
+            "xp", user.getXp(),
+            "isOnline", sessionTracker.isOnline(user.getUsername())
         )).toList());
     }
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@org.springframework.web.bind.annotation.PathVariable Long id) {
-        userRepository.deleteById(id);
+        userService.deleteUserById(id);
         return ResponseEntity.ok().build();
     }
 

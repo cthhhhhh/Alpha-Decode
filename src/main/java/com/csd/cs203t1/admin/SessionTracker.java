@@ -7,7 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class SessionTracker {
     private final ConcurrentHashMap<String, Long> activeUsers = new ConcurrentHashMap<>();
-    private static final long SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+    private static final long SESSION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+
+    public boolean isOnline(String username) {
+        if (username == null) return false;
+        Long lastSeen = activeUsers.get(username);
+        return lastSeen != null && (System.currentTimeMillis() - lastSeen <= SESSION_TIMEOUT_MS);
+    }
 
     public void recordActivity(String username) {
         if (username != null) {

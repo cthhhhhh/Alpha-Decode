@@ -10,7 +10,6 @@ import {
     Info,
     Shield,
     Flag,
-    RotateCcw,
     type LucideIcon,
 } from 'lucide-react';
 import type { Lesson, RevisionQuiz } from '../types';
@@ -22,7 +21,6 @@ interface Props {
     revisionQuizzes: RevisionQuiz[];
     completedRevisionIds: Set<string>;
     onStartRevision: (quiz: RevisionQuiz) => void;
-    onPractice: (lessonId: string) => void;
 }
 
 interface LevelMeta {
@@ -44,7 +42,7 @@ type PathNode =
     | { kind: 'lesson'; lesson: Lesson; visibleIndex: number }
     | { kind: 'checkpoint'; quiz: RevisionQuiz; isCompleted: boolean };
 
-const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision, onPractice }: Props) => {
+const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision }: Props) => {
     const [flagTarget, setFlagTarget] = useState<number | null>(null);
 
     const buildNodes = (): PathNode[] => {
@@ -161,30 +159,19 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                 </div>
                             </motion.button>
 
-                            <div className="mt-4 flex items-center gap-1">
+                            <div className="mt-4 relative flex items-center justify-center">
                                 <span className="font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap bg-white/90 text-slate-600 border-slate-100">
                                     {lesson.title}
                                 </span>
                                 <button
                                     onClick={e => { e.stopPropagation(); setFlagTarget(parseInt(lesson.id)); }}
-                                    className="text-slate-300 hover:text-red-400 transition-colors p-0.5"
+                                    className="absolute left-[calc(100%+8px)] text-slate-400 hover:bg-red-50 hover:text-red-500 bg-white/90 shadow-sm border border-slate-100 rounded-full p-1.5 transition-colors"
                                     title="Flag this lesson"
                                 >
-                                    <Flag size={12} />
+                                    <Flag size={14} />
                                 </button>
                             </div>
-                            {isCompleted && (
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={e => { e.stopPropagation(); onPractice(lesson.id); }}
-                                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-brand-accent/10 border border-brand-accent/30 text-brand-accent rounded-full text-[10px] font-black uppercase tracking-wide hover:bg-brand-accent/20 transition-colors"
-                                    title="Practice this lesson (no XP)"
-                                >
-                                    <RotateCcw size={11} />
-                                    Practice
-                                </motion.button>
-                            )}
+
                         </div>
                     );
                 }

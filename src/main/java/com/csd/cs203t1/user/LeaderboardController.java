@@ -1,5 +1,6 @@
 package com.csd.cs203t1.user;
 
+import com.csd.cs203t1.common.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,7 +46,7 @@ public class LeaderboardController {
             LocalDate since = LocalDate.now().minusDays(7);
             if ("streak".equals(sort)) {
                 topUsers = userRepository
-                        .findByDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(since, pageable)
+                        .findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(Role.ADMIN, since, pageable)
                         .getContent()
                         .stream()
                         .sorted((a, b) -> b.getStreak() != a.getStreak()
@@ -54,14 +55,15 @@ public class LeaderboardController {
                         .collect(Collectors.toList());
             } else {
                 topUsers = userRepository
-                        .findByDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(since, pageable)
+                        .findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(Role.ADMIN, since, pageable)
                         .getContent();
             }
         } else {
             if ("streak".equals(sort)) {
-                topUsers = userRepository.findAllByOrderByStreakDescXpDesc(pageable).getContent();
+                topUsers = userRepository.findAllByRoleNotOrderByStreakDescXpDesc(Role.ADMIN, pageable).getContent();
             } else {
-                topUsers = userRepository.findAllByOrderByXpDescLevelDesc(pageable).getContent();
+                // Default: Stars (XP) primarily
+                topUsers = userRepository.findAllByRoleNotOrderByXpDescLevelDesc(Role.ADMIN, pageable).getContent();
             }
         }
 
@@ -81,13 +83,24 @@ public class LeaderboardController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getMyRank(@RequestParam(defaultValue = "xp") String sort) {
         User currentUser = userService.getCurrentUser();
+        
+        // If current user is admin, they don't have a rank
+        if (currentUser.getRole() == Role.ADMIN) {
+             Map<String, Object> result = new HashMap<>();
+             result.put("rank", 0);
+             result.put("entry", null);
+             return ResponseEntity.ok(result);
+        }
+
         long rank;
         if ("streak".equals(sort)) {
-            long streakGreater = userRepository.countByStreakGreaterThan(currentUser.getStreak());
-            long sameStreakBetterXp = userRepository.countByStreakAndXpGreaterThan(currentUser.getStreak(), currentUser.getXp());
+            long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
+            long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndXpGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getXp());
             rank = streakGreater + sameStreakBetterXp + 1;
         } else {
-            rank = userRepository.countByXpGreaterThan(currentUser.getXp()) + 1;
+            // Rank strictly by Stars (XP)
+            long xpGreater = userRepository.countByRoleNotAndXpGreaterThan(Role.ADMIN, currentUser.getXp());
+            rank = xpGreater + 1;
         }
 
         Map<String, Object> result = new HashMap<>();

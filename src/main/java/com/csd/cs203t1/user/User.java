@@ -65,6 +65,9 @@ public class User {
 	@Column
 	private LocalDate dailyQuizLastDate;
 
+	@Column
+	private String profilePic;
+
 	@jakarta.persistence.Transient
 	private UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
 

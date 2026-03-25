@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { LogIn, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 
 interface LoginPageProps {
-  onLoginSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number) => void;
+  onLoginSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean) => void;
   onGoToRegister: () => void;
   onBack: () => void;
 }
@@ -24,6 +24,13 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Forgot Password State
+  const [isForgotMode, setIsForgotMode] = useState(false);
+  const [forgotStep, setForgotStep] = useState<1 | 2>(1);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -42,9 +49,50 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
       localStorage.setItem('username', data.username);
-      onLoginSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex, data.streak);
+      onLoginSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex, data.streak, data.dailyQuizLastDate, data.dailyQuizCompletedToday);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotStep1 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email: forgotEmail }),
+      });
+      if (!res.ok) throw new Error(await res.text() || 'Invalid username or email');
+      setForgotStep(2);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotStep2 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, newPassword }),
+      });
+      if (!res.ok) throw new Error(await res.text() || 'Reset failed');
+      setIsForgotMode(false);
+      setPassword('');
+      setSuccessMsg('Password reset successfully! You can now log in.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Reset failed');
     } finally {
       setLoading(false);
     }
@@ -80,7 +128,14 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={onBack}
+          onClick={() => {
+            if (isForgotMode) {
+              setIsForgotMode(false);
+              setError('');
+            } else {
+              onBack();
+            }
+          }}
           className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-500 hover:bg-white hover:text-slate-800 transition-all shadow-sm group"
         >
           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
@@ -98,10 +153,28 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
         >
           <div className="text-center mb-8 space-y-4">
             <h1 className="text-4xl sm:text-5xl font-black text-slate-800 tracking-tighter uppercase drop-shadow-sm pb-2">
-              Welcome <span className="text-brand-primary italic">Back</span>
+              {isForgotMode ? (
+                 <>Password <span className="text-brand-primary italic">Reset</span></>
+              ) : (
+                 <>Welcome <span className="text-brand-primary italic">Back</span></>
+              )}
             </h1>
-            <p className="text-slate-500 font-bold">Sign in to Alpha Decode</p>
+            <p className="text-slate-500 font-bold">
+              {isForgotMode 
+                 ? (forgotStep === 1 ? 'Verify your account details' : 'Create a new password')
+                 : 'Sign in to Alpha Decode'}
+            </p>
           </div>
+
+          {successMsg && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="flex items-center gap-2 bg-green-50 text-green-600 border border-green-200 rounded-2xl px-5 py-4 mb-6 text-sm font-bold text-left"
+            >
+              <span>{successMsg}</span>
+            </motion.div>
+          )}
 
           {error && (
             <motion.div
@@ -114,58 +187,164 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 text-left">
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Username</label>
-              <input
-                id="login-username"
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                required
-                placeholder="Enter your username"
-                className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Password</label>
-              <div className="relative">
-                <input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  placeholder="Enter your password"
-                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 pr-12 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
-                />
-                <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          {!isForgotMode ? (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4 text-left">
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Username</label>
+                  <input
+                    id="login-username"
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    required
+                    placeholder="Enter your username"
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-wider">Password</label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="login-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      required
+                      placeholder="Enter your password"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 pr-12 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
+                    />
+                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  <div className="text-right mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsForgotMode(true);
+                        setForgotStep(1);
+                        setError('');
+                        setSuccessMsg('');
+                      }}
+                      className="text-xs font-bold text-slate-400 hover:text-brand-primary transition-colors inline-block pt-1"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <motion.button
+                    id="login-submit"
+                    type="submit"
+                    disabled={loading}
+                    whileHover={{ scale: 1.02, translateY: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-brand-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#46a302] hover:shadow-[0_8px_15px_rgba(88,204,2,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed group"
+                  >
+                    {loading ? 'SIGNING IN...' : 'LOG IN'}
+                    {!loading && <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />}
+                  </motion.button>
+                </div>
+              </form>
+
+              <p className="text-center text-slate-400 font-bold mt-8">
+                Don't have an account?{' '}
+                <button onClick={onGoToRegister} className="text-brand-primary hover:text-brand-secondary transition-colors underline decoration-2 underline-offset-4">
+                  Register here
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+              {forgotStep === 1 ? (
+                <form onSubmit={handleForgotStep1} className="space-y-4 text-left">
+                  <div>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Username</label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={e => setUsername(e.target.value)}
+                      required
+                      autoComplete="off"
+                      placeholder="Enter your registered username"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      required
+                      autoComplete="off"
+                      placeholder="Enter your registered email"
+                      className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
+                    />
+                  </div>
+                  <div className="pt-4">
+                    <motion.button
+                      type="submit"
+                      disabled={loading || !username || !forgotEmail}
+                      whileHover={{ scale: 1.02, translateY: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full bg-brand-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#46a302] hover:shadow-[0_8px_15px_rgba(88,204,2,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed group"
+                    >
+                      {loading ? 'VERIFYING...' : 'VERIFY ACCOUNT'}
+                    </motion.button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleForgotStep2} className="space-y-4 text-left">
+                  <div>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        placeholder="Must be at least 6 characters"
+                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 pr-12 text-slate-700 placeholder-slate-400 text-base font-bold focus:outline-none focus:border-brand-primary focus:bg-white transition-all shadow-sm"
+                      />
+                      <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="pt-4">
+                    <motion.button
+                      type="submit"
+                      disabled={loading || newPassword.length < 6}
+                      whileHover={{ scale: 1.02, translateY: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full bg-brand-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#46a302] hover:shadow-[0_8px_15px_rgba(88,204,2,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed group"
+                    >
+                      {loading ? 'RESETTING...' : 'RESET PASSWORD'}
+                    </motion.button>
+                  </div>
+                </form>
+              )}
+              
+              <div className="text-center mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotMode(false);
+                    setError('');
+                  }}
+                  className="text-slate-400 font-bold hover:text-slate-600 transition-colors"
+                >
+                  Cancel and return to Login
                 </button>
               </div>
-            </div>
-            
-            <div className="pt-4">
-              <motion.button
-                id="login-submit"
-                type="submit"
-                disabled={loading}
-                whileHover={{ scale: 1.02, translateY: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-brand-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#46a302] hover:shadow-[0_8px_15px_rgba(88,204,2,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed group"
-              >
-                {loading ? 'SIGNING IN...' : 'LOG IN'}
-                {!loading && <LogIn size={20} className="group-hover:translate-x-1 transition-transform" />}
-              </motion.button>
-            </div>
-          </form>
-
-          <p className="text-center text-slate-400 font-bold mt-8">
-            Don't have an account?{' '}
-            <button onClick={onGoToRegister} className="text-brand-primary hover:text-brand-secondary transition-colors underline decoration-2 underline-offset-4">
-              Register here
-            </button>
-          </p>
+            </>
+          )}
         </motion.div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 package com.csd.cs203t1.achievement;
 
+import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.user.User;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,22 @@ public class AchievementServiceImpl implements AchievementService {
                 .collect(Collectors.toSet());
 
         List<Achievement> newlyUnlocked = new ArrayList<>();
+        
+        // Admin gets everything unlocked regardless of thresholds
+        if (user.getRole() == Role.ADMIN) {
+            for (Achievement a : all) {
+                if (unlockedIds.contains(a.getId())) continue;
+                UserAchievement ua = UserAchievement.builder()
+                        .user(user)
+                        .achievement(a)
+                        .unlockedAt(LocalDateTime.now())
+                        .build();
+                userAchievementRepository.save(ua);
+                newlyUnlocked.add(a);
+            }
+            return newlyUnlocked;
+        }
+
         for (Achievement a : all) {
             if (unlockedIds.contains(a.getId())) continue;
             boolean meets = switch (a.getTriggerType()) {
@@ -62,7 +79,25 @@ public class AchievementServiceImpl implements AchievementService {
 
     @Override
     public List<AchievementDTO.UserAchievementInfo> getUserAchievements(User user) {
-        return userAchievementRepository.findByUser(user).stream()
+        List<UserAchievement> unlocked = userAchievementRepository.findByUser(user);
+        
+        // If admin, return all achievements as if unlocked (even if not yet saved in DB)
+        if (user.getRole() == Role.ADMIN) {
+            List<Achievement> all = achievementRepository.findAll();
+            return all.stream()
+                    .map(a -> {
+                        LocalDateTime unlockedAt = unlocked.stream()
+                                .filter(ua -> ua.getAchievement().getId().equals(a.getId()))
+                                .map(UserAchievement::getUnlockedAt)
+                                .findFirst()
+                                .orElse(LocalDateTime.now());
+                        return new AchievementDTO.UserAchievementInfo(
+                                a.getId(), a.getName(), a.getDescription(), a.getIcon(), unlockedAt);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return unlocked.stream()
                 .map(ua -> new AchievementDTO.UserAchievementInfo(
                         ua.getAchievement().getId(),
                         ua.getAchievement().getName(),

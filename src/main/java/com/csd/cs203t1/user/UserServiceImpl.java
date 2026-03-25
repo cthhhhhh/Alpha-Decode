@@ -11,8 +11,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.csd.cs203t1.achievement.UserAchievementRepository;
+import com.csd.cs203t1.bookmark.UserBookmarkRepository;
+import com.csd.cs203t1.flag.FlagRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,13 +28,32 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AchievementService achievementService;
+    private final UserAchievementRepository userAchievementRepository;
+    private final UserBookmarkRepository userBookmarkRepository;
+    private final FlagRepository flagRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                           JwtUtil jwtUtil, AchievementService achievementService) {
+                           JwtUtil jwtUtil, AchievementService achievementService,
+                           UserAchievementRepository userAchievementRepository,
+                           UserBookmarkRepository userBookmarkRepository,
+                           FlagRepository flagRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.achievementService = achievementService;
+        this.userAchievementRepository = userAchievementRepository;
+        this.userBookmarkRepository = userBookmarkRepository;
+        this.flagRepository = flagRepository;
+    }
+
+    @PostConstruct
+    public void init() {
+        try {
+            userRepository.migrateLegacyQuizDates();
+        } catch (Exception e) {
+            // Likely column doesn't exist or already migrated
+            System.out.println("Legacy quiz date migration skipped: " + e.getMessage());
+        }
     }
 
     @Override
@@ -51,10 +74,10 @@ public class UserServiceImpl implements UserService {
         if (request.getXp() != null) user.setXp(request.getXp());
         if (request.getMaxUnlockedLessonIndex() != null) user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
 
+        checkStreakLapse(user);
         User savedUser = userRepository.save(user);
         String token = generateToken(savedUser);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
-                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
+        return toAuthResponse(savedUser, token, null);
     }
 
     @Override
@@ -74,10 +97,10 @@ public class UserServiceImpl implements UserService {
         if (request.getLevel() != null) user.setLevel(request.getLevel());
         if (request.getXp() != null) user.setXp(request.getXp());
 
+        checkStreakLapse(user);
         User savedUser = userRepository.save(user);
         String token = generateToken(savedUser);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
-                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
+        return toAuthResponse(savedUser, token, null);
     }
 
     @Override
@@ -89,24 +112,34 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
+        checkStreakLapse(user);
+        userRepository.save(user);
+
         String token = generateToken(user);
-        return new UserDTO.AuthResponse(token, user.getRole().name(), user.getUsername(),
-                user.getLevel(), user.getXp(), user.getMaxUnlockedLessonIndex(), user.getStreak());
+        return toAuthResponse(user, token, null);
     }
 
     @Override
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        checkStreakLapse(user);
+        return userRepository.save(user);
     }
 
     @Override
+    public UserDTO.AuthResponse getMe() {
+        User user = getCurrentUser();
+        return toAuthResponse(user, null, null);
+    }
+    @Override
     @Transactional
     public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
-        User user = getCurrentUser();
+        User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         user.setXp(user.getXp() + request.getXpToAdd());
-        int newLevel = user.getXp() / 20 + 1;
+        int newLevel = user.getXp() / 50 + 1;
         user.setLevel(newLevel);
 
         if (request.getMaxUnlockedLessonIndex() != null
@@ -126,15 +159,13 @@ public class UserServiceImpl implements UserService {
         List<UserDTO.NewAchievementDTO> notifs = toNotifDTOs(newAchievements);
 
         String token = generateToken(savedUser);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
-                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(),
-                savedUser.getStreak(), notifs.isEmpty() ? null : notifs);
+        return toAuthResponse(savedUser, token, notifs);
     }
 
     @Override
     @Transactional
     public UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex) {
-        User user = getCurrentUser();
+        User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         if (maxUnlockedLessonIndex > user.getMaxUnlockedLessonIndex()) {
             user.setMaxUnlockedLessonIndex(maxUnlockedLessonIndex);
         }
@@ -143,14 +174,12 @@ public class UserServiceImpl implements UserService {
         List<UserDTO.NewAchievementDTO> notifs = toNotifDTOs(newAchievements);
 
         String token = generateToken(savedUser);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
-                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(),
-                savedUser.getStreak(), notifs.isEmpty() ? null : notifs);
+        return toAuthResponse(savedUser, token, notifs);
     }
 
     @Override
     public UserDTO.AuthResponse updateProfile(UserDTO.UpdateProfileRequest request) {
-        User user = getCurrentUser();
+        User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         if (request.getUsername() != null && !request.getUsername().isBlank()) {
             if (!request.getUsername().equals(user.getUsername())
                     && userRepository.existsByUsername(request.getUsername())) {
@@ -158,23 +187,92 @@ public class UserServiceImpl implements UserService {
             }
             user.setUsername(request.getUsername());
         }
+        if (request.getProfilePic() != null) {
+            user.setProfilePic(request.getProfilePic());
+        }
         User savedUser = userRepository.save(user);
         String token = generateToken(savedUser);
-        return new UserDTO.AuthResponse(token, savedUser.getRole().name(), savedUser.getUsername(),
-                savedUser.getLevel(), savedUser.getXp(), savedUser.getMaxUnlockedLessonIndex(), savedUser.getStreak());
+        return toAuthResponse(savedUser, token, null);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCurrentUser() {
+        User user = getCurrentUser();
+        // Clean up related data
+        userAchievementRepository.deleteByUser(user);
+        userBookmarkRepository.deleteByUser(user);
+        flagRepository.deleteByReportedBy(user);
+        
+        userRepository.delete(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        // Clean up related data
+        userAchievementRepository.deleteByUser(user);
+        userBookmarkRepository.deleteByUser(user);
+        flagRepository.deleteByReportedBy(user);
+        
+        userRepository.delete(user);
     }
 
     @Override
     public void changePassword(UserDTO.ChangePasswordRequest request) {
-        User user = getCurrentUser();
+        User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
         if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
             throw new IllegalArgumentException("New password must be at least 6 characters");
         }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password cannot be the same as the old password");
+        }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    @Override
+    public boolean verifyUserForReset(UserDTO.VerifyUserRequest request) {
+        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+        if (user == null) {
+            return false;
+        }
+        return user.getEmail() != null && user.getEmail().equals(request.getEmail());
+    }
+
+    @Override
+    public void resetPassword(UserDTO.ResetPasswordRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password cannot be the same as the old password");
+        }
+        
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    private void checkStreakLapse(User user) {
+        if (user.getDailyQuizLastDate() == null) {
+            return;
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate lastDate = user.getDailyQuizLastDate();
+        
+        // If last quiz was more than 1 day before today, streak lapses to 0.
+        // yesterday = today - 1; if lastDate is before yesterday, lapse.
+        if (lastDate.isBefore(today.minusDays(1))) {
+            user.setStreak(0);
+        }
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -186,6 +284,25 @@ public class UserServiceImpl implements UserService {
                 .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
                 .build();
         return jwtUtil.generateToken(userDetails);
+    }
+
+    private UserDTO.AuthResponse toAuthResponse(User user, String token, List<UserDTO.NewAchievementDTO> achievements) {
+        String lastDate = user.getDailyQuizLastDate() != null ? user.getDailyQuizLastDate().toString() : null;
+        boolean completedToday = user.getDailyQuizLastDate() != null
+                && user.getDailyQuizLastDate().equals(LocalDate.now());
+        return new UserDTO.AuthResponse(
+                token,
+                user.getRole().name(),
+                user.getUsername(),
+                user.getLevel(),
+                user.getXp(),
+                user.getMaxUnlockedLessonIndex(),
+                user.getStreak(),
+                user.getProfilePic(),
+                lastDate,
+                completedToday,
+                achievements != null && !achievements.isEmpty() ? achievements : null
+        );
     }
 
     private List<UserDTO.NewAchievementDTO> toNotifDTOs(List<Achievement> achievements) {

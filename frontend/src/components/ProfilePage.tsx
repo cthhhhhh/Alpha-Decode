@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Star, Flame, Zap, Edit3, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Flame, Zap, Edit3, Check, X, Shield, AlertCircle, LogOut } from 'lucide-react';
 import AchievementsSection from './AchievementsSection';
 
 interface Props {
     authUsername: string | null;
     authToken: string | null;
     onUsernameUpdate: (newUsername: string, newToken: string) => void;
+    onLogout: () => void;
 }
 
 interface UserProfile {
@@ -18,16 +19,20 @@ interface UserProfile {
     streak: number;
 }
 
-const XP_PER_LEVEL = 20;
+const XP_PER_LEVEL = 50;
 const TOTAL_LESSONS = 20;
 
-const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
+const ProfilePage = ({ authUsername, authToken, onUsernameUpdate, onLogout }: Props) => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [fetchError, setFetchError] = useState(false);
     const [editingName, setEditingName] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [saveError, setSaveError] = useState('');
     const [saving, setSaving] = useState(false);
+
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
 
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
@@ -58,7 +63,7 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
         </div>
     );
 
-    const lessonsCompleted = Math.min(profile.maxUnlockedLessonIndex, TOTAL_LESSONS);
+    const lessonsCompleted = profile.role === 'ADMIN' ? TOTAL_LESSONS : Math.min(profile.maxUnlockedLessonIndex, TOTAL_LESSONS);
     const xpProgress = profile.xp % XP_PER_LEVEL;
     const xpForNext = XP_PER_LEVEL;
     const progressPct = Math.min((xpProgress / xpForNext) * 100, 100);
@@ -122,8 +127,34 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        setDeletingAccount(true);
+        setDeleteError('');
+        try {
+            const res = await fetch('/api/auth/me', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                },
+            });
+            if (res.ok) {
+                // Logout the user
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/';
+            } else {
+                const msg = await res.text();
+                setDeleteError(msg || 'Failed to delete account');
+            }
+        } catch {
+            setDeleteError('Network error');
+        } finally {
+            setDeletingAccount(false);
+        }
+    };
+
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6">
             {/* Profile Card */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -170,12 +201,7 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
                 </div>
 
                 {/* Stats row */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-brand-yellow/10 border border-brand-yellow/30 rounded-2xl p-4 text-center">
-                        <Star size={20} className="text-brand-yellow mx-auto mb-1" fill="currentColor" />
-                        <p className="text-2xl font-black text-slate-900">{profile.xp}</p>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">Stars</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-center">
                         <Flame size={20} className="text-orange-500 mx-auto mb-1" fill="currentColor" />
                         <p className="text-2xl font-black text-slate-900">{profile.streak}</p>
@@ -188,10 +214,10 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
                     </div>
                 </div>
 
-                {/* XP progress bar */}
+                {/* Stars progress bar */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between text-xs font-black text-slate-500 uppercase tracking-wide mb-2">
-                        <span>XP Progress</span>
+                        <span>Stars Progress</span>
                         <span>{xpProgress}/{xpForNext} to next milestone</span>
                     </div>
                     <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -226,55 +252,98 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
-                className="bg-white rounded-3xl border-2 border-slate-100 p-6"
+                className="bg-white rounded-3xl border-2 border-slate-100 overflow-hidden"
             >
-                <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-slate-500 uppercase tracking-wide">Change Password</h3>
-                    <button
-                        onClick={() => { setShowPasswordForm(v => !v); setPasswordError(''); setPasswordSuccess(''); }}
-                        className="text-xs font-bold text-brand-primary hover:underline"
-                    >
-                        {showPasswordForm ? 'Cancel' : 'Change'}
-                    </button>
-                </div>
-                {passwordSuccess && !showPasswordForm && (
-                    <p className="text-xs text-green-600 font-bold mt-2">{passwordSuccess}</p>
-                )}
-                {showPasswordForm && (
-                    <div className="mt-4 space-y-3">
-                        <input
-                            type="password"
-                            placeholder="Current password"
-                            value={currentPassword}
-                            onChange={e => setCurrentPassword(e.target.value)}
-                            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-brand-primary"
-                        />
-                        <input
-                            type="password"
-                            placeholder="New password (min 6 characters)"
-                            value={newPassword}
-                            onChange={e => setNewPassword(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handlePasswordSave(); }}
-                            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-brand-primary"
-                        />
-                        {passwordError && <p className="text-xs text-red-500 font-bold">{passwordError}</p>}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handlePasswordSave}
-                                disabled={savingPassword}
-                                className="flex items-center gap-1.5 text-green-500 hover:text-green-600 font-bold text-sm"
-                            >
-                                <Check size={16} /> Save
-                            </button>
-                            <button
-                                onClick={() => { setShowPasswordForm(false); setPasswordError(''); }}
-                                className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600 font-bold text-sm"
-                            >
-                                <X size={16} /> Cancel
-                            </button>
+                <div 
+                    onClick={() => { setShowPasswordForm(v => !v); setPasswordError(''); setPasswordSuccess(''); }}
+                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 transition-colors"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                             <Shield size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-slate-900">Security Settings</h3>
+                            <p className="text-xs font-bold text-slate-400">Manage your password and account security</p>
                         </div>
                     </div>
+                    <button className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl border-2 transition-all ${showPasswordForm ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/20'}`}>
+                        {showPasswordForm ? 'Close' : 'Update'}
+                    </button>
+                </div>
+
+                <AnimatePresence>
+                    {showPasswordForm && (
+                        <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-slate-50 border-t-2 border-slate-100 overflow-hidden"
+                        >
+                            <div className="p-6 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                                        <input
+                                            type="password"
+                                            placeholder="Enter old password"
+                                            value={currentPassword}
+                                            onChange={e => setCurrentPassword(e.target.value)}
+                                            className="w-full border-2 border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-brand-primary transition-colors"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                                        <input
+                                            type="password"
+                                            placeholder="Min 6 characters"
+                                            value={newPassword}
+                                            onChange={e => setNewPassword(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Enter') handlePasswordSave(); }}
+                                            className="w-full border-2 border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:border-brand-primary transition-colors"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                {passwordError && (
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-red-500 font-bold text-xs bg-red-50 p-3 rounded-xl border border-red-100">
+                                        <AlertCircle size={14} />
+                                        {passwordError}
+                                    </motion.div>
+                                )}
+                                
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={handlePasswordSave}
+                                        disabled={savingPassword}
+                                        className="flex-1 bg-brand-primary text-white py-3 rounded-2xl font-black text-sm shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        {savingPassword ? "Updating..." : "Save New Password"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {passwordSuccess && !showPasswordForm && (
+                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-6 mb-6 p-4 rounded-2xl bg-green-50 text-green-600 border border-green-100 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white shrink-0">
+                            <Check size={16} />
+                        </div>
+                        <p className="text-sm font-black">{passwordSuccess}</p>
+                     </motion.div>
                 )}
+
+                <div className="px-6 pb-6">
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-50 hover:text-red-500 text-slate-600 py-3 rounded-2xl font-black text-sm transition-all border-2 border-transparent hover:border-red-100"
+                    >
+                        <LogOut size={18} />
+                        Log Out
+                    </button>
+                </div>
             </motion.div>
 
             {/* Achievements */}
@@ -285,6 +354,63 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
                 className="bg-white rounded-3xl border-2 border-slate-100 p-6"
             >
                 <AchievementsSection />
+            </motion.div>
+
+            {/* Danger Zone */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-red-50 rounded-3xl border-2 border-red-100 p-6"
+            >
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-500">
+                        <AlertCircle size={20} />
+                    </div>
+                    <div>
+                        <h3 className="font-black text-red-900">Danger Zone</h3>
+                        <p className="text-xs font-bold text-red-400">Permanently delete your account and all data</p>
+                    </div>
+                </div>
+
+                {!showDeleteConfirm ? (
+                    <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="w-full bg-white text-red-500 border-2 border-red-100 py-3 rounded-2xl font-black text-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-all"
+                    >
+                        Delete My Account
+                    </button>
+                ) : (
+                    <div className="space-y-4">
+                        <div className="p-4 bg-white rounded-2xl border border-red-100">
+                            <p className="text-sm font-bold text-slate-700 leading-relaxed">
+                                Are you absolutely sure? This action <span className="text-red-600 underline">cannot be undone</span>. 
+                                You will lose your streak, achievements, and all progress.
+                            </p>
+                        </div>
+                        
+                        {deleteError && (
+                            <p className="text-xs text-red-500 font-bold">{deleteError}</p>
+                        )}
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleDeleteAccount}
+                                disabled={deletingAccount}
+                                className="flex-1 bg-red-500 text-white py-3 rounded-2xl font-black text-sm shadow-lg shadow-red-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {deletingAccount ? "Deleting..." : "Yes, Delete Account"}
+                            </button>
+                            <button
+                                onClick={() => { setShowDeleteConfirm(false); setDeleteError(''); }}
+                                disabled={deletingAccount}
+                                className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-2xl font-black text-sm hover:bg-slate-300 transition-all disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
             </motion.div>
         </div>
     );

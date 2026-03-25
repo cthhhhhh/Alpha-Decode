@@ -232,7 +232,7 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
         else setFinished(true);
     };
 
-    const handleFinishClose = () => { onComplete(correctCount, total); onClose(); };
+    const handleFinishClose = () => { onComplete(correctCount, total); };
 
     const handleReset = () => {
         setQIndex(0); setSelected(null); setIsChecked(false);
