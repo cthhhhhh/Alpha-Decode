@@ -10,6 +10,7 @@ import {
     Info,
     Shield,
     Flag,
+    RotateCcw,
     type LucideIcon,
 } from 'lucide-react';
 import type { Lesson, RevisionQuiz } from '../types';
@@ -21,6 +22,7 @@ interface Props {
     revisionQuizzes: RevisionQuiz[];
     completedRevisionIds: Set<string>;
     onStartRevision: (quiz: RevisionQuiz) => void;
+    onPractice: (lessonId: string) => void;
 }
 
 interface LevelMeta {
@@ -42,7 +44,7 @@ type PathNode =
     | { kind: 'lesson'; lesson: Lesson; visibleIndex: number }
     | { kind: 'checkpoint'; quiz: RevisionQuiz; isCompleted: boolean };
 
-const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision }: Props) => {
+const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision, onPractice }: Props) => {
     const [flagTarget, setFlagTarget] = useState<number | null>(null);
 
     const buildNodes = (): PathNode[] => {
@@ -171,6 +173,18 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                     <Flag size={12} />
                                 </button>
                             </div>
+                            {isCompleted && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={e => { e.stopPropagation(); onPractice(lesson.id); }}
+                                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-brand-accent/10 border border-brand-accent/30 text-brand-accent rounded-full text-[10px] font-black uppercase tracking-wide hover:bg-brand-accent/20 transition-colors"
+                                    title="Practice this lesson (no XP)"
+                                >
+                                    <RotateCcw size={11} />
+                                    Practice
+                                </motion.button>
+                            )}
                         </div>
                     );
                 }

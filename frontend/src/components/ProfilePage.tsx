@@ -41,7 +41,6 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate }: Props) => {
         fetch('/api/auth/me', {
             headers: { 'Authorization': `Bearer ${authToken}` },
         })
-            .then(r => r.json())
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: UserProfile) => setProfile(data))
             .catch(() => setFetchError(true));

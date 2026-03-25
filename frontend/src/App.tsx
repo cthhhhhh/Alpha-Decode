@@ -83,6 +83,7 @@ export default function App() {
   const [onboardingFinished, setOnboardingFinished] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  const [practiceLessonId, setPracticeLessonId] = useState<string | null>(null);
   type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
   type OnbQ = { q: string; options: string[]; correct: number };
   const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
@@ -277,6 +278,14 @@ export default function App() {
 
   const startLesson = (lessonId: string) => {
     setActiveLessonId(lessonId);
+  };
+
+  const startPractice = (lessonId: string) => {
+    setPracticeLessonId(lessonId);
+  };
+
+  const handlePracticeComplete = (_id: string, _correct: number, _total: number) => {
+    setPracticeLessonId(null);
   };
 
   const handleLessonComplete = (lessonId: string, correct: number, total: number) => {
@@ -492,6 +501,7 @@ export default function App() {
                     revisionQuizzes={revisionQuizzes}
                     completedRevisionIds={completedRevisionIds}
                     onStartRevision={setActiveRevisionQuiz}
+                    onPractice={startPractice}
                   />
                 </div>
 
@@ -639,6 +649,19 @@ export default function App() {
             initialCompleted={lessons.find(l => l.id === activeLessonId)?.completed || false}
             onClose={() => setActiveLessonId(null)}
             onComplete={handleLessonComplete}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Practice Mode Session */}
+      <AnimatePresence>
+        {practiceLessonId && (
+          <LessonSession
+            lessonId={practiceLessonId}
+            initialCompleted={true}
+            onClose={() => setPracticeLessonId(null)}
+            onComplete={handlePracticeComplete}
+            practiceMode={true}
           />
         )}
       </AnimatePresence>

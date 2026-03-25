@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { BookOpen, CheckCircle2, XCircle, Star, Trophy, Flag } from 'lucide-react';
+import { BookOpen, CheckCircle2, XCircle, Star, Trophy, Flag, RotateCcw } from 'lucide-react';
 import FlagModal from './FlagModal';
 
 function fisherYates<T>(arr: T[]): void {
@@ -59,9 +59,10 @@ interface Props {
     initialCompleted: boolean;
     onClose: () => void;
     onComplete: (id: string, correct: number, total: number) => void;
+    practiceMode?: boolean;
 }
 
-const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Props) => {
+const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practiceMode = false }: Props) => {
     const [steps, setSteps] = useState<Step[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -161,6 +162,12 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                         />
                     ))}
                 </div>
+                {practiceMode && !isFinished && (
+                    <div className="flex items-center gap-1.5 bg-brand-accent/10 text-brand-accent px-3 py-1.5 rounded-full border border-brand-accent/30 shrink-0">
+                        <RotateCcw size={13} />
+                        <span className="text-[10px] font-black uppercase tracking-wide">Practice</span>
+                    </div>
+                )}
                 {isGradedStep && !isFinished && (
                     <div className="flex items-center gap-2 text-slate-500 font-bold whitespace-nowrap">
                         <span>Question {currentGradedIdx} of {totalGraded}</span>
@@ -301,23 +308,31 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete }: Prop
                                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">Lesson Complete!</h2>
                                 <p className="text-xl text-slate-500 font-bold">You're leveling up your brain.</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                            <div className={`grid gap-4 w-full max-w-sm ${practiceMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
                                 <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
                                     <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
                                     <p className="text-3xl font-black text-brand-primary">{Math.round((correctCount / totalGraded) * 100)}%</p>
                                 </div>
-                                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
-                                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
-                                    <div className="flex items-center justify-center gap-1">
-                                        <Star size={24} className="text-brand-yellow" fill="currentColor" />
-                                        <p className="text-3xl font-black text-slate-900">
-                                            {initialCompleted ? '+0' : `+${correctCount}`}
-                                        </p>
+                                {practiceMode ? (
+                                    <div className="bg-brand-accent/10 p-6 rounded-3xl border-2 border-brand-accent/20 text-center">
+                                        <RotateCcw size={24} className="text-brand-accent mx-auto mb-2" />
+                                        <p className="text-sm font-black text-brand-accent uppercase tracking-widest mb-1">Practice Complete</p>
+                                        <p className="text-[10px] font-bold text-slate-500">No XP awarded in practice mode</p>
                                     </div>
-                                    {initialCompleted && (
-                                        <p className="text-[10px] font-black text-slate-400 uppercase mt-1">Already Earned</p>
-                                    )}
-                                </div>
+                                ) : (
+                                    <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                                        <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Star size={24} className="text-brand-yellow" fill="currentColor" />
+                                            <p className="text-3xl font-black text-slate-900">
+                                                {initialCompleted ? '+0' : `+${correctCount}`}
+                                            </p>
+                                        </div>
+                                        {initialCompleted && (
+                                            <p className="text-[10px] font-black text-slate-400 uppercase mt-1">Already Earned</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <motion.button
                                 whileHover={{ scale: 1.05 }}

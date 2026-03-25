@@ -56,16 +56,16 @@ public class User {
 	@Column(columnDefinition = "integer default 0", nullable = false)
 	private int maxUnlockedLessonIndex = 0;
 
-	@Column(columnDefinition = "integer default 0", nullable = false)
+	@Column(columnDefinition = "integer default 0")
 	private int streak = 0;
 
-	@Column(columnDefinition = "integer default 0", nullable = false)
+	@Column(columnDefinition = "integer default 0")
 	private int dailyQuizCount = 0;
 
 	@Column
 	private LocalDate dailyQuizLastDate;
 
-	@Column(nullable=false, unique=true, updatable=false)
+	@jakarta.persistence.Transient
 	private UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
 
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Search, SlidersHorizontal, Flag } from 'lucide-react';
+import { Search, SlidersHorizontal, Flag, Bookmark } from 'lucide-react';
 import FlagModal from './FlagModal';
 
 interface ApiTerm {
@@ -26,6 +26,8 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
     const [showFilters, setShowFilters] = useState(false);
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
     const [flagTarget, setFlagTarget] = useState<number | null>(null);
+    const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
+    const [showSavedOnly, setShowSavedOnly] = useState(false);
 
     useEffect(() => {
         fetch('/api/terms/')
@@ -33,6 +35,42 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
             .then((data: ApiTerm[]) => setTerms(data))
             .catch(() => {});
     }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        fetch('/api/bookmarks', {
+            headers: { 'Authorization': `Bearer ${token}` },
+        })
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+            .then((ids: number[]) => setBookmarkedIds(new Set(ids)))
+            .catch(() => {});
+    }, []);
+
+    const handleBookmark = (termId: number) => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const isBookmarked = bookmarkedIds.has(termId);
+        // Optimistic update
+        setBookmarkedIds(prev => {
+            const next = new Set(prev);
+            if (isBookmarked) next.delete(termId);
+            else next.add(termId);
+            return next;
+        });
+        fetch(`/api/bookmarks/${termId}`, {
+            method: isBookmarked ? 'DELETE' : 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+        }).catch(() => {
+            // Revert on failure
+            setBookmarkedIds(prev => {
+                const next = new Set(prev);
+                if (isBookmarked) next.add(termId);
+                else next.delete(termId);
+                return next;
+            });
+        });
+    };
 
     const position = (lessonId: number | null) =>
         lessonId !== null ? (lessonIdToPosition[String(lessonId)] ?? Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER;
@@ -47,7 +85,8 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
         const matchesEx = t.example.toLowerCase().includes(queryLower);
         const matchesCat = t.category ? t.category.toLowerCase().includes(queryLower) : false;
         const matchesCategoryFilter = categoryFilter ? t.category === categoryFilter : true;
-        return (matchesTerm || matchesDef || matchesEx || matchesCat) && matchesCategoryFilter;
+        const matchesSaved = showSavedOnly ? bookmarkedIds.has(t.id) : true;
+        return (matchesTerm || matchesDef || matchesEx || matchesCat) && matchesCategoryFilter && matchesSaved;
     });
 
     const sorted = [...filtered].sort((a, b) => {
@@ -66,7 +105,7 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
     return (
         <div className="py-8">
             {/* Search bar + Filters */}
-            <div className="relative mb-8 flex items-center gap-3">
+            <div className="relative mb-6 flex items-center gap-3">
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
@@ -77,6 +116,27 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
                         className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl focus:border-brand-primary outline-none transition-colors font-medium"
                     />
                 </div>
+
+                {/* Saved filter toggle */}
+                {localStorage.getItem('token') && (
+                    <button
+                        type="button"
+                        onClick={() => setShowSavedOnly(v => !v)}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl border-2 text-sm font-black uppercase tracking-wide shadow-sm transition-colors ${showSavedOnly
+                            ? 'border-brand-yellow bg-brand-yellow/10 text-brand-yellow'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                            }`}
+                        title="Show saved terms only"
+                    >
+                        <Bookmark size={18} fill={showSavedOnly ? 'currentColor' : 'none'} />
+                        <span>Saved</span>
+                        {bookmarkedIds.size > 0 && (
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${showSavedOnly ? 'bg-brand-yellow/30 text-brand-yellow' : 'bg-slate-200 text-slate-500'}`}>
+                                {bookmarkedIds.size}
+                            </span>
+                        )}
+                    </button>
+                )}
 
                 <div className="relative">
                     <button
@@ -143,6 +203,7 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sorted.map(term => {
                     const lessonPos = term.lesson_id !== null ? lessonIdToPosition[String(term.lesson_id)] : undefined;
+                    const isBookmarked = bookmarkedIds.has(term.id);
                     return (
                         <motion.div
                             layout
@@ -167,6 +228,15 @@ const Glossary = ({ lessonIdToPosition }: Props) => {
                                             'bg-red-100 text-red-700'}`}>
                                         {term.difficulty}
                                     </span>
+                                    {localStorage.getItem('token') && (
+                                        <button
+                                            onClick={e => { e.stopPropagation(); handleBookmark(term.id); }}
+                                            className={`transition-colors ${isBookmarked ? 'text-brand-yellow' : 'text-slate-300 hover:text-brand-yellow'}`}
+                                            title={isBookmarked ? 'Remove bookmark' : 'Bookmark this term'}
+                                        >
+                                            <Bookmark size={15} fill={isBookmarked ? 'currentColor' : 'none'} />
+                                        </button>
+                                    )}
                                     <button
                                         onClick={e => { e.stopPropagation(); setFlagTarget(term.id); }}
                                         className="text-slate-300 hover:text-red-400 transition-colors"
