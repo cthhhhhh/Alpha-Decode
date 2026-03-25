@@ -20,7 +20,7 @@ interface Props {
 }
 
 const PODIUM_COLORS = ['bg-yellow-400', 'bg-slate-300', 'bg-amber-600'];
-const PODIUM_SIZES = ['h-24', 'h-16', 'h-12'];
+const PODIUM_SIZES = ['h-40', 'h-28', 'h-20'];
 
 const Leaderboard = ({ authUsername }: Props) => {
     const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -68,7 +68,7 @@ const Leaderboard = ({ authUsername }: Props) => {
     const isInTopList = entries.some(e => e.username === authUsername);
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto w-full overflow-x-hidden">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
                 <div>
                     <h2 className="text-3xl font-black text-slate-800">Leaderboard</h2>
@@ -111,10 +111,10 @@ const Leaderboard = ({ authUsername }: Props) => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-10"
                 >
-                    <div className="flex items-end justify-center gap-4 mb-4">
+                    <div className="flex items-end justify-center gap-2 sm:gap-4 mb-4">
                         {/* Reorder: 2nd, 1st, 3rd */}
                         {[top3[1], top3[0], top3[2]].map((entry, podiumSlot) => {
-                            if (!entry) return <div key={podiumSlot} className="w-24" />;
+                            if (!entry) return <div key={podiumSlot} className="w-20 sm:w-24" />;
                             const displayRank = entry.rank;
                             const colorIdx = displayRank - 1;
                             const isMe = entry.username === authUsername;
@@ -127,30 +127,30 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     transition={{ delay: podiumSlot * 0.1 }}
                                     className="flex flex-col items-center gap-1"
                                 >
-                                    <span className="text-2xl">{medalEmoji}</span>
-                                    <div className={`text-center px-3 py-2 rounded-2xl border-2 ${isMe ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200 bg-white'}`}>
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white font-black text-lg mx-auto mb-1">
+                                    <span className="text-2xl sm:text-3xl">{medalEmoji}</span>
+                                    <div className={`text-center px-3 sm:px-4 py-2 sm:py-3 rounded-2xl border-2 ${isMe ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200 bg-white'}`}>
+                                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white font-black text-lg sm:text-2xl mx-auto mb-1">
                                             {entry.username.charAt(0).toUpperCase()}
                                         </div>
-                                        <p className={`text-xs font-black truncate max-w-[72px] ${isMe ? 'text-brand-primary' : 'text-slate-700'}`}>
+                                        <p className={`text-xs sm:text-sm font-black truncate max-w-[72px] sm:max-w-[88px] ${isMe ? 'text-brand-primary' : 'text-slate-700'}`}>
                                             {isMe ? 'You' : entry.username}
                                         </p>
-                                        <div className="flex items-center justify-center gap-0.5 mt-0.5">
+                                        <div className="flex items-center justify-center gap-0.5 mt-1">
                                             {sort === 'streak' ? (
                                                 <>
-                                                    <Flame size={10} className="text-orange-400 fill-current" />
-                                                    <span className="text-[10px] font-black text-slate-500">{entry.streak}</span>
+                                                    <Flame size={13} className="text-orange-400 fill-current" />
+                                                    <span className="text-xs font-black text-slate-500">{entry.streak}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Star size={10} className="text-brand-yellow fill-current" />
-                                                    <span className="text-[10px] font-black text-slate-500">{entry.xp} Stars</span>
+                                                    <Star size={13} className="text-brand-yellow fill-current" />
+                                                    <span className="text-xs font-black text-slate-500">{entry.xp} Stars</span>
                                                 </>
                                             )}
                                         </div>
                                     </div>
-                                    <div className={`w-20 ${PODIUM_COLORS[colorIdx]} ${PODIUM_SIZES[colorIdx]} rounded-t-xl flex items-end justify-center pb-1`}>
-                                        <span className="text-white font-black text-xl">#{displayRank}</span>
+                                    <div className={`w-20 sm:w-28 ${PODIUM_COLORS[colorIdx]} ${PODIUM_SIZES[colorIdx]} rounded-t-xl flex items-end justify-center pb-2`}>
+                                        <span className="text-white font-black text-lg sm:text-2xl">#{displayRank}</span>
                                     </div>
                                 </motion.div>
                             );

@@ -17,7 +17,14 @@
 
 body {
   @apply bg-slate-50 text-slate-900 font-sans;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
+
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 
 .kahoot-btn {
   @apply relative overflow-hidden transition-all duration-200 active:translate-y-1 active:shadow-none;

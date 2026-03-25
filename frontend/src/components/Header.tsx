@@ -11,10 +11,10 @@ export default function Header({ authToken, authUsername, profilePic }: Props) {
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3">
             <div className="max-w-5xl mx-auto flex items-center justify-between">
                 {/* Logo */}
-                <div className="flex items-center gap-2">
-                    <img src="/logo.svg" alt="Alpha Decode" className="w-8 h-8" />
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">
-                        Alpha <span className="text-green-500">Decode</span>
+                <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
+                    <img src="/logo.svg" alt="Alpha Decode" className="w-8 h-8 sm:w-10 sm:h-10 group-hover:scale-110 transition-transform" />
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tighter uppercase">
+                        Alpha <span className="text-brand-primary uppercase">Decode</span>
                     </h1>
                 </div>
 

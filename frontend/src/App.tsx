@@ -580,9 +580,9 @@ export default function App() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_260px] gap-6 items-start">
                 {/* Left Sidebar — scoring info */}
-                <div className="space-y-4 sticky top-24 self-start">
+                <div className="hidden lg:block space-y-4 sticky top-24 self-start">
                   <motion.div
                     whileHover={{ y: -5, scale: 1.02 }}
                     className="bg-brand-yellow/10 border-2 border-brand-yellow/40 rounded-3xl p-6 text-center transition-shadow hover:shadow-xl hover:shadow-brand-yellow/10"

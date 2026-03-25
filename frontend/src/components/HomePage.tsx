@@ -60,8 +60,8 @@ const HomePage = ({ authToken }: Props) => {
             </nav>
 
             {/* Hero Section */}
-            <main className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 px-6 max-w-7xl mx-auto w-full">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
+            <main className="flex-1 flex flex-col items-center justify-center pt-24 lg:pt-32 pb-20 px-4 sm:px-6 max-w-7xl mx-auto w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
                     {/* Mascot Side */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
@@ -98,7 +98,7 @@ const HomePage = ({ authToken }: Props) => {
                                     rotate: [0, 2, -2, 0]
                                 }}
                                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                                className="relative z-10 w-64 h-64 sm:w-80 sm:h-80 lg:w-[450px] lg:h-[450px] overflow-hidden rounded-full"
+                                className="relative z-10 w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-96 lg:h-96 xl:w-[420px] xl:h-[420px] overflow-hidden rounded-full"
                             >
                                 <img src={mascot} alt="Alpha Decode Sensei" className="w-full h-full object-contain scale-110" />
 
@@ -136,7 +136,7 @@ const HomePage = ({ authToken }: Props) => {
                                 <Sparkles size={14} />
                                 The #1 Brain Rot Academy
                             </div>
-                            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-slate-800 tracking-tight leading-[0.95]">
+                            <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-slate-800 tracking-tight leading-[0.95]">
                                 THE WORLD'S BEST <br />
                                 <span className="text-brand-primary italic uppercase underline decoration-brand-yellow underline-offset-8">ROTTING WAY.</span>
                             </h1>
@@ -150,7 +150,7 @@ const HomePage = ({ authToken }: Props) => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.4 }}
-                            className="w-full max-w-sm bg-slate-50 border-2 border-slate-200 rounded-3xl p-6 shadow-sm group hover:border-brand-yellow transition-colors"
+                            className="w-full max-w-xs sm:max-w-sm bg-slate-50 border-2 border-slate-200 rounded-3xl p-5 shadow-sm group hover:border-brand-yellow transition-colors"
                         >
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-xs font-black uppercase tracking-widest text-slate-400">Global Proficiency</span>
@@ -204,7 +204,7 @@ const HomePage = ({ authToken }: Props) => {
                     initial={{ opacity: 0, y: 50 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8 w-full"
+                    className="mt-20 lg:mt-32 grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8 w-full"
                 >
                     {features.map((f, i) => (
                         <div key={i} className="p-8 rounded-[2.5rem] bg-slate-50 border-2 border-slate-100 flex flex-col items-center text-center space-y-4 hover:shadow-xl transition-shadow group">

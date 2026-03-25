@@ -65,12 +65,15 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
 
     const nodes = buildNodes();
 
+    const NODE_STEP = 160;
+    const svgHeight = Math.max(600, nodes.length * NODE_STEP + 200);
+
     // Calculate dynamic SVG path
     const generatePath = () => {
         if (nodes.length === 0) return "";
         const points = nodes.map((node, i) => ({
             x: 200 + (node.kind === 'lesson' ? (node.lesson.x || 0) : 0),
-            y: 72 + i * 144,
+            y: 80 + i * NODE_STEP,
         }));
 
         let d = `M ${points[0].x} 0 L ${points[0].x} ${points[0].y}`;
@@ -87,7 +90,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
         }
 
         const last = points[points.length - 1];
-        d += ` L ${last.x} ${last.y + 120}`;
+        d += ` L ${last.x} ${svgHeight}`;
 
         return d;
     };
@@ -100,8 +103,14 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
             <div className="absolute top-40 left-20 w-20 h-20 bg-yellow-200 rounded-full blur-xl opacity-30 animate-pulse" />
 
             {/* Background dashed path */}
-            <div className="absolute inset-0 pointer-events-none flex justify-center">
-                <svg width="400" height="100%" className="opacity-20" style={{ minHeight: '100%' }}>
+            <div className="absolute inset-0 pointer-events-none flex justify-center overflow-visible">
+                <svg
+                    width="400"
+                    height={svgHeight}
+                    viewBox={`0 0 400 ${svgHeight}`}
+                    className="opacity-20 overflow-visible"
+                    style={{ minHeight: svgHeight }}
+                >
                     <path
                         d={generatePath()}
                         stroke="currentColor"
