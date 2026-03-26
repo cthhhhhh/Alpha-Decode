@@ -15,10 +15,13 @@ public class StreakScheduler {
         this.userRepository = userRepository;
     }
 
-    @Scheduled(cron = "0 5 0 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void resetMissedStreaks() {
+        // Users get the entire next day to complete the quiz.
+        // If today is Tuesday 00:00 AM, if they haven't completed it since Sunday
+        // (i.e. before yesterday, Monday), their streak resets.
         List<User> toReset = userRepository.findByStreakGreaterThanAndDailyQuizLastDateBefore(
-                0, LocalDate.now());
+                0, LocalDate.now().minusDays(1));
         toReset.forEach(u -> u.setStreak(0));
         userRepository.saveAll(toReset);
     }
