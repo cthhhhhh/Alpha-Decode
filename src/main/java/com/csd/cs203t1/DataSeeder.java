@@ -22,6 +22,7 @@ import com.csd.cs203t1.term.TermRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.csd.cs203t1.user.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -33,15 +34,17 @@ public class DataSeeder implements CommandLineRunner {
     private final TermRepository termRepository;
     private final QuizRepository quizRepository;
     private final AchievementRepository achievementRepository;
+    private final UserRepository userRepository;
 
     public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
             TermRepository termRepository, QuizRepository quizRepository,
-            AchievementRepository achievementRepository) {
+            AchievementRepository achievementRepository, UserRepository userRepository) {
         this.lessonService = lessonService;
         this.lessonRepository = lessonRepository;
         this.termRepository = termRepository;
         this.quizRepository = quizRepository;
         this.achievementRepository = achievementRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -52,6 +55,12 @@ public class DataSeeder implements CommandLineRunner {
         seedOnboardingQuiz();
         seedRevisionQuiz();
         seedAchievements();
+        recoverUsers();
+    }
+
+    private void recoverUsers() {
+        // Ensure all existing users are enabled to prevent lockout from new flag
+        userRepository.enableAllUsers();
     }
 
     // ─── Lessons ────────────────────────────────────────────────────────────────

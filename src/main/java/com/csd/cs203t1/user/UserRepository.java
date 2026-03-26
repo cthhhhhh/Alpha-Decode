@@ -79,4 +79,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
                    "END || '-' || substr(last_daily_quiz_completed_date, 9, 2) " +
                    "WHERE daily_quiz_last_date IS NULL AND last_daily_quiz_completed_date IS NOT NULL", nativeQuery = true)
     void migrateLegacyQuizDates();
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE users SET enabled = true", nativeQuery = true)
+    void enableAllUsers();
 }

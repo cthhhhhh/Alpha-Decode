@@ -118,6 +118,10 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
+        if (!user.isEnabled()) {
+            throw new IllegalArgumentException("Account is disabled. Please contact admin.");
+        }
+
         checkStreakLapse(user);
         userRepository.save(user);
 
@@ -283,10 +287,10 @@ public class UserServiceImpl implements UserService {
     // ─── Helpers ────────────────────────────────────────────────────────────────
 
     private String generateToken(User user) {
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
                 .password(user.getPassword())
                 .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                .disabled(!user.isEnabled())
                 .build();
         return jwtUtil.generateToken(userDetails);
     }

@@ -27,10 +27,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Role is stored as e.g. "USER" or "ADMIN" – Spring Security expects "ROLE_USER" / "ROLE_ADMIN"
         String authority = "ROLE_" + user.getRole().name();
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
+        return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
                 .password(user.getPassword())
                 .authorities(List.of(new SimpleGrantedAuthority(authority)))
+                .disabled(!user.isEnabled())
                 .build();
     }
 }
