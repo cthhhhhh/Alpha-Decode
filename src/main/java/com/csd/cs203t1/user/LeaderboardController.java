@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,19 +42,18 @@ public class LeaderboardController {
 
         List<User> topUsers;
         if ("weekly".equals(period)) {
-            LocalDate since = LocalDate.now().minusDays(7);
             if ("streak".equals(sort)) {
                 topUsers = userRepository
-                        .findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(Role.ADMIN, since, pageable)
+                        .findAllByRoleNotOrderByWeeklyXpDescLevelDesc(Role.ADMIN, pageable)
                         .getContent()
                         .stream()
                         .sorted((a, b) -> b.getStreak() != a.getStreak()
                                 ? Integer.compare(b.getStreak(), a.getStreak())
-                                : Integer.compare(b.getXp(), a.getXp()))
+                                : Integer.compare(b.getWeeklyXp(), a.getWeeklyXp()))
                         .collect(Collectors.toList());
             } else {
                 topUsers = userRepository
-                        .findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(Role.ADMIN, since, pageable)
+                        .findAllByRoleNotOrderByWeeklyXpDescLevelDesc(Role.ADMIN, pageable)
                         .getContent();
             }
         } else {
@@ -73,7 +71,7 @@ public class LeaderboardController {
                         rank.getAndIncrement(),
                         u.getUsername(),
                         u.getLevel(),
-                        u.getXp(),
+                        "weekly".equals(period) ? u.getWeeklyXp() : u.getXp(),
                         u.getStreak()))
                 .collect(Collectors.toList());
 
@@ -81,10 +79,11 @@ public class LeaderboardController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getMyRank(@RequestParam(defaultValue = "xp") String sort) {
+    public ResponseEntity<Map<String, Object>> getMyRank(
+            @RequestParam(required = false, defaultValue = "allTime") String period,
+            @RequestParam(required = false, defaultValue = "xp") String sort) {
         User currentUser = userService.getCurrentUser();
         
-        // If current user is admin, they don't have a rank
         if (currentUser.getRole() == Role.ADMIN) {
              Map<String, Object> result = new HashMap<>();
              result.put("rank", 0);
@@ -93,14 +92,24 @@ public class LeaderboardController {
         }
 
         long rank;
-        if ("streak".equals(sort)) {
-            long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-            long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndXpGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getXp());
-            rank = streakGreater + sameStreakBetterXp + 1;
+        if ("weekly".equals(period)) {
+            if ("streak".equals(sort)) {
+                long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
+                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndWeeklyXpGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyXp());
+                rank = streakGreater + sameStreakBetterXp + 1;
+            } else {
+                long xpGreater = userRepository.countByRoleNotAndWeeklyXpGreaterThan(Role.ADMIN, currentUser.getWeeklyXp());
+                rank = xpGreater + 1;
+            }
         } else {
-            // Rank strictly by Stars (XP)
-            long xpGreater = userRepository.countByRoleNotAndXpGreaterThan(Role.ADMIN, currentUser.getXp());
-            rank = xpGreater + 1;
+            if ("streak".equals(sort)) {
+                long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
+                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndXpGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getXp());
+                rank = streakGreater + sameStreakBetterXp + 1;
+            } else {
+                long xpGreater = userRepository.countByRoleNotAndXpGreaterThan(Role.ADMIN, currentUser.getXp());
+                rank = xpGreater + 1;
+            }
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -109,7 +118,7 @@ public class LeaderboardController {
                 (int) rank,
                 currentUser.getUsername(),
                 currentUser.getLevel(),
-                currentUser.getXp(),
+                "weekly".equals(period) ? currentUser.getWeeklyXp() : currentUser.getXp(),
                 currentUser.getStreak()));
         return ResponseEntity.ok(result);
     }

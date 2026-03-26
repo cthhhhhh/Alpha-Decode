@@ -375,15 +375,25 @@ export default function App() {
   const handleRevisionQuizComplete = (quizId: string, correct: number) => {
     const alreadyDone = completedRevisionIds.has(quizId);
     if (!alreadyDone && correct > 0) {
-      const newXp = xp + correct;
+      const rewardXp = 5;
+      const newXp = xp + rewardXp;
       setXp(newXp);
       localStorage.setItem('xp', newXp.toString());
+      
+      const quiz = revisionQuizzes.find(q => q.id === quizId);
+      const nextIdx = quiz ? quiz.afterLessonIndex + 1 : -1;
+      const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
+      const shouldUnlockNext = nextIdx > 0 && nextIdx < lessonsRef.current.length && nextIdx > savedUnlock;
+
       const token = localStorage.getItem('token');
       if (token) {
         fetch('/api/auth/xp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ xpToAdd: correct }),
+          body: JSON.stringify({ 
+            xpToAdd: rewardXp,
+            ...(shouldUnlockNext ? { maxUnlockedLessonIndex: nextIdx } : {})
+          }),
         })
           .then(r => r.json())
           .then(data => { 
@@ -392,6 +402,8 @@ export default function App() {
             if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
             if (data.maxUnlockedLessonIndex !== undefined) {
               localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
+              // Force local lessons state refresh
+              setLessons(prev => prev.map((l, i) => i <= data.maxUnlockedLessonIndex ? { ...l, locked: false } : l));
             }
           })
           .catch(err => console.error('Failed to save revision XP:', err));
@@ -420,9 +432,13 @@ export default function App() {
 
     const idx = lessonsRef.current.findIndex(l => l.id === lessonId);
     const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-
     const nextIdx = idx !== -1 ? idx + 1 : -1;
-    const shouldUnlockNext = passed && nextIdx > 0 && nextIdx < lessonsRef.current.length && nextIdx > savedUnlock;
+    
+    // REQUIREMENT: Check if there's a RevisionQuiz at this current index (idx)
+    // If so, the NEXT lesson (nextIdx) is GATED until the quiz is finished.
+    // BUG FIX: Don't gate if the quiz is already completed.
+    const hasIncompleteGatingQuiz = revisionQuizzes.some(q => q.afterLessonIndex === idx && !completedRevisionIds.has(q.id.toString()));
+    const shouldUnlockNext = passed && nextIdx > 0 && nextIdx < lessonsRef.current.length && nextIdx > savedUnlock && !hasIncompleteGatingQuiz;
 
     setLessons(prev => {
       const updated = [...prev];
@@ -431,7 +447,7 @@ export default function App() {
         if (correct === total && total > 0) {
           updated[lessonIdx] = { ...updated[lessonIdx], completed: true };
         }
-        if (passed && lessonIdx + 1 < updated.length) {
+        if (shouldUnlockNext && lessonIdx + 1 < updated.length) {
           updated[lessonIdx + 1] = { ...updated[lessonIdx + 1], locked: false };
         }
       }
@@ -444,21 +460,20 @@ export default function App() {
 
     const token = localStorage.getItem('token');
 
-    const shouldAwardXp = currentLesson && !wasAlreadyCompleted && correct > 0;
+    const shouldAwardXp = currentLesson && !wasAlreadyCompleted && passed;
 
     if (shouldAwardXp) {
-      const newXp = xp + correct;
+      const rewardXp = 5;
+      const newXp = xp + rewardXp;
       setXp(newXp);
       localStorage.setItem('xp', newXp.toString());
-    }
-
-    if (token && (shouldAwardXp || shouldUnlockNext)) {
-      if (shouldAwardXp) {
+      
+      if (token) {
         fetch('/api/auth/xp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
-            xpToAdd: correct,
+            xpToAdd: rewardXp,
             ...(shouldUnlockNext ? { maxUnlockedLessonIndex: nextIdx } : {}),
           }),
         })

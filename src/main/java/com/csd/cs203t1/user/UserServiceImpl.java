@@ -71,7 +71,10 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
-        if (request.getXp() != null) user.setXp(request.getXp());
+        if (request.getXp() != null) {
+            user.setXp(request.getXp());
+            user.setWeeklyXp(request.getXp());
+        }
         if (request.getMaxUnlockedLessonIndex() != null) user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
 
         checkStreakLapse(user);
@@ -95,7 +98,10 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.ADMIN);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
-        if (request.getXp() != null) user.setXp(request.getXp());
+        if (request.getXp() != null) {
+            user.setXp(request.getXp());
+            user.setWeeklyXp(request.getXp());
+        }
 
         checkStreakLapse(user);
         User savedUser = userRepository.save(user);
@@ -139,6 +145,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
         User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         user.setXp(user.getXp() + request.getXpToAdd());
+        user.setWeeklyXp(user.getWeeklyXp() + request.getXpToAdd());
         int newLevel = user.getXp() / 50 + 1;
         user.setLevel(newLevel);
 
@@ -313,6 +320,7 @@ public class UserServiceImpl implements UserService {
     public void resetProgress(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setXp(0);
+        user.setWeeklyXp(0);
         user.setLevel(1);
         user.setStreak(0);
         user.setMaxUnlockedLessonIndex(0);

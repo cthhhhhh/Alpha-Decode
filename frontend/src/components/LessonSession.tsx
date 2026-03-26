@@ -295,55 +295,77 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                     </AnimatePresence>
 
                     {/* Summary */}
-                    {isFinished && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex-1 flex flex-col items-center justify-center text-center space-y-8 py-12"
-                        >
-                            <div className="w-24 h-24 bg-brand-yellow rounded-3xl flex items-center justify-center text-white shadow-xl rotate-6 animate-bounce">
-                                <Trophy size={48} fill="currentColor" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-4xl font-black text-slate-900 tracking-tight">Lesson Complete!</h2>
-                                <p className="text-xl text-slate-500 font-bold">You're leveling up your brain.</p>
-                            </div>
-                            <div className={`grid gap-4 w-full max-w-sm ${practiceMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
-                                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
-                                    <p className="text-3xl font-black text-brand-primary">{Math.round((correctCount / totalGraded) * 100)}%</p>
-                                </div>
-                                {practiceMode ? (
-                                    <div className="bg-brand-accent/10 p-6 rounded-3xl border-2 border-brand-accent/20 text-center">
-                                        <RotateCcw size={24} className="text-brand-accent mx-auto mb-2" />
-                                        <p className="text-sm font-black text-brand-accent uppercase tracking-widest mb-1">Practice Complete</p>
-                                        <p className="text-[10px] font-bold text-slate-500">No XP awarded in practice mode</p>
-                                    </div>
-                                ) : (
-                                    <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
-                                        <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
-                                        <div className="flex items-center justify-center gap-1">
-                                            <Star size={24} className="text-brand-yellow" fill="currentColor" />
-                                            <p className="text-3xl font-black text-slate-900">
-                                                {initialCompleted ? '+0' : `+${correctCount}`}
-                                            </p>
-                                        </div>
-                                        {initialCompleted && (
-                                            <p className="text-[10px] font-black text-slate-400 uppercase mt-1">Already Earned</p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => onComplete(lessonId, correctCount, totalGraded)}
-                                className="w-full max-w-sm bg-brand-primary text-white py-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#46a302] active:translate-y-1 active:shadow-none transition-all"
+                    {isFinished && (() => {
+                        const accuracy = totalGraded === 0 ? 100 : Math.round((correctCount / totalGraded) * 100);
+                        let title = "Lesson Complete!";
+                        let subtitle = "You're leveling up your brain.";
+                        
+                        if (accuracy === 100) {
+                            title = "Sigma Performance!";
+                            subtitle = "Maximum Rizz! +5 Stars earned.";
+                        } else if (accuracy >= 80) {
+                            title = "So Close!";
+                            subtitle = "Almost a Sigma! Try again for stars.";
+                        } else if (accuracy >= 60) {
+                            title = "Delulu Moment?";
+                            subtitle = "The delulu is not the solulu. No stars awarded.";
+                        } else {
+                            title = "Total Ohio...";
+                            subtitle = "Go back to Skibidi 101. Try again!";
+                        }
+
+                        return (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex-1 flex flex-col items-center justify-center text-center space-y-8 py-12"
                             >
-                                RETURN HOME
-                            </motion.button>
-                        </motion.div>
-                    )}
+                                <div className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-6 ${accuracy === 100 ? 'bg-brand-yellow animate-bounce' : 'bg-slate-300'}`}>
+                                    <Trophy size={48} fill="currentColor" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-4xl font-black text-slate-900 tracking-tight">{title}</h2>
+                                    <p className="text-xl text-brand-primary font-bold">{subtitle}</p>
+                                </div>
+                                <div className={`grid gap-4 w-full max-w-sm ${practiceMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                    <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                                        <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
+                                        <p className="text-3xl font-black text-brand-primary">{accuracy}%</p>
+                                    </div>
+                                    {practiceMode ? (
+                                        <div className="bg-brand-accent/10 p-6 rounded-3xl border-2 border-brand-accent/20 text-center">
+                                            <RotateCcw size={24} className="text-brand-accent mx-auto mb-2" />
+                                            <p className="text-sm font-black text-brand-accent uppercase tracking-widest mb-1">Practice Complete</p>
+                                            <p className="text-[10px] font-bold text-slate-500">No XP awarded in practice mode</p>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Star size={24} className={accuracy === 100 ? "text-brand-yellow" : "text-slate-300"} fill="currentColor" />
+                                                <p className="text-3xl font-black text-slate-900">
+                                                    {initialCompleted || accuracy < 100 ? '+0' : '+5'}
+                                                </p>
+                                            </div>
+                                            {(initialCompleted || (accuracy < 100 && !initialCompleted)) && (
+                                                <p className="text-[10px] font-black text-slate-400 uppercase mt-1">
+                                                    {initialCompleted ? 'Already Earned' : '100% Required'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => onComplete(lessonId, correctCount, totalGraded)}
+                                    className="w-full max-w-sm bg-brand-primary text-white py-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#46a302] active:translate-y-1 active:shadow-none transition-all"
+                                >
+                                    RETURN HOME
+                                </motion.button>
+                            </motion.div>
+                        );
+                    })()}
                 </div>
             </div>
 

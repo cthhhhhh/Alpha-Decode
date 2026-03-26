@@ -54,6 +54,9 @@ public class User {
 	private int xp = 0;
 
 	@Column(columnDefinition = "integer default 0", nullable = false)
+	private int weeklyXp = 0;
+
+	@Column(columnDefinition = "integer default 0", nullable = false)
 	private int maxUnlockedLessonIndex = 0;
 
 	@Column(columnDefinition = "integer default 0")

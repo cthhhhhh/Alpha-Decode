@@ -27,6 +27,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllByRoleNotOrderByXpDescLevelDesc(Role role, Pageable pageable);
 
+    Page<User> findAllByRoleNotOrderByWeeklyXpDescLevelDesc(Role role, Pageable pageable);
+
     Page<User> findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(Role role, LocalDate since, Pageable pageable);
 
     Page<User> findAllByRoleNotOrderByLevelDescXpDesc(Role role, Pageable pageable);
@@ -35,6 +37,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByRoleNotAndXpGreaterThan(Role role, int xp);
 
+    long countByRoleNotAndWeeklyXpGreaterThan(Role role, int weeklyXp);
+
     long countByRoleNotAndLevelGreaterThan(Role role, int level);
 
     long countByRoleNotAndLevelAndXpGreaterThan(Role role, int level, int xp);
@@ -42,6 +46,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRoleNotAndStreakGreaterThan(Role role, int streak);
 
     long countByRoleNotAndStreakAndXpGreaterThan(Role role, int streak, int xp);
+
+    long countByRoleNotAndStreakAndWeeklyXpGreaterThan(Role role, int streak, int weeklyXp);
 
     Page<User> findAllByOrderByXpDescLevelDesc(Pageable pageable);
 
@@ -56,6 +62,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByStreakGreaterThan(int streak);
 
     long countByStreakAndXpGreaterThan(int streak, int xp);
+    
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.weeklyXp = 0")
+    void resetAllWeeklyXp();
     
     @Modifying
     @Transactional

@@ -22,4 +22,10 @@ public class StreakScheduler {
         toReset.forEach(u -> u.setStreak(0));
         userRepository.saveAll(toReset);
     }
+
+    @Scheduled(cron = "0 0 0 * * SUN")
+    public void resetWeeklyXp() {
+        // Fires every Sunday at exactly 00:00 (midnight) to wipe the weekly leaderboard tracker
+        userRepository.resetAllWeeklyXp();
+    }
 }
