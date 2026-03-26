@@ -16,7 +16,6 @@ import com.csd.cs203t1.bookmark.UserBookmarkRepository;
 import com.csd.cs203t1.flag.FlagRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,15 +45,7 @@ public class UserServiceImpl implements UserService {
         this.flagRepository = flagRepository;
     }
 
-    @PostConstruct
-    public void init() {
-        try {
-            userRepository.migrateLegacyQuizDates();
-        } catch (Exception e) {
-            // Likely column doesn't exist or already migrated
-            System.out.println("Legacy quiz date migration skipped: " + e.getMessage());
-        }
-    }
+
 
     @Override
     public UserDTO.AuthResponse register(UserDTO.RegisterRequest request) {
@@ -272,6 +263,17 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Override
+    @Transactional
+    public UserDTO.AuthResponse completeOnboarding(UserDTO.OnboardingRequest request) {
+        User user = getCurrentUser();
+        user.setLevel(request.getLevel());
+        user.setXp(request.getXp());
+        user.setOnboardingCompleted(true);
+        User savedUser = userRepository.save(user);
+        return toAuthResponse(savedUser, null, null);
+    }
+    
     private void checkStreakLapse(User user) {
         if (user.getDailyQuizLastDate() == null) {
             return;
@@ -310,6 +312,7 @@ public class UserServiceImpl implements UserService {
                 user.getProfilePic(),
                 lastDate,
                 completedToday,
+                user.isOnboardingCompleted(),
                 achievements != null && !achievements.isEmpty() ? achievements : null
         );
     }

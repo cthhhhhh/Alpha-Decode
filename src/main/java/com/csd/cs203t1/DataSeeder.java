@@ -55,13 +55,10 @@ public class DataSeeder implements CommandLineRunner {
         seedOnboardingQuiz();
         seedRevisionQuiz();
         seedAchievements();
-        recoverUsers();
+        userRepository.markExistingUsersAsOnboarded();
     }
 
-    private void recoverUsers() {
-        // Ensure all existing users are enabled to prevent lockout from new flag
-        userRepository.enableAllUsers();
-    }
+
 
     // ─── Lessons ────────────────────────────────────────────────────────────────
 

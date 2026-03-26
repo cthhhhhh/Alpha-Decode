@@ -16,4 +16,5 @@ public interface UserService {
     void deleteUserById(Long id);
     void resetProgress(Long id);
     void setUserEnabled(Long id, boolean enabled);
+    UserDTO.AuthResponse completeOnboarding(UserDTO.OnboardingRequest request);
 }

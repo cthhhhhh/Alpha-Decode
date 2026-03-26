@@ -42,22 +42,23 @@ public class UserDTO {
         private String profilePic;
         private String dailyQuizLastDate;
         private Boolean dailyQuizCompletedToday;
+        private Boolean onboardingCompleted;
         private List<NewAchievementDTO> newAchievements;
 
         // Backwards-compatible constructor for endpoints that don't check achievements
         public AuthResponse(String token, String role, String username,
                             Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak, String profilePic) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, null, null, null);
+            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, null, null, null, null);
         }
 
         public AuthResponse(String token, String role, String username,
                             Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak, String profilePic, String dailyQuizLastDate) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null);
+            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null, null);
         }
 
         public AuthResponse(String token, String role, String username,
                             Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, null, null, null, null);
+            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, null, null, null, null, null);
         }
     }
 
@@ -117,5 +118,13 @@ public class UserDTO {
     public static class ResetPasswordRequest {
         private String username;
         private String newPassword;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class OnboardingRequest {
+        private int level;
+        private int xp;
     }
 }

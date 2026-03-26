@@ -11,6 +11,7 @@ interface Props {
     onComplete: () => void;
     onLogin: () => void;
     onBack: () => void;
+    isLoggedIn?: boolean;
 }
 
 const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { color: string; size: string; top?: string; left?: string; bottom?: string; right?: string; delay: number }) => (
@@ -30,7 +31,7 @@ const BackgroundBubble = ({ color, size, top, left, bottom, right, delay }: { co
     />
 );
 
-const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onLogin, onBack }: Props) => {
+const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, onComplete, onLogin, onBack, isLoggedIn }: Props) => {
     return (
         <AnimatePresence>
             {show && (
@@ -52,15 +53,17 @@ const OnboardingModal = ({ show, qIndex, score, finished, questions, onAnswer, o
                             <span>Back</span>
                         </motion.button>
 
-                        <motion.button
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            onClick={onLogin}
-                            className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-600 hover:bg-white hover:text-brand-primary transition-all shadow-sm group"
-                        >
-                            <User size={18} className="group-hover:scale-110 transition-transform" />
-                            <span>Log In</span>
-                        </motion.button>
+                        {!isLoggedIn && (
+                            <motion.button
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                onClick={onLogin}
+                                className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-full font-bold text-slate-600 hover:bg-white hover:text-brand-primary transition-all shadow-sm group"
+                            >
+                                <User size={18} className="group-hover:scale-110 transition-transform" />
+                                <span>Log In</span>
+                            </motion.button>
+                        )}
                     </div>
 
                     {/* Vibrant Theme-Consistent Background */}

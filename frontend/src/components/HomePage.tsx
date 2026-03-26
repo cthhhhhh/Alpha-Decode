@@ -14,7 +14,7 @@ const HomePage = ({ authToken }: Props) => {
         if (authToken) {
             navigate('/home');
         } else {
-            navigate('/onboarding');
+            navigate('/register');
         }
     };
 

@@ -144,6 +144,12 @@ export default function App() {
               localStorage.removeItem('dailyQuizStartedDate');
             }
           }
+          if (data.onboardingCompleted !== undefined) {
+             const finished = data.onboardingCompleted === true;
+             setShowOnboarding(!finished);
+             if (finished) localStorage.setItem('onboardingFinished', 'true');
+             else localStorage.removeItem('onboardingFinished');
+          }
         }).catch(() => { });
 
       return () => clearInterval(pingInterval);
@@ -250,10 +256,11 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean) => {
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
+    if (profilePic !== undefined) setProfilePic(profilePic);
     localStorage.setItem('token', token);
     localStorage.setItem('role', role);
     localStorage.setItem('username', username);
@@ -291,9 +298,15 @@ export default function App() {
         localStorage.removeItem('dailyQuizStartedDate');
       }
     }
-    setShowOnboarding(false);
-    localStorage.setItem('onboardingFinished', 'true');
-    navigate('/home');
+    const isDoneWithOnboarding = onboardingCompleted === true;
+    setShowOnboarding(!isDoneWithOnboarding);
+    if (isDoneWithOnboarding) {
+      localStorage.setItem('onboardingFinished', 'true');
+      navigate('/home');
+    } else {
+      localStorage.removeItem('onboardingFinished');
+      navigate('/onboarding');
+    }
   };
 
   const handleLogout = () => {
@@ -514,18 +527,36 @@ export default function App() {
     }
   };
 
-  // Finish onboarding completely (go to register)
+  // Finish onboarding completely (send results to backend)
   const completeOnboarding = () => {
-    const newLevel = onboardingScore + 1;
-    const startingXp = onboardingScore * 50; // 50 XP per level past Level 1
-
-    setLevel(newLevel);
-    setXp(startingXp); // Also set the state just in case
-    setShowOnboarding(false);
-    localStorage.setItem('onboardingFinished', 'true');
-    localStorage.setItem('initialLevel', newLevel.toString());
-    localStorage.setItem('initialXp', startingXp.toString());
-    navigate('/register');
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/api/auth/onboarding-complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          level: onboardingScore + 1,
+          xp: onboardingScore * 50
+        })
+      })
+        .then(r => r.json())
+        .then(data => {
+          setLevel(data.level);
+          setXp(data.xp);
+          setShowOnboarding(false);
+          localStorage.setItem('onboardingFinished', 'true');
+          navigate('/home');
+        })
+        .catch(err => console.error('Failed to save onboarding:', err));
+    } else {
+      // Fallback for safety, though we now register first
+      setShowOnboarding(false);
+      localStorage.setItem('onboardingFinished', 'true');
+      navigate('/home');
+    }
   };
 
 
@@ -886,7 +917,7 @@ export default function App() {
       <Route path="/login" element={
         <LoginPage
           onLoginSuccess={handleAuthSuccess}
-          onGoToRegister={() => navigate('/onboarding')}
+          onGoToRegister={() => navigate('/register')}
           onBack={() => navigate('/')}
         />
       } />
@@ -909,6 +940,7 @@ export default function App() {
             onComplete={completeOnboarding}
             onLogin={() => navigate('/login')}
             onBack={() => navigate('/')}
+            isLoggedIn={!!authToken}
           />
         </div>
       } />

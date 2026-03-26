@@ -67,21 +67,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Transactional
     @Query("UPDATE User u SET u.weeklyXp = 0")
     void resetAllWeeklyXp();
-    
     @Modifying
     @Transactional
-    @Query(value = "UPDATE users " +
-                   "SET daily_quiz_last_date = substr(last_daily_quiz_completed_date, 12, 4) || '-' || " +
-                   "CASE substr(last_daily_quiz_completed_date, 5, 3) " +
-                   "  WHEN 'Jan' THEN '01' WHEN 'Feb' THEN '02' WHEN 'Mar' THEN '03' WHEN 'Apr' THEN '04' " +
-                   "  WHEN 'May' THEN '05' WHEN 'Jun' THEN '06' WHEN 'Jul' THEN '07' WHEN 'Aug' THEN '08' " +
-                   "  WHEN 'Sep' THEN '09' WHEN 'Oct' THEN '10' WHEN 'Nov' THEN '11' WHEN 'Dec' THEN '12' " +
-                   "END || '-' || substr(last_daily_quiz_completed_date, 9, 2) " +
-                   "WHERE daily_quiz_last_date IS NULL AND last_daily_quiz_completed_date IS NOT NULL", nativeQuery = true)
-    void migrateLegacyQuizDates();
-
-    @Modifying
-    @Transactional
-    @Query(value = "UPDATE users SET enabled = true", nativeQuery = true)
-    void enableAllUsers();
+    @Query("UPDATE User u SET u.onboardingCompleted = true WHERE u.level > 1 OR u.xp > 0 OR u.onboardingCompleted = true")
+    void markExistingUsersAsOnboarded();
 }

@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 
 import java.time.LocalDate;
-import java.util.UUID;
+
 
 import jakarta.persistence.EnumType;
 import lombok.*;
@@ -74,7 +74,7 @@ public class User {
 	@Column(nullable = false, columnDefinition = "boolean default true")
 	private boolean enabled = true;
 
-	@jakarta.persistence.Transient
-	private UUID publicUUID = UUID.randomUUID(); //for later when we implement sign in with jwt
+	@Column(nullable = false, columnDefinition = "boolean default false")
+	private boolean onboardingCompleted = false;
 
 }

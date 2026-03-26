@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 
 interface RegisterPageProps {
-  onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean) => void;
+  onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => void;
   onGoToLogin: () => void;
   onBack: () => void;
 }
@@ -30,18 +30,13 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
     setError('');
     setLoading(true);
     try {
-      const initialLevel = parseInt(localStorage.getItem('initialLevel') || '1');
-      const initialXp = parseInt(localStorage.getItem('initialXp') || '0');
-
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           username, 
           email, 
-          password,
-          level: initialLevel,
-          xp: initialXp
+          password
         }),
       });
       if (!res.ok) {
@@ -54,7 +49,7 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
       localStorage.setItem('username', data.username);
       localStorage.removeItem('initialLevel');
       localStorage.removeItem('initialXp');
-      onRegisterSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex, data.streak, data.dailyQuizLastDate, data.dailyQuizCompletedToday);
+      onRegisterSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
