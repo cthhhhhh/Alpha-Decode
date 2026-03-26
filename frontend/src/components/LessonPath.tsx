@@ -43,7 +43,7 @@ type PathNode =
     | { kind: 'checkpoint'; quiz: RevisionQuiz; isCompleted: boolean };
 
 const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision }: Props) => {
-    const [flagTarget, setFlagTarget] = useState<number | null>(null);
+    const [flagTarget, setFlagTarget] = useState<{ id: number; type: 'LESSON' | 'QUIZ'; context: string } | null>(null);
 
     const buildNodes = (): PathNode[] => {
         const nodes: PathNode[] = [];
@@ -173,7 +173,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                     {lesson.title}
                                 </span>
                                 <button
-                                    onClick={e => { e.stopPropagation(); setFlagTarget(parseInt(lesson.id)); }}
+                                    onClick={e => { e.stopPropagation(); setFlagTarget({ id: parseInt(lesson.id), type: 'LESSON', context: `Lesson: ${lesson.title}` }); }}
                                     className="absolute left-[calc(100%+8px)] text-slate-400 hover:bg-red-50 hover:text-red-500 bg-white/90 shadow-sm border border-slate-100 rounded-full p-1.5 transition-colors"
                                     title="Flag this lesson"
                                 >
@@ -207,16 +207,26 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                 </div>
                             )}
                         </motion.button>
-                        <span className="mt-4 font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap bg-purple-50 text-purple-700 border-purple-200">
-                            {isCompleted ? 'Checkpoint Cleared!' : 'Revision Quiz'}
-                        </span>
+                        <div className="mt-4 relative flex items-center justify-center">
+                            <span className="font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap bg-purple-50 text-purple-700 border-purple-200">
+                                {isCompleted ? 'Checkpoint Cleared!' : 'Revision Quiz'}
+                            </span>
+                            <button
+                                onClick={e => { e.stopPropagation(); setFlagTarget({ id: parseInt(quiz.id), type: 'QUIZ', context: `Checkpoint: ${quiz.title || 'Revision Quiz'}` }); }}
+                                className="absolute left-[calc(100%+8px)] text-slate-400 hover:bg-red-50 hover:text-red-500 bg-white/90 shadow-sm border border-slate-100 rounded-full p-1.5 transition-colors"
+                                title="Flag this checkpoint"
+                            >
+                                <Flag size={14} />
+                            </button>
+                        </div>
                     </div>
                 );
             })}
             <FlagModal
                 show={flagTarget !== null}
-                contentType="LESSON"
-                contentId={flagTarget ?? 0}
+                contentType={flagTarget?.type ?? 'LESSON'}
+                contentId={flagTarget?.id ?? 0}
+                context={flagTarget?.context ?? ''}
                 onClose={() => setFlagTarget(null)}
             />
         </div>

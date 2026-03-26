@@ -181,7 +181,7 @@ export default function App() {
   const lessonsRef = useRef<Lesson[]>([]);
   useEffect(() => { lessonsRef.current = lessons; }, [lessons]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-  type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
+  type QuizQ = { id: number; q: string; options: string[]; correct: number; explanation: string };
   type OnbQ = { q: string; options: string[]; correct: number };
   const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
   const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
@@ -201,49 +201,63 @@ export default function App() {
     });
   };
 
-  // Fetch lesson list from backend on mount
+  // Fetch lessons and revision quizzes
   useEffect(() => {
-    fetch('/api/lessons/')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data: { id: number; title: string }[]) => {
+    const fetchAll = async () => {
+      try {
+        const [lessonsRes, revisionRes] = await Promise.all([
+          fetch('/api/lessons/'),
+          fetch('/api/quiz/revision')
+        ]);
+
+        if (!lessonsRes.ok || !revisionRes.ok) throw new Error('Failed to fetch data');
+
+        const lessonsData: { id: number; title: string }[] = await lessonsRes.json();
+        const revisionData: { id: number; afterLessonIndex: number; questions: RevisionQuizQuestion[] }[] = await revisionRes.json();
+
         const xOffsets = [0, 40, -40, 0, 40, -40, 0];
         const pos: Record<string, number> = {};
-        data.forEach((l, i) => { pos[String(l.id)] = i + 1; });
+        lessonsData.forEach((l, i) => { pos[String(l.id)] = i + 1; });
         setLessonIdToPosition(pos);
 
         const isAdmin = authRole === 'ADMIN';
         const unlockedIndex = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
 
-        setLessons(data.map((l, i) => ({
+        const mappedLessons = lessonsData.map((l, i) => ({
           id: String(l.id),
           title: l.title,
           locked: isAdmin ? false : i > unlockedIndex,
           completed: isAdmin ? true : i < unlockedIndex,
           x: xOffsets[i % xOffsets.length],
-        })));
-      })
-      .catch(() => setLessons([]));
+        }));
+        setLessons(mappedLessons);
+
+        setRevisionQuizzes(revisionData.map(rq => {
+          const lessonTitle = lessonsData[rq.afterLessonIndex]?.title || 'Unknown Lesson';
+          return {
+            id: String(rq.id),
+            title: `Checkpoint: ${lessonTitle}`,
+            afterLessonIndex: rq.afterLessonIndex,
+            questions: rq.questions,
+          };
+        }));
+
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setLessons([]);
+        setRevisionQuizzes([]);
+      }
+    };
+
+    fetchAll();
   }, [authToken, authRole]);
 
   // Fetch daily quiz questions
   useEffect(() => {
     fetch('/api/quiz/daily')
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data: { title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
-        setDailyQuizQuestions(data.map(q => ({ q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
-      ).catch(() => { });
-  }, []);
-
-  // Fetch revision quizzes
-  useEffect(() => {
-    fetch('/api/quiz/revision')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data: { id: number; afterLessonIndex: number; questions: RevisionQuizQuestion[] }[]) =>
-        setRevisionQuizzes(data.map(rq => ({
-          id: String(rq.id),
-          afterLessonIndex: rq.afterLessonIndex,
-          questions: rq.questions,
-        })))
+      .then((data: { id: number; title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
+        setDailyQuizQuestions(data.map(q => ({ id: q.id, q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
       ).catch(() => { });
   }, []);
 

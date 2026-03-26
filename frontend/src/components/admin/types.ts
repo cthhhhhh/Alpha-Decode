@@ -35,6 +35,7 @@ export interface FlagItem {
   reportedBy: string;
   contentType: string;
   contentId: number;
+  contentContext?: string;
 }
 
 export interface Lesson {
@@ -69,6 +70,12 @@ export interface Term {
   example: string;
   difficulty: string;
   category: string;
+}
+
+export interface RevisionQuiz {
+  id: number;
+  afterLessonIndex: number;
+  questions: Question[];
 }
 
 export type Tab = 'dashboard' | 'users' | 'reports' | 'content';

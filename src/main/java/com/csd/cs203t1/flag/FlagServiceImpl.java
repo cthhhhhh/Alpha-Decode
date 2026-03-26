@@ -31,15 +31,18 @@ public class FlagServiceImpl implements FlagService {
             throw new IllegalArgumentException("Invalid reason: " + request.getReason());
         }
 
-        // Prevent duplicate flags from same user on same content
+        // Allow multiple flags from same user on same content per user request
+        /*
         flagRepository.findByReportedByAndContentTypeAndContentId(reporter, contentType, request.getContentId())
                 .ifPresent(f -> { throw new IllegalArgumentException("You have already flagged this content"); });
+        */
 
         Flag flag = Flag.builder()
                 .contentType(contentType)
                 .contentId(request.getContentId())
                 .reason(reason)
                 .details(request.getDetails())
+                .contentContext(request.getContentContext())
                 .reportedBy(reporter)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -74,6 +77,16 @@ public class FlagServiceImpl implements FlagService {
         return flagRepository.findByReportedByAndContentTypeAndContentId(user, ct, contentId).isPresent();
     }
 
+    @Override
+    public void deleteFlag(Long id) {
+        flagRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteResolvedFlags() {
+        flagRepository.deleteByStatus(FlagStatus.RESOLVED);
+    }
+
     private FlagDTO.FlagResponse toResponse(Flag flag) {
         return new FlagDTO.FlagResponse(
                 flag.getId(),
@@ -83,7 +96,8 @@ public class FlagServiceImpl implements FlagService {
                 flag.getDetails(),
                 flag.getStatus().name(),
                 flag.getCreatedAt(),
-                flag.getReportedBy().getUsername()
+                flag.getReportedBy().getUsername(),
+                flag.getContentContext()
         );
     }
 }

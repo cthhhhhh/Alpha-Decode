@@ -16,6 +16,7 @@ public class FlagDTO {
         private Long contentId;
         private String reason;
         private String details;
+        private String contentContext;
     }
 
     @Data
@@ -30,6 +31,7 @@ public class FlagDTO {
         private String status;
         private LocalDateTime createdAt;
         private String reportedBy;
+        private String contentContext;
     }
 
     @Data

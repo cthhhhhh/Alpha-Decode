@@ -37,7 +37,7 @@ const Glossary = ({ lessonIdToPosition, completedLessonIds }: Props) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-    const [flagTarget, setFlagTarget] = useState<number | null>(null);
+    const [flagTarget, setFlagTarget] = useState<{ id: number; context: string } | null>(null);
     const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
     const [showSavedOnly, setShowSavedOnly] = useState(false);
 
@@ -207,7 +207,8 @@ const Glossary = ({ lessonIdToPosition, completedLessonIds }: Props) => {
             <FlagModal
                 show={flagTarget !== null}
                 contentType="TERM"
-                contentId={flagTarget ?? 0}
+                contentId={flagTarget?.id ?? 0}
+                context={flagTarget?.context ?? ''}
                 onClose={() => setFlagTarget(null)}
             />
 
@@ -253,7 +254,7 @@ const Glossary = ({ lessonIdToPosition, completedLessonIds }: Props) => {
                                                 </button>
                                             )}
                                             <button
-                                                onClick={e => { e.stopPropagation(); setFlagTarget(term.id); }}
+                                                onClick={e => { e.stopPropagation(); setFlagTarget({ id: term.id, context: `Term: ${term.term}` }); }}
                                                 className="text-slate-300 hover:text-red-400 transition-colors"
                                                 title="Flag this term"
                                             >

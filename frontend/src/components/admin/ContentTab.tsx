@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, BookA, Plus, Edit2, Trash2, ChevronDown, ChevronUp, CheckCircle2, Tag, AlignLeft } from 'lucide-react';
-import type { Lesson, LessonWithQuestions, Question, Term } from './types';
+import { BookOpen, BookA, Plus, Edit2, Trash2, ChevronDown, ChevronUp, CheckCircle2, Tag, AlignLeft, ClipboardList } from 'lucide-react';
+import type { Lesson, LessonWithQuestions, Question, Term, RevisionQuiz } from './types';
 import { authHeaders } from './utils';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -123,9 +123,10 @@ function QuestionFormFields({ form, setForm }: { form: QForm; setForm: React.Dis
 
 // ─── main component ──────────────────────────────────────────────────────────
 export function ContentTab() {
-  const [subTab, setSubTab] = useState<'lessons' | 'terms'>('lessons');
+  const [subTab, setSubTab] = useState<'lessons' | 'terms' | 'revision-quizzes'>('lessons');
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [terms, setTerms] = useState<Term[]>([]);
+  const [revisionQuizzes, setRevisionQuizzes] = useState<RevisionQuiz[]>([]);
   const [loading, setLoading] = useState(true);
 
   // lesson form state
@@ -137,8 +138,14 @@ export function ContentTab() {
   const [editTerm, setEditTerm] = useState<Term | null>(null);
   const [termForm, setTermForm] = useState({ term: '', definition: '', example: '', difficulty: 'easy', category: 'noun' });
 
+  // revision quiz form state
+  const [showRQModal, setShowRQModal] = useState(false);
+  const [editRQ, setEditRQ] = useState<RevisionQuiz | null>(null);
+  const [rqForm, setRQForm] = useState({ afterLessonIndex: 0 });
+
   // question state
   const [expandedLessonId, setExpandedLessonId] = useState<number | null>(null);
+  const [expandedRQId, setExpandedRQId] = useState<number | null>(null);
   const [lessonDetail, setLessonDetail] = useState<LessonWithQuestions | null>(null);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [showQModal, setShowQModal] = useState(false);
@@ -150,13 +157,38 @@ export function ContentTab() {
 
   const fetchContent = async () => {
     setLoading(true);
-    const [lr, tr] = await Promise.all([fetch('/api/lessons/'), fetch('/api/terms/')]);
+    const [lr, tr, rqr] = await Promise.all([
+      fetch('/api/lessons/'),
+      fetch('/api/terms/'),
+      fetch('/api/quiz/revision')
+    ]);
     if (lr.ok) setLessons(await lr.json());
     if (tr.ok) setTerms(await tr.json());
+    if (rqr.ok) setRevisionQuizzes(await rqr.json());
     setLoading(false);
   };
 
   useEffect(() => { fetchContent(); }, []);
+
+  // ── revision quiz CRUD ──────────────────────────────────────────────────
+  const openAddRQ = () => { setEditRQ(null); setRQForm({ afterLessonIndex: lessons.length - 1 }); setShowRQModal(true); };
+
+  const handleSaveRQ = async () => {
+    const isEdit = !!editRQ;
+    const res = await fetch(isEdit ? `/api/quiz/revision/${editRQ!.id}` : '/api/quiz/revision',
+      { method: isEdit ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(rqForm) });
+    if (res.ok) { setShowRQModal(false); fetchContent(); }
+    else alert('Failed to save revision quiz');
+  };
+
+  const executeDeleteRQ = async (id: number) => {
+    const res = await fetch(`/api/quiz/revision/${id}`, { method: 'DELETE', headers: authHeaders() });
+    if (res.ok) { 
+      setRevisionQuizzes(prev => prev.filter(x => x.id !== id));
+      if (expandedRQId === id) setExpandedRQId(null);
+    } else alert('Failed to delete — check permissions');
+    setConfirmDelete(null);
+  };
 
   // ── lesson CRUD ─────────────────────────────────────────────────────────
   const openAddLesson = () => { setLessonForm({ title: '', story: '', emoji: '', colour: '#46a302' }); setShowLessonModal(true); };
@@ -204,6 +236,7 @@ export function ContentTab() {
   const toggleQuestions = async (lessonId: number) => {
     if (expandedLessonId === lessonId) { setExpandedLessonId(null); setLessonDetail(null); return; }
     setExpandedLessonId(lessonId);
+    setExpandedRQId(null); // Close other panels
     setLessonDetail(null);
     setLoadingQuestions(true);
     const res = await fetch(`/api/lessons/questions/${lessonId}`);
@@ -212,10 +245,29 @@ export function ContentTab() {
     setLoadingQuestions(false);
   };
 
+  const toggleRQQuestions = (rqId: number) => {
+    if (expandedRQId === rqId) { setExpandedRQId(null); setLessonDetail(null); return; }
+    setExpandedRQId(rqId);
+    setExpandedLessonId(null); // Close other panels
+    const rq = revisionQuizzes.find(x => x.id === rqId);
+    if (rq) {
+      setLessonDetail({ id: 0, title: 'Revision Quiz', quiz: { id: rq.id, questions: rq.questions } });
+    }
+  };
+
   const refreshQuestions = async () => {
-    if (!expandedLessonId) return;
-    const res = await fetch(`/api/lessons/questions/${expandedLessonId}`);
-    if (res.ok) setLessonDetail(await res.json());
+    if (expandedLessonId) {
+      const res = await fetch(`/api/lessons/questions/${expandedLessonId}`);
+      if (res.ok) setLessonDetail(await res.json());
+    } else if (expandedRQId) {
+      const rqr = await fetch('/api/quiz/revision');
+      if (rqr.ok) {
+        const rdata: RevisionQuiz[] = await rqr.json();
+        setRevisionQuizzes(rdata);
+        const rq = rdata.find(x => x.id === expandedRQId);
+        if (rq) setLessonDetail({ id: 0, title: 'Revision Quiz', quiz: { id: rq.id, questions: rq.questions } });
+      }
+    }
   };
 
   // ── question CRUD ──────────────────────────────────────────────────────
@@ -283,6 +335,7 @@ export function ContentTab() {
           onConfirm={() => {
             if (confirmDelete.type === 'lesson') executeDeleteLesson(confirmDelete.id);
             else if (confirmDelete.type === 'term') executeDeleteTerm(confirmDelete.id);
+            else if ((confirmDelete.type as string) === 'revision-quiz') executeDeleteRQ(confirmDelete.id);
             else executeDeleteQuestion(confirmDelete.id);
           }}
           onCancel={() => setConfirmDelete(null)}
@@ -290,10 +343,14 @@ export function ContentTab() {
       )}
 
       {/* Sub-tab switcher */}
-      <div className="flex gap-2 mb-6 select-none">
-        {[{ k: 'lessons', label: 'Lessons', icon: <BookOpen size={14} /> }, { k: 'terms', label: 'Glossary Terms', icon: <BookA size={14} /> }].map(t => (
-          <button key={t.k} onClick={() => setSubTab(t.k as 'lessons' | 'terms')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black border-2 transition-all ${subTab === t.k ? 'border-brand-primary bg-brand-primary/10 text-brand-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+      <div className="flex gap-2 mb-6 select-none overflow-x-auto pb-2">
+        {[
+          { k: 'lessons', label: 'Lessons', icon: <BookOpen size={14} /> }, 
+          { k: 'terms', label: 'Glossary Terms', icon: <BookA size={14} /> },
+          { k: 'revision-quizzes', label: 'Revision Quizzes', icon: <ClipboardList size={14} /> }
+        ].map(t => (
+          <button key={t.k} onClick={() => setSubTab(t.k as any)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black border-2 transition-all whitespace-nowrap ${subTab === t.k ? 'border-brand-primary bg-brand-primary/10 text-brand-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
             {t.icon} {t.label}
           </button>
         ))}
@@ -413,6 +470,79 @@ export function ContentTab() {
         </div>
       )}
 
+      {/* ── REVISION QUIZZES TAB ── */}
+      {subTab === 'revision-quizzes' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-black text-slate-800 text-lg">Revision Quizzes ({revisionQuizzes.length})</h2>
+            <button onClick={openAddRQ} className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary text-white rounded-xl text-sm font-black hover:opacity-90 transition-opacity shadow-sm">
+              <Plus size={15} /> Add Revision Quiz
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {revisionQuizzes.sort((a,b) => a.afterLessonIndex - b.afterLessonIndex).map(rq => {
+              const followingLesson = lessons[rq.afterLessonIndex];
+              return (
+                <div key={rq.id} className="bg-white border-2 border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🏁</span>
+                      <div>
+                        <p className="font-black text-slate-800">
+                          {followingLesson ? `Checkpoint: ${followingLesson.title}` : `Quiz after Lesson #${rq.afterLessonIndex + 1}`}
+                        </p>
+                        <p className="text-xs text-slate-400 font-medium">Position: After lesson #{rq.afterLessonIndex + 1}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <button
+                        onClick={() => toggleRQQuestions(rq.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border-2 transition-all ${expandedRQId === rq.id ? 'border-brand-primary bg-brand-primary/10 text-brand-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                        {expandedRQId === rq.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        Questions
+                      </button>
+                      <button onClick={() => setConfirmDelete({ id: rq.id, type: 'revision-quiz' as any })} className="p-2 text-red-500 bg-white rounded-xl border-2 border-slate-200 hover:border-red-200 hover:bg-red-50 transition-all"><Trash2 size={15} /></button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {expandedRQId === rq.id && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t-2 border-slate-100 bg-slate-50 overflow-hidden">
+                        <div className="p-4">
+                           <div className="flex justify-between items-center mb-3">
+                              <p className="text-xs font-black text-slate-500 uppercase tracking-wide">Questions ({rq.questions?.length ?? 0})</p>
+                              <button onClick={openAddQuestion} className="flex items-center gap-1 px-3 py-1.5 bg-brand-primary text-white rounded-xl text-xs font-black hover:opacity-90 shadow-sm"><Plus size={12} /> Add Question</button>
+                           </div>
+                           <div className="space-y-2">
+                             {rq.questions?.map((q, idx) => (
+                               <div key={q.id} className="bg-white border-2 border-slate-200 rounded-xl p-3 flex items-start justify-between gap-3 shadow-sm">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                      <span className="text-xs font-black text-slate-400">#{idx + 1}</span>
+                                      <TypeBadge type={q.question_type} />
+                                    </div>
+                                    <p className="text-sm font-black text-slate-800 truncate">{q.title}</p>
+                                    {q.explanation && <p className="mt-1 text-[11px] text-slate-400 italic truncate">💡 {q.explanation}</p>}
+                                  </div>
+                                  <div className="flex gap-1.5 shrink-0">
+                                    <button onClick={() => openEditQuestion(q)} className="p-1.5 text-blue-500 rounded-lg hover:bg-blue-50 transition-colors border border-slate-200"><Edit2 size={13} /></button>
+                                    <button onClick={() => setConfirmDelete({ id: q.id, type: 'question' })} className="p-1.5 text-red-500 rounded-lg hover:bg-red-50 transition-colors border border-slate-200"><Trash2 size={13} /></button>
+                                  </div>
+                               </div>
+                             ))}
+                           </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── TERMS TAB ── */}
       {subTab === 'terms' && (
         <div>
@@ -526,6 +656,38 @@ export function ContentTab() {
             <div className="flex gap-3 mt-5">
               <button onClick={() => setShowQModal(false)} className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 font-black text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
               <button onClick={handleSaveQuestion} className="flex-1 py-2.5 rounded-xl bg-brand-primary text-white font-black hover:opacity-90 transition-opacity shadow-sm">Save</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ── REVISION QUIZ MODAL ── */}
+      {showRQModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-xl font-black text-slate-800 mb-5">New Checkpoint</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-black text-slate-500 uppercase tracking-wide mb-2">Appears After Lesson</p>
+                <select 
+                  className={inp} 
+                  value={rqForm.afterLessonIndex} 
+                  onChange={e => setRQForm({ afterLessonIndex: parseInt(e.target.value) })}
+                >
+                  {lessons.map((l, i) => (
+                    <option key={l.id} value={i}>
+                      Lesson #{i+1}: {l.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-[11px] text-slate-400 font-bold italic">
+                  Tip: A checkpoint usually appears after multiple lessons to test cumulative knowledge.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowRQModal(false)} className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 font-black text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
+              <button onClick={handleSaveRQ} className="flex-1 py-2.5 rounded-xl bg-brand-primary text-white font-black hover:opacity-90 transition-opacity shadow-sm">Save</button>
             </div>
           </motion.div>
         </div>

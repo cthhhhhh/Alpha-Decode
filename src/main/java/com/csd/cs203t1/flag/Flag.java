@@ -33,6 +33,9 @@ public class Flag {
     @Column(length = 500)
     private String details;
 
+    @Column(length = 500)
+    private String contentContext;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reported_by_id", nullable = false)
     private User reportedBy;

@@ -99,7 +99,7 @@ const AnswerOption = ({ opt, idx, isSelected, isChecked, isCorrect, isWrong, isD
 
 // ── QuestionView ───────────────────────────────────────────────────────────
 const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect, onSelect, onCheck, onNext, onFlag }:
-    { question: { id?: number; title: string; options: string[]; correctAnswer: number; explanation: string }; qIndex: number; total: number; selected: number | null; isChecked: boolean; isCorrect: boolean; onSelect: (i: number) => void; onCheck: () => void; onNext: () => void; onFlag: (id: number) => void }
+    { question: { id?: number; title: string; options: string[]; correctAnswer: number; explanation: string; question_type?: string; target?: string; content?: string }; qIndex: number; total: number; selected: number | null; isChecked: boolean; isCorrect: boolean; onSelect: (i: number) => void; onCheck: () => void; onNext: () => void; onFlag: (id: number) => void }
 ) => (
     <motion.div key={qIndex} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
         transition={{ type: 'spring', stiffness: 220, damping: 28 }} className="space-y-4">
@@ -160,51 +160,71 @@ const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect,
 const ResultScreen = ({ correctCount, total, answerLog, onClose }:
     { correctCount: number; total: number; answerLog: boolean[]; onClose: () => void }
 ) => {
-    const isPerfect = correctCount === total;
+    const accuracy = total === 0 ? 100 : Math.round((correctCount / total) * 100);
+    const isPerfect = accuracy === 100;
+
+    let title = "KEEP PRACTICING";
+    let subtitle = "You're leveling up your brain.";
+
+    if (accuracy === 100) {
+        title = "Sigma Performance!";
+        subtitle = "Checkpoint Cleared FR! +5 Stars earned.";
+    } else if (accuracy >= 80) {
+        title = "So Close!";
+        subtitle = "Almost a Sigma! Try again for stars.";
+    } else if (accuracy >= 60) {
+        title = "Delulu Moment?";
+        subtitle = "The delulu is not the solulu. No stars awarded.";
+    } else {
+        title = "Total Ohio...";
+        subtitle = "Go back to Skibidi 101. Try again!";
+    }
+
     return (
-        <motion.div key="result" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 180, damping: 22 }}
-            className="flex flex-col items-center text-center space-y-6 py-6">
+        <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            className="flex-1 flex flex-col items-center justify-center text-center space-y-8 py-10">
 
-            <motion.div animate={{ rotate: [0, -8, 8, -4, 4, 0] }} transition={{ duration: 0.6, delay: 0.2 }}
-                className={`w-28 h-28 rounded-[2rem] flex items-center justify-center shadow-xl ${isPerfect ? 'bg-amber-400' : 'bg-purple-100'}`}>
-                {isPerfect
-                    ? <Trophy size={56} fill="white" className="text-white" />
-                    : <Shield size={56} className="text-purple-400" />
-                }
-            </motion.div>
-
-            <div>
-                <h2 className="text-4xl font-black text-slate-900 mb-1">
-                    {isPerfect ? 'CHECKPOINT CLEARED! 🎉' : 'KEEP PRACTICING'}
-                </h2>
-                <p className="text-slate-500 font-bold text-lg">{correctCount} / {total} correct</p>
+            <div className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-6 ${isPerfect ? 'bg-amber-400 animate-bounce' : 'bg-purple-100'}`}>
+                {isPerfect ? <Trophy size={48} fill="currentColor" /> : <Shield size={48} className="text-purple-400" />}
             </div>
 
-            <div className="flex gap-2 justify-center flex-wrap">
+            <div className="space-y-2">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight">{title}</h2>
+                <p className="text-xl text-purple-600 font-bold">{subtitle}</p>
+            </div>
+
+            {/* Questions Grid Log */}
+            <div className="flex flex-wrap gap-2 justify-center">
                 {answerLog.map((ok, i) => (
-                    <div key={i} className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center border-2 ${ok ? 'bg-green-50 border-green-300 text-green-600' : 'bg-red-50 border-red-300 text-red-500'}`}>
-                        <span className="text-[10px] font-black text-slate-400 uppercase">Q{i + 1}</span>
-                        <span className="text-xl font-black">{ok ? '✓' : '✗'}</span>
+                    <div key={i} className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center border-2 transition-transform hover:scale-103 ${ok ? 'bg-green-50 border-green-200 text-green-600' : 'bg-red-50 border-red-200 text-red-500'}`}>
+                        <span className="text-[8px] font-black text-slate-400 uppercase">Q{i + 1}</span>
+                        <span className="text-lg font-black leading-none">{ok ? '✓' : '✗'}</span>
                     </div>
                 ))}
             </div>
 
-            <div className="w-full max-w-sm rounded-3xl p-6 border-2 text-center bg-purple-50 border-purple-200">
-                {correctCount > 0 ? (
-                    <>
-                        <div className="flex items-center justify-center gap-2 mb-1">
-                            <Star size={28} className="text-brand-yellow" fill="currentColor" />
-                            <span className="text-3xl font-black text-purple-700">+{correctCount} Stars earned</span>
-                        </div>
-                        <p className="text-purple-500 font-bold text-sm">1 Star per correct answer</p>
-                    </>
-                ) : (
-                    <p className="text-slate-500 font-bold">No stars this time — give it another shot!</p>
-                )}
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
+                    <p className="text-3xl font-black text-purple-700">{accuracy}%</p>
+                </div>
+                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
+                    <div className="flex items-center justify-center gap-1">
+                        <Star size={24} className={isPerfect ? "text-brand-yellow" : "text-slate-300"} fill="currentColor" />
+                        <p className="text-3xl font-black text-slate-900">
+                            {isPerfect ? '+5' : '+0'}
+                        </p>
+                    </div>
+                    {!isPerfect && (
+                        <p className="text-[10px] font-black text-slate-400 uppercase mt-1">
+                            100% Required
+                        </p>
+                    )}
+                </div>
             </div>
 
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onClose}
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onClose}
                 className="w-full max-w-sm bg-purple-600 text-white py-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#7c3aed] active:translate-y-1 active:shadow-none transition-all">
                 CONTINUE
             </motion.button>
@@ -289,6 +309,7 @@ const RevisionQuizModal = ({ quiz, onClose, onComplete }: Props) => {
                 show={showFlag}
                 contentType="QUESTION"
                 contentId={flagId}
+                context={`${quiz.title || 'Revision Quiz'} - "${question.title}"${question.question_type === 'TRANSLATE' && question.target ? `: ${question.target}` : question.question_type === 'SELECT' && question.content ? `: ${question.content}` : ''}`}
                 onClose={() => setShowFlag(false)}
             />
         </motion.div>

@@ -1,13 +1,28 @@
 import { useState, useEffect } from 'react';
-import { RefreshCcw, CheckCircle, Flag, ExternalLink } from 'lucide-react';
+import { RefreshCcw, CheckCircle, Flag, ExternalLink, Trash2 } from 'lucide-react';
 import type { FlagItem } from './types';
 import { authHeaders, formatReason } from './utils';
+import { ConfirmModal } from './ConfirmModal';
 
 export function ReportsTab() {
   const [flags, setFlags] = useState<FlagItem[]>([]);
   const [lessonMap, setLessonMap] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info' | 'warning';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onConfirm: () => { }
+  });
 
   const fetchFlags = () => {
     setLoading(true);
@@ -54,10 +69,61 @@ export function ReportsTab() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Report?',
+      message: 'Are you sure you want to permanently delete this report? This action cannot be undone.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/flags/${id}`, {
+            method: 'DELETE',
+            headers: authHeaders(),
+          });
+          if (res.ok) {
+            setFlags(f => f.filter(x => x.id !== id));
+          } else {
+            alert('Failed to delete report');
+          }
+        } catch (e) {
+          alert('Network error');
+        }
+      }
+    });
+  };
+
+  const handleClearResolved = async () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Clear History?',
+      message: 'Are you sure you want to delete ALL resolved reports? This will permanently wipe your resolution history.',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const res = await fetch('/api/flags/resolved', {
+            method: 'DELETE',
+            headers: authHeaders(),
+          });
+          if (res.ok) {
+            setFlags(f => f.filter(x => x.status !== 'RESOLVED'));
+          } else {
+            alert('Failed to clear resolved reports');
+          }
+        } catch (e) {
+          alert('Network error');
+        }
+      }
+    });
+  };
+
   const contentLabel = (flag: FlagItem) => {
+    if (flag.contentContext) return flag.contentContext;
     const ct = flag.contentType?.toUpperCase();
     if (ct === 'LESSON') return lessonMap[flag.contentId] || `Lesson #${flag.contentId}`;
-    if (ct === 'TERM') return `Term #${flag.contentId}`;
+    if (ct === 'TERM') return `Slang Term #${flag.contentId}`;
+    if (ct === 'QUIZ') return `Checkpoint Quiz #${flag.contentId}`;
+    if (ct === 'QUESTION') return `Quiz Question #${flag.contentId}`;
     return `${flag.contentType} #${flag.contentId}`;
   };
 
@@ -114,17 +180,38 @@ export function ReportsTab() {
 
       {resolved.length > 0 && (
         <div className="pt-4">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Recently Resolved</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Recently Resolved</h3>
+            <button
+              onClick={handleClearResolved}
+              className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
+            >
+              <Trash2 size={14} /> Clear All
+            </button>
+          </div>
           <div className="space-y-2">
             {resolved.map(f => (
-              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 opacity-60" key={f.id}>
-                <span className="text-xs font-bold text-slate-500">[{contentLabel(f)}] {formatReason(f.reason)}</span>
-                <span className="text-[10px] font-black text-green-500 flex items-center gap-1"><CheckCircle size={11} /> Resolved</span>
+              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 opacity-60 hover:opacity-100 transition-opacity group" key={f.id}>
+                <span className="text-sm font-bold text-slate-500">[{contentLabel(f)}] {formatReason(f.reason)}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-black text-green-500 flex items-center gap-1.5"><CheckCircle size={14} /> Resolved</span>
+                  <button
+                    onClick={() => handleDelete(f.id)}
+                    className="p-1.5 text-red-300 hover:text-red-500 hover:bg-white rounded-lg transition-all"
+                    title="Delete permanently"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
+      <ConfirmModal
+        {...confirmConfig}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+      />
     </div>
   );
 }

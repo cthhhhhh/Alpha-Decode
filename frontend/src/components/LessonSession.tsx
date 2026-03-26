@@ -74,6 +74,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
     const [correctCount, setCorrectCount] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [showFlag, setShowFlag] = useState(false);
+    const [lessonTitle, setLessonTitle] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -81,6 +82,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: LessonData) => {
                 if (isMounted) {
+                    setLessonTitle(data.title);
                     setSteps(shuffleSteps(data.quiz?.questions ?? []));
                     setLoading(false);
                 }
@@ -194,6 +196,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                 show={showFlag}
                 contentType="QUESTION"
                 contentId={step.id ?? 0}
+                context={`${lessonTitle ? `Lesson: ${lessonTitle}` : `Lesson ID: ${lessonId}`} - "${step.title}"${step.question_type === 'TRANSLATE' && step.target ? `: ${step.target}` : step.question_type === 'SELECT' && step.content ? `: ${step.content}` : ''}`}
                 onClose={() => setShowFlag(false)}
             />
 
@@ -291,7 +294,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                     </div>
                                 </div>
                             )}
-                        </motion.div>
+                            </motion.div>
                     </AnimatePresence>
 
                     {/* Summary */}

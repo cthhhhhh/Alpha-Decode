@@ -10,6 +10,8 @@ public interface FlagService {
     List<FlagDTO.FlagResponse> getAllFlags();
     FlagDTO.FlagResponse updateStatus(Long flagId, String status);
     boolean hasUserFlagged(User user, String contentType, Long contentId);
+    void deleteFlag(Long id);
+    void deleteResolvedFlags();
 
     static List<String> getFlagReasons() {
         return Arrays.stream(FlagReason.values())

@@ -30,12 +30,19 @@ public class FlagController {
     public ResponseEntity<?> createFlag(@RequestBody FlagDTO.CreateFlagRequest request) {
         try {
             User user = userService.getCurrentUser();
+            if (user == null) return ResponseEntity.status(401).body("Session expired. Please log in again.");
+            
             FlagDTO.FlagResponse response = flagService.createFlag(request, user);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("auth")) {
+                return ResponseEntity.status(401).body("Authentication failed: " + e.getMessage());
+            }
+            return ResponseEntity.status(500).body("Error creating flag: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Not authenticated");
+            return ResponseEntity.status(500).body("Unexpected error: " + e.getMessage());
         }
     }
 
@@ -54,5 +61,21 @@ public class FlagController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    /** Admin — delete individual flag. */
+    @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteFlag(@PathVariable Long id) {
+        flagService.deleteFlag(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Admin — delete all resolved flags. */
+    @DeleteMapping("/resolved")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteResolvedFlags() {
+        flagService.deleteResolvedFlags();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -155,64 +155,85 @@ const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect,
 );
 
 // ── ResultScreen ───────────────────────────────────────────────────────────
-const ResultScreen = ({ correctCount, total, answerLog, isPerfect, onClose }:
-    { correctCount: number; total: number; answerLog: boolean[]; isPerfect: boolean; onClose: () => void }
-) => (
-    <motion.div key="result" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 180, damping: 22 }}
-        className="flex flex-col items-center text-center space-y-6 py-6">
+const ResultScreen = ({ correctCount, total, answerLog, onClose }:
+    { correctCount: number; total: number; answerLog: boolean[]; onClose: () => void }
+) => {
+    const accuracy = total === 0 ? 100 : Math.round((correctCount / total) * 100);
+    const isPerfect = accuracy === 100;
 
-        <motion.div animate={{ rotate: [0, -8, 8, -4, 4, 0] }} transition={{ duration: 0.6, delay: 0.2 }}
-            className={`w-28 h-28 rounded-[2rem] flex items-center justify-center shadow-xl ${isPerfect ? 'bg-brand-yellow' : 'bg-slate-100'}`}>
-            <Trophy size={56} fill={isPerfect ? 'white' : '#94a3b8'} className={isPerfect ? 'text-white' : 'text-slate-400'} />
-        </motion.div>
+    let title = "KEEP PRACTICING";
+    let subtitle = "You're leveling up your brain.";
 
-        <div>
-            <h2 className="text-4xl font-black text-slate-900 mb-1">
-                {isPerfect ? 'YOU ATE NO CAP!' : correctCount >= 2 ? 'ALMOST COOKED FR' : 'L + RATIO'}
-            </h2>
-            <p className="text-slate-500 font-bold text-lg">{correctCount} / {total} correct</p>
-        </div>
+    if (accuracy === 100) {
+        title = "YOU ATE NO CAP!";
+        subtitle = "Absolute Sigma! +10 Stars & +1 Streak.";
+    } else if (accuracy >= 80) {
+        title = "ALMOST COOKED FR";
+        subtitle = "So close to a perfect streak! Try again.";
+    } else if (accuracy >= 60) {
+        title = "Delulu Moment?";
+        subtitle = "The delulu is not the solulu. No rewards.";
+    } else {
+        title = "L + RATIO";
+        subtitle = "Total Ohio energy. Skibidi 101 calls...";
+    }
 
-        <div className="flex gap-3 justify-center">
-            {answerLog.map((ok, i) => (
-                <div key={i} className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center border-2 ${ok ? 'bg-green-50 border-green-300 text-green-600' : 'bg-red-50 border-red-300 text-red-500'}`}>
-                    <span className="text-xs font-black text-slate-400 uppercase">Q{i + 1}</span>
-                    <span className="text-xl font-black">{ok ? '✓' : '✗'}</span>
+    return (
+        <motion.div key="result" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            className="flex-1 flex flex-col items-center justify-center text-center space-y-8 py-10">
+
+            <div className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-6 ${isPerfect ? 'bg-brand-yellow animate-bounce' : 'bg-slate-100'}`}>
+                {isPerfect ? <Trophy size={48} fill="currentColor" /> : <Flame size={48} className="text-orange-400" />}
+            </div>
+
+            <div className="space-y-2">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight">{title}</h2>
+                <p className="text-xl text-brand-primary font-bold">{subtitle}</p>
+            </div>
+
+            {/* Questions Grid Log */}
+            <div className="flex flex-wrap gap-2 justify-center">
+                {answerLog.map((ok, i) => (
+                    <div key={i} className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center border-2 transition-transform hover:scale-103 ${ok ? 'bg-green-50 border-green-200 text-green-600' : 'bg-red-50 border-red-200 text-red-500'}`}>
+                        <span className="text-[8px] font-black text-slate-400 uppercase">Q{i + 1}</span>
+                        <span className="text-lg font-black leading-none">{ok ? '✓' : '✗'}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Accuracy</p>
+                    <p className="text-3xl font-black text-brand-primary">{accuracy}%</p>
                 </div>
-            ))}
-        </div>
+                <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Rewards</p>
+                    {isPerfect ? (
+                        <div className="space-y-1">
+                            <div className="flex items-center justify-center gap-1">
+                                <Star size={20} className="text-brand-yellow" fill="currentColor" />
+                                <span className="text-xl font-black text-brand-primary">+10</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-1">
+                                <Flame size={18} className="text-orange-400" fill="currentColor" />
+                                <span className="text-lg font-bold text-orange-400">+1 Streak</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="mt-2 text-[10px] font-black text-slate-400 uppercase leading-tight">
+                            100% Correct <br />Required for Rewards
+                        </div>
+                    )}
+                </div>
+            </div>
 
-        <div className={`w-full max-w-sm rounded-3xl p-6 border-2 text-center ${isPerfect ? 'bg-brand-primary/10 border-brand-primary/30' : 'bg-slate-100 border-slate-200'}`}>
-            {isPerfect ? (
-                <>
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                        <Star size={28} className="text-brand-yellow" fill="currentColor" />
-                        <span className="text-3xl font-black text-brand-primary">+10</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                        <Flame size={22} className="text-orange-400" fill="currentColor" />
-                        <span className="text-xl font-black text-orange-400">+1 Streak</span>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <p className="text-slate-500 font-bold">Get all {total} correct to earn</p>
-                    <div className="flex items-center justify-center gap-3 mt-1">
-                        <div className="flex items-center gap-1"><Star size={20} className="text-brand-yellow" fill="currentColor" /><span className="font-black text-brand-primary">+10</span></div>
-                        <span className="text-slate-300">&</span>
-                        <div className="flex items-center gap-1"><Flame size={18} className="text-orange-400" fill="currentColor" /><span className="font-black text-brand-primary">+1</span></div>
-                    </div>
-                </>
-            )}
-        </div>
-
-        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onClose}
-            className="w-full max-w-sm bg-brand-primary text-white py-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#46a302] active:translate-y-1 active:shadow-none transition-all">
-            CONTINUE
-        </motion.button>
-    </motion.div>
-);
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onClose}
+                className="w-full max-w-sm bg-brand-primary text-white py-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#46a302] active:translate-y-1 active:shadow-none transition-all">
+                CONTINUE
+            </motion.button>
+        </motion.div>
+    );
+};
 
 // ── DailyQuizModal ─────────────────────────────────────────────────────────
 const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
@@ -276,7 +297,7 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
                         <div className="max-w-3xl mx-auto px-4 py-4">
                             <AnimatePresence mode="wait">
                                 {finished
-                                    ? <ResultScreen correctCount={correctCount} total={total} answerLog={answerLog} isPerfect={isPerfect} onClose={handleFinishClose} />
+                                    ? <ResultScreen correctCount={correctCount} total={total} answerLog={answerLog} onClose={handleFinishClose} />
                                     : <QuestionView question={question} qIndex={qIndex} total={total} selected={selected} isChecked={isChecked} isCorrect={isCorrect} onSelect={setSelected} onCheck={handleCheck} onNext={handleNext}
                                 onFlag={(id) => { setFlagId(id); setShowFlag(true); }} />
                                 }
@@ -288,6 +309,7 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
                         show={showFlag}
                         contentType="QUESTION"
                         contentId={flagId}
+                        context={`Daily Quiz - "${question.q}"`}
                         onClose={() => setShowFlag(false)}
                     />
                 </motion.div>

@@ -4,12 +4,13 @@ import { Flag, X, CheckCircle2 } from 'lucide-react';
 
 interface Props {
     show: boolean;
-    contentType: 'LESSON' | 'TERM' | 'QUESTION';
+    contentType: 'LESSON' | 'TERM' | 'QUESTION' | 'QUIZ';
     contentId: number;
+    context?: string;
     onClose: () => void;
 }
 
-const FlagModal = ({ show, contentType, contentId, onClose }: Props) => {
+const FlagModal = ({ show, contentType, contentId, context, onClose }: Props) => {
     const [reasons, setReasons] = useState<string[]>([]);
     const [selectedReason, setSelectedReason] = useState('');
     const [details, setDetails] = useState('');
@@ -36,22 +37,35 @@ const FlagModal = ({ show, contentType, contentId, onClose }: Props) => {
         setError('');
         try {
             const token = localStorage.getItem('token');
+            if (!token) {
+                setError('Authentication required to report. Please log in.');
+                setSubmitting(false);
+                return;
+            }
+
             const res = await fetch('/api/flags', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ contentType, contentId, reason: selectedReason, details }),
+                body: JSON.stringify({
+                    contentType,
+                    contentId,
+                    reason: selectedReason,
+                    details,
+                    contentContext: context
+                }),
             });
+
             if (res.ok) {
                 setSubmitted(true);
             } else {
                 const msg = await res.text();
-                setError(msg || 'Failed to submit flag.');
+                setError(msg || `Failed to submit report (Error ${res.status}).`);
             }
-        } catch {
-            setError('Network error. Please try again.');
+        } catch (err: any) {
+            setError(`Network error: ${err.message || 'Please try again.'}`);
         } finally {
             setSubmitting(false);
         }

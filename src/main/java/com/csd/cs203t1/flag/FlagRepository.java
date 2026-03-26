@@ -13,4 +13,8 @@ public interface FlagRepository extends JpaRepository<Flag, Long> {
     Optional<Flag> findByReportedByAndContentTypeAndContentId(User user, ContentType contentType, Long contentId);
     List<Flag> findByReportedBy(User user);
     void deleteByReportedBy(User user);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByStatus(FlagStatus status);
 }

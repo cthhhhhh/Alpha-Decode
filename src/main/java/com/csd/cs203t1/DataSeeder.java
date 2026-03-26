@@ -23,6 +23,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import com.csd.cs203t1.user.UserRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -35,20 +36,24 @@ public class DataSeeder implements CommandLineRunner {
     private final QuizRepository quizRepository;
     private final AchievementRepository achievementRepository;
     private final UserRepository userRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
             TermRepository termRepository, QuizRepository quizRepository,
-            AchievementRepository achievementRepository, UserRepository userRepository) {
+            AchievementRepository achievementRepository, UserRepository userRepository,
+            JdbcTemplate jdbcTemplate) {
         this.lessonService = lessonService;
         this.lessonRepository = lessonRepository;
         this.termRepository = termRepository;
         this.quizRepository = quizRepository;
         this.achievementRepository = achievementRepository;
         this.userRepository = userRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public void run(String... args) {
+        fixFlagConstraints();
         seedLessons();
         seedTerms();
         seedDailyQuiz();
@@ -56,6 +61,17 @@ public class DataSeeder implements CommandLineRunner {
         seedRevisionQuiz();
         seedAchievements();
         userRepository.markExistingUsersAsOnboarded();
+    }
+
+    private void fixFlagConstraints() {
+        try {
+            // Drop the old constraint that might only allow LESSON, TERM, QUESTION
+            jdbcTemplate.execute("ALTER TABLE flags DROP CONSTRAINT IF EXISTS flags_content_type_check");
+            // Add the updated constraint including QUIZ
+            jdbcTemplate.execute("ALTER TABLE flags ADD CONSTRAINT flags_content_type_check CHECK (content_type IN ('LESSON', 'TERM', 'QUESTION', 'QUIZ'))");
+        } catch (Exception e) {
+            System.err.println("Warning: Could not update flags_content_type_check constraint: " + e.getMessage());
+        }
     }
 
 
