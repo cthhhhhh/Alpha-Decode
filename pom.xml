@@ -16,6 +16,9 @@
 	
 	<properties>
 		<java.version>21</java.version>
+		<!-- Spring Boot 3.2.5 pins 1.18.32, which breaks on recent JDK 21 javac (TypeTag.UNKNOWN). -->
+		<!-- Pinned because Lombok/Javac crashes on some JDK 21 patch levels (TypeTag :: UNKNOWN). -->
+		<lombok.version>1.18.44</lombok.version>
 		<node.version>v22.14.0</node.version>
 		<npm.version>10.9.2</npm.version>
 	</properties>
@@ -124,6 +127,20 @@
 
 	<build>
 		<plugins>
+			<!-- Lombok must run as an annotation processor; without this, javac skips it and getters/setters vanish. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
