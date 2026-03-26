@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield, ChevronUp, User } from 'lucide-react';
@@ -119,6 +119,17 @@ export default function App() {
             if (data.profilePic) localStorage.setItem('profilePic', data.profilePic);
             else localStorage.removeItem('profilePic');
           }
+          if (data.maxUnlockedLessonIndex !== undefined) {
+            const serverIdx: number = data.maxUnlockedLessonIndex;
+            const localIdx = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
+            if (serverIdx >= localIdx) {
+              localStorage.setItem('maxUnlockedLessonIndex', serverIdx.toString());
+              setLessons(prev => prev.length > 0
+                ? prev.map((l, i) => ({ ...l, locked: i > serverIdx, completed: i < serverIdx }))
+                : prev
+              );
+            }
+          }
           // Use server-computed boolean — avoids timezone mismatch (server=SGT, client=UTC).
           // Also keeps streak in sync so the sidebar shows the DB value after refresh.
           {
@@ -161,6 +172,8 @@ export default function App() {
   const [onboardingScore, setOnboardingScore] = useState(0);
   const [onboardingFinished, setOnboardingFinished] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const lessonsRef = useRef<Lesson[]>([]);
+  useEffect(() => { lessonsRef.current = lessons; }, [lessons]);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   type QuizQ = { q: string; options: string[]; correct: number; explanation: string };
   type OnbQ = { q: string; options: string[]; correct: number };
@@ -373,7 +386,14 @@ export default function App() {
           body: JSON.stringify({ xpToAdd: correct }),
         })
           .then(r => r.json())
-          .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+          .then(data => { 
+            if (data.newAchievements) showAchievementToasts(data.newAchievements);
+            if (data.xp !== undefined) { setXp(data.xp); localStorage.setItem('xp', data.xp.toString()); }
+            if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
+            if (data.maxUnlockedLessonIndex !== undefined) {
+              localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
+            }
+          })
           .catch(err => console.error('Failed to save revision XP:', err));
       }
     }
@@ -391,36 +411,27 @@ export default function App() {
   };
 
   const handleLessonComplete = (lessonId: string, correct: number, total: number) => {
-    // Guard against double firing (React StrictMode or rapid clicks)
     if (!activeLessonId) return;
 
-    // 1 Correct answer = 1 Star (XP)
-    const passed = total === 0 || correct === total; // Requires 100% to unlock next
+    // Requires 100% or an all-intro lesson to unlock the next
+    const passed = total === 0 || correct === total;
 
-    // Check completion BEFORE updating state
-    const currentLesson = lessons.find(l => l.id === lessonId);
+    const currentLesson = lessonsRef.current.find(l => l.id === lessonId);
     const wasAlreadyCompleted = currentLesson?.completed;
 
-    // Compute new maxUnlockedLessonIndex before setLessons
-    const idx = lessons.findIndex(l => l.id === lessonId);
-    const newMaxUnlocked = (passed && idx !== -1 && idx + 1 < lessons.length) ? idx + 1 : undefined;
-    if (newMaxUnlocked !== undefined) {
-      const currentMax = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-      if (newMaxUnlocked > currentMax) {
-        localStorage.setItem('maxUnlockedLessonIndex', newMaxUnlocked.toString());
-      }
-    }
+    const idx = lessonsRef.current.findIndex(l => l.id === lessonId);
+    const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
+
+    const nextIdx = idx !== -1 ? idx + 1 : -1;
+    const shouldUnlockNext = passed && nextIdx > 0 && nextIdx < lessonsRef.current.length && nextIdx > savedUnlock;
 
     setLessons(prev => {
       const updated = [...prev];
       const lessonIdx = updated.findIndex(l => l.id === lessonId);
       if (lessonIdx !== -1) {
-        // Mark completed only if perfect
         if (correct === total && total > 0) {
           updated[lessonIdx] = { ...updated[lessonIdx], completed: true };
         }
-
-        // Unlock next lesson ONLY if 100% correct
         if (passed && lessonIdx + 1 < updated.length) {
           updated[lessonIdx + 1] = { ...updated[lessonIdx + 1], locked: false };
         }
@@ -428,55 +439,50 @@ export default function App() {
       return updated;
     });
 
-    // ALWAYS ensure the local storage unlocks the next lesson if they get 100/100!
-    if (passed && total > 0) {
-      const currentIdx = lessons.findIndex(l => l.id === lessonId);
-      const savedUnlock = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
-      if (currentIdx !== -1 && currentIdx + 1 > savedUnlock) {
-        localStorage.setItem('maxUnlockedLessonIndex', String(currentIdx + 1));
-
-        // Persist to backend if logged in
-        const token = localStorage.getItem('token');
-        if (token) {
-          fetch('/api/auth/lesson-progress', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ maxUnlockedLessonIndex: currentIdx + 1 }),
-          })
-            .then(r => r.json())
-            .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
-            .catch(err => console.error('Failed to save progress:', err));
-        }
-      }
+    if (shouldUnlockNext) {
+      localStorage.setItem('maxUnlockedLessonIndex', nextIdx.toString());
     }
 
-    // Add XP side-effect safely outside the updater ONLY if not previously completed
-    if (currentLesson && !wasAlreadyCompleted && passed && total > 0) {
+    const token = localStorage.getItem('token');
+
+    // User gets XP for ANY correct answers on their first try
+    const shouldAwardXp = currentLesson && !wasAlreadyCompleted && correct > 0;
+
+    if (shouldAwardXp) {
       const newXp = xp + correct;
       setXp(newXp);
       localStorage.setItem('xp', newXp.toString());
+    }
 
-      // Persist to backend if logged in
-      const token = localStorage.getItem('token');
-      if (token) {
-        const currentMax = parseInt(localStorage.getItem('maxUnlockedLessonIndex') || '0');
+    if (token && (shouldAwardXp || shouldUnlockNext)) {
+      if (shouldAwardXp) {
         fetch('/api/auth/xp', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ xpToAdd: correct, maxUnlockedLessonIndex: newMaxUnlocked !== undefined ? Math.max(newMaxUnlocked, currentMax) : undefined }),
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            xpToAdd: correct,
+            ...(shouldUnlockNext ? { maxUnlockedLessonIndex: nextIdx } : {}),
+          }),
         })
           .then(r => r.json())
           .then(data => {
             if (data.newAchievements) showAchievementToasts(data.newAchievements);
-            if (data.level) { localStorage.setItem('level', String(data.level)); setLevel(data.level); }
+            if (data.xp !== undefined) { setXp(data.xp); localStorage.setItem('xp', data.xp.toString()); }
+            if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
+            if (data.maxUnlockedLessonIndex !== undefined) {
+              localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
+            }
           })
           .catch(err => console.error('Failed to save XP:', err));
+      } else {
+        fetch('/api/auth/lesson-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ maxUnlockedLessonIndex: nextIdx }),
+        })
+          .then(r => r.json())
+          .then(data => { if (data.newAchievements) showAchievementToasts(data.newAchievements); })
+          .catch(err => console.error('Failed to save progress:', err));
       }
     }
 

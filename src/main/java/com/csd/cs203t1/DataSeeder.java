@@ -49,6 +49,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        cleanupInvalidAchievementTriggers();
         dropLegacyColumns();
         seedLessons();
         seedTerms();
@@ -56,6 +57,15 @@ public class DataSeeder implements CommandLineRunner {
         seedOnboardingQuiz();
         seedRevisionQuiz();
         seedAchievements();
+    }
+
+    private void cleanupInvalidAchievementTriggers() {
+        try {
+            jdbcTemplate.execute("UPDATE achievements SET trigger_type = 'XP_REACHED' WHERE trigger_type = 'COINS_REACHED'");
+            System.out.println("Cleaned up orphaned invalid achievement triggers.");
+        } catch (Exception e) {
+            System.out.println("Could not run cleanup: " + e.getMessage());
+        }
     }
 
     private void dropLegacyColumns() {
@@ -460,6 +470,8 @@ public class DataSeeder implements CommandLineRunner {
             achievementRepository.findByName(a.getName()).ifPresentOrElse(existing -> {
                 existing.setDescription(a.getDescription());
                 existing.setThreshold(a.getThreshold());
+                existing.setTriggerType(a.getTriggerType());
+                existing.setIcon(a.getIcon());
                 achievementRepository.save(existing);
             }, () -> achievementRepository.save(a));
         }
