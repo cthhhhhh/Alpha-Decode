@@ -223,7 +223,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                     </div>
                                     <div className="bg-brand-primary/10 p-6 rounded-2xl border-2 border-brand-primary/20">
                                         <p className="text-xs font-black text-brand-primary uppercase mb-2 tracking-widest">Usage Example</p>
-                                        <p className="text-2xl font-bold text-slate-800 italic">"{step.explanation}"</p>
+                                        <p className="text-2xl font-bold text-slate-800 italic">{step.explanation}</p>
                                     </div>
                                 </div>
                             )}

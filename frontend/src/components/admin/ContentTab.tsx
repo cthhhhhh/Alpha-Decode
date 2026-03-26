@@ -239,7 +239,7 @@ export function ContentTab() {
     setShowQModal(true);
   };
 
-  const buildQBody = (form: QForm, isEdit: boolean) => {
+  const buildQBody = (form: QForm) => {
     const base = { question_type: form.question_type, title: form.title, content: form.content, explanation: form.explanation };
     if (form.question_type === 'SELECT') return { ...base, options: form.options.filter(o => o.trim()), correctAnswer: form.correctAnswer };
     if (form.question_type === 'TRANSLATE') return { ...base, wordbank: form.wordbank.filter(w => w.trim()), target: form.target };
@@ -253,7 +253,7 @@ export function ContentTab() {
     const isEdit = !!editQuestion;
     const url = isEdit ? `/api/questions/${editQuestion!.id}` : `/api/questions/quiz/${quizId}`;
     const method = isEdit ? 'PUT' : 'POST';
-    const body = buildQBody(qForm, isEdit);
+    const body = buildQBody(qForm);
 
     const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
     if (res.ok) { setShowQModal(false); await refreshQuestions(); }

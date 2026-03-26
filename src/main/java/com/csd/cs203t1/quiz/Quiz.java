@@ -33,5 +33,6 @@ public abstract class Quiz {
 
 	@OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
 	@JsonManagedReference
+	@jakarta.persistence.OrderBy("id ASC")
     private List<Question> questions;
 }
