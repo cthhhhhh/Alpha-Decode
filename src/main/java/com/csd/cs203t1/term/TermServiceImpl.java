@@ -41,6 +41,12 @@ public class TermServiceImpl implements TermService {
         }).orElseThrow(() -> new RuntimeException("lesson not found")); //TODO make custom exception
 	}
 
+	@Override
+	@Transactional
+	public Term createTerm(Term term) {
+		return terms.save(term);
+	}
+
 
 	public void deleteTerm(Long id){
 		if(!terms.existsById(id)){

@@ -40,11 +40,20 @@ public class TermController {
 
 	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
 	@PostMapping("/lessons/{lessonId}")
-	public ResponseEntity<Term> addTerm(
+	public ResponseEntity<Term> addTermWithLesson(
 		@PathVariable Long lessonId,
 		@RequestBody Term term
 	) {
 		Term savedTerm = ts.addTerm(lessonId, term);
+		return new ResponseEntity<>(savedTerm, HttpStatus.CREATED);
+	}
+
+	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
+	@PostMapping("/create")
+	public ResponseEntity<Term> createTerm(
+		@RequestBody Term term
+	) {
+		Term savedTerm = ts.createTerm(term);
 		return new ResponseEntity<>(savedTerm, HttpStatus.CREATED);
 	}
 

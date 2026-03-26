@@ -11,5 +11,7 @@ public interface TermService {
 
 	Term addTerm(Long lessonId, Term term);
 
+	Term createTerm(Term term);
+
 	Term updateTerm(Long id, Term term);
 }

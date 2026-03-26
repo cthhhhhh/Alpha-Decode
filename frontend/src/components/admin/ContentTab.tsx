@@ -130,13 +130,12 @@ export function ContentTab() {
 
   // lesson form state
   const [showLessonModal, setShowLessonModal] = useState(false);
-  const [editLesson, setEditLesson] = useState<Lesson | null>(null);
-  const [lessonForm, setLessonForm] = useState({ title: '', story: '', emoji: '' });
+  const [lessonForm, setLessonForm] = useState({ title: '', story: '', emoji: '', colour: '#46a302' });
 
   // term form state
   const [showTermModal, setShowTermModal] = useState(false);
   const [editTerm, setEditTerm] = useState<Term | null>(null);
-  const [termForm, setTermForm] = useState({ term: '', definition: '', example: '', difficulty: 'easy' });
+  const [termForm, setTermForm] = useState({ term: '', definition: '', example: '', difficulty: 'easy', category: 'noun' });
 
   // question state
   const [expandedLessonId, setExpandedLessonId] = useState<number | null>(null);
@@ -160,14 +159,12 @@ export function ContentTab() {
   useEffect(() => { fetchContent(); }, []);
 
   // ── lesson CRUD ─────────────────────────────────────────────────────────
-  const openAddLesson = () => { setEditLesson(null); setLessonForm({ title: '', story: '', emoji: '' }); setShowLessonModal(true); };
-  const openEditLesson = (l: Lesson) => { setEditLesson(l); setLessonForm({ title: l.title, story: l.story || '', emoji: l.emoji || '' }); setShowLessonModal(true); };
+  const openAddLesson = () => { setLessonForm({ title: '', story: '', emoji: '', colour: '#46a302' }); setShowLessonModal(true); };
 
   const handleSaveLesson = async () => {
-    const isEdit = !!editLesson;
-    const url = isEdit ? `/api/lessons/${editLesson!.id}` : '/api/lessons/create';
-    const method = isEdit ? 'PUT' : 'POST';
-    const body = isEdit ? lessonForm : { lesson: lessonForm, questions: [] };
+    const url = '/api/lessons/create';
+    const method = 'POST';
+    const body = { lesson: lessonForm, questions: [] };
     const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
     if (res.ok) { setShowLessonModal(false); fetchContent(); }
     else alert('Failed to save lesson');
@@ -181,13 +178,17 @@ export function ContentTab() {
   };
 
   // ── term CRUD ──────────────────────────────────────────────────────────
-  const openAddTerm = () => { setEditTerm(null); setTermForm({ term: '', definition: '', example: '', difficulty: 'easy' }); setShowTermModal(true); };
-  const openEditTerm = (t: Term) => { setEditTerm(t); setTermForm({ term: t.term, definition: t.definition, example: t.example, difficulty: t.difficulty }); setShowTermModal(true); };
+  const openAddTerm = () => { setEditTerm(null); setTermForm({ term: '', definition: '', example: '', difficulty: 'easy', category: 'noun' }); setShowTermModal(true); };
+  const openEditTerm = (t: Term) => { setEditTerm(t); setTermForm({ term: t.term, definition: t.definition, example: t.example, difficulty: t.difficulty, category: t.category || 'noun' }); setShowTermModal(true); };
 
   const handleSaveTerm = async () => {
     const isEdit = !!editTerm;
-    const res = await fetch(isEdit ? `/api/terms/${editTerm!.id}` : '/api/terms/lessons/0',
-      { method: isEdit ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(termForm) });
+    const body = { 
+      ...termForm, 
+      category: termForm.category.toUpperCase() 
+    };
+    const res = await fetch(isEdit ? `/api/terms/${editTerm!.id}` : '/api/terms/create',
+      { method: isEdit ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(body) });
     if (res.ok) { setShowTermModal(false); fetchContent(); }
     else alert('Failed to save term');
   };
@@ -327,7 +328,6 @@ export function ContentTab() {
                       {expandedLessonId === l.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                       Questions
                     </button>
-                    <button onClick={() => openEditLesson(l)} className="p-2 text-blue-500 bg-white rounded-xl border-2 border-slate-200 hover:border-blue-200 hover:bg-blue-50 transition-all"><Edit2 size={15} /></button>
                     <button onClick={() => setConfirmDelete({ id: l.id, type: 'lesson' })} className="p-2 text-red-500 bg-white rounded-xl border-2 border-slate-200 hover:border-red-200 hover:bg-red-50 transition-all"><Trash2 size={15} /></button>
                   </div>
                 </div>
@@ -427,8 +427,11 @@ export function ContentTab() {
               <div key={t.id} className="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-black text-slate-800">{t.term}</p>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase ${t.difficulty === 'easy' ? 'bg-green-100 text-green-700' : t.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{t.difficulty}</span>
+                    <div className="flex items-center gap-2">
+                       <p className="font-black text-slate-800">{t.term}</p>
+                       <span className="text-[10px] uppercase font-bold text-slate-400 border border-slate-200 px-1.5 rounded">{t.category?.toLowerCase() || '—'}</span>
+                    </div>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase mt-0.5 inline-block ${t.difficulty === 'easy' ? 'bg-green-100 text-green-700' : t.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{t.difficulty}</span>
                   </div>
                   <div className="flex gap-1.5">
                     <button onClick={() => openEditTerm(t)} className="p-1.5 text-blue-500 rounded-lg hover:bg-blue-50 transition-colors"><Edit2 size={14} /></button>
@@ -446,7 +449,7 @@ export function ContentTab() {
       {showLessonModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-xl font-black text-slate-800 mb-5">{editLesson ? 'Edit Lesson' : 'New Lesson'}</h3>
+            <h3 className="text-xl font-black text-slate-800 mb-5">New Lesson</h3>
             <div className="space-y-3">
               <input className={inp} placeholder="Title" value={lessonForm.title} onChange={e => setLessonForm(f => ({ ...f, title: e.target.value }))} />
               <input className={inp} placeholder="Emoji (e.g. 🔥)" value={lessonForm.emoji} onChange={e => setLessonForm(f => ({ ...f, emoji: e.target.value }))} />
@@ -469,11 +472,19 @@ export function ContentTab() {
               <input className={inp} placeholder="Term (e.g. Rizz)" value={termForm.term} onChange={e => setTermForm(f => ({ ...f, term: e.target.value }))} />
               <textarea className={`${inp} resize-none h-20`} placeholder="Definition" value={termForm.definition} onChange={e => setTermForm(f => ({ ...f, definition: e.target.value }))} />
               <textarea className={`${inp} resize-none h-16`} placeholder="Example usage" value={termForm.example} onChange={e => setTermForm(f => ({ ...f, example: e.target.value }))} />
-              <select className={`${inp} bg-white`} value={termForm.difficulty} onChange={e => setTermForm(f => ({ ...f, difficulty: e.target.value }))}>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
+              <div className="flex gap-2">
+                <select className={`${inp} bg-white flex-1`} value={termForm.category} onChange={e => setTermForm(f => ({ ...f, category: e.target.value }))}>
+                  <option value="noun">Noun</option>
+                  <option value="verb">Verb</option>
+                  <option value="adjective">Adjective</option>
+                  <option value="reaction">Reaction</option>
+                </select>
+                <select className={`${inp} bg-white flex-1`} value={termForm.difficulty} onChange={e => setTermForm(f => ({ ...f, difficulty: e.target.value }))}>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setShowTermModal(false)} className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 font-black text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>

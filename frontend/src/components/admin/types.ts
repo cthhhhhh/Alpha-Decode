@@ -68,6 +68,7 @@ export interface Term {
   definition: string;
   example: string;
   difficulty: string;
+  category: string;
 }
 
 export type Tab = 'dashboard' | 'users' | 'reports' | 'content';

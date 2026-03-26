@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LessonRepository extends JpaRepository <Lesson, Long>{
 	//this takes a lesson id, gets the associated quiz, and the questions witht the quiz
-	@Query("SELECT l FROM Lesson l JOIN FETCH l.quiz q JOIN FETCH q.questions WHERE l.id = :lessonId")
+	@Query("SELECT l FROM Lesson l LEFT JOIN FETCH l.quiz q LEFT JOIN FETCH q.questions WHERE l.id = :lessonId")
     Optional<Lesson> findByIdWithQuizAndQuestions(@Param("lessonId") Long lessonId);
 
 }
