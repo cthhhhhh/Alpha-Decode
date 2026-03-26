@@ -517,6 +517,7 @@ export default function App() {
         authUsername={authUsername}
         profilePic={profilePic}
         onLogout={handleLogout}
+        onNavigateHome={() => navigate('/home')}
         onNavigateProfile={() => navigate('/profile')}
       />
 

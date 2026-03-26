@@ -6,10 +6,11 @@ interface Props {
     authUsername: string | null;
     profilePic: string | null;
     onLogout: () => void;
+    onNavigateHome?: () => void;
     onNavigateProfile?: () => void;
 }
 
-export default function Header({ authToken, authUsername, profilePic, onLogout, onNavigateProfile }: Props) {
+export default function Header({ authToken, authUsername, profilePic, onLogout, onNavigateHome, onNavigateProfile }: Props) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,12 +29,17 @@ export default function Header({ authToken, authUsername, profilePic, onLogout, 
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3">
             <div className="max-w-5xl mx-auto flex items-center justify-between">
                 {/* Logo */}
-                <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
+                <button
+                    type="button"
+                    onClick={() => onNavigateHome?.()}
+                    className="flex items-center gap-2 sm:gap-3 group cursor-pointer"
+                    aria-label="Go to home"
+                >
                     <img src="/logo.svg" alt="Alpha Decode" className="w-8 h-8 sm:w-10 sm:h-10 group-hover:scale-110 transition-transform" />
                     <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tighter uppercase">
                         Alpha <span className="text-brand-primary uppercase">Decode</span>
                     </h1>
-                </div>
+                </button>
 
                 {/* Stats */}
                 {/* Center stats - Removed as per user request */}
