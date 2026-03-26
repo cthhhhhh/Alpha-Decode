@@ -268,8 +268,6 @@ public class UserServiceImpl implements UserService {
         LocalDate today = LocalDate.now();
         LocalDate lastDate = user.getDailyQuizLastDate();
         
-        // If last quiz was more than 1 day before today, streak lapses to 0.
-        // yesterday = today - 1; if lastDate is before yesterday, lapse.
         if (lastDate.isBefore(today.minusDays(1))) {
             user.setStreak(0);
         }

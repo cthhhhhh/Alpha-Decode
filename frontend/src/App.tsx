@@ -413,7 +413,6 @@ export default function App() {
   const handleLessonComplete = (lessonId: string, correct: number, total: number) => {
     if (!activeLessonId) return;
 
-    // Requires 100% or an all-intro lesson to unlock the next
     const passed = total === 0 || correct === total;
 
     const currentLesson = lessonsRef.current.find(l => l.id === lessonId);
@@ -445,7 +444,6 @@ export default function App() {
 
     const token = localStorage.getItem('token');
 
-    // User gets XP for ANY correct answers on their first try
     const shouldAwardXp = currentLesson && !wasAlreadyCompleted && correct > 0;
 
     if (shouldAwardXp) {
