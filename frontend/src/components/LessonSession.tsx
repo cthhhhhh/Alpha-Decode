@@ -174,10 +174,10 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                         {step.id && (
                             <button
                                 onClick={() => setShowFlag(true)}
-                                className="text-slate-300 hover:text-red-400 transition-colors"
+                                className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all group"
                                 title="Flag this question"
                             >
-                                <Flag size={16} />
+                                <Flag size={20} className="group-hover:scale-110 transition-transform" />
                             </button>
                         )}
                     </div>

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, XCircle, Trophy, Star, Shield } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Trophy, Star, Shield, Flag } from 'lucide-react';
+import FlagModal from './FlagModal';
 import type { RevisionQuiz } from '../types';
 
 interface Props {
@@ -97,15 +98,26 @@ const AnswerOption = ({ opt, idx, isSelected, isChecked, isCorrect, isWrong, isD
 };
 
 // ── QuestionView ───────────────────────────────────────────────────────────
-const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect, onSelect, onCheck, onNext }:
-    { question: { title: string; options: string[]; correctAnswer: number; explanation: string }; qIndex: number; total: number; selected: number | null; isChecked: boolean; isCorrect: boolean; onSelect: (i: number) => void; onCheck: () => void; onNext: () => void }
+const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect, onSelect, onCheck, onNext, onFlag }:
+    { question: { id?: number; title: string; options: string[]; correctAnswer: number; explanation: string }; qIndex: number; total: number; selected: number | null; isChecked: boolean; isCorrect: boolean; onSelect: (i: number) => void; onCheck: () => void; onNext: () => void; onFlag: (id: number) => void }
 ) => (
     <motion.div key={qIndex} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
         transition={{ type: 'spring', stiffness: 220, damping: 28 }} className="space-y-4">
 
         <div className="flex items-center gap-3">
             <span className="bg-purple-100 text-purple-700 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider border border-purple-200">🛡️ Revision</span>
-            <span className="text-slate-400 font-bold text-sm ml-auto">Question {qIndex + 1} of {total}</span>
+            <div className="ml-auto flex items-center gap-2">
+                <span className="text-slate-400 font-bold text-sm">Question {qIndex + 1} of {total}</span>
+                {question.id && (
+                    <button
+                        onClick={() => onFlag(question.id!)}
+                        className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all group"
+                        title="Flag this question"
+                    >
+                        <Flag size={20} className="group-hover:scale-110 transition-transform" />
+                    </button>
+                )}
+            </div>
         </div>
 
         <div className="bg-slate-50 rounded-3xl p-7 border-2 border-slate-200">
@@ -208,6 +220,8 @@ const RevisionQuizModal = ({ quiz, onClose, onComplete }: Props) => {
     const [correctCount, setCorrectCount] = useState(0);
     const [answerLog, setAnswerLog] = useState<boolean[]>([]);
     const [finished, setFinished] = useState(false);
+    const [showFlag, setShowFlag] = useState(false);
+    const [flagId, setFlagId] = useState<number>(0);
 
     const questions = quiz.questions;
     const total = questions.length;
@@ -264,11 +278,19 @@ const RevisionQuizModal = ({ quiz, onClose, onComplete }: Props) => {
                     <AnimatePresence mode="wait">
                         {finished
                             ? <ResultScreen correctCount={correctCount} total={total} answerLog={answerLog} onClose={handleFinishClose} />
-                            : <QuestionView question={question} qIndex={qIndex} total={total} selected={selected} isChecked={isChecked} isCorrect={isCorrect} onSelect={setSelected} onCheck={handleCheck} onNext={handleNext} />
+                            : <QuestionView question={question} qIndex={qIndex} total={total} selected={selected} isChecked={isChecked} isCorrect={isCorrect} onSelect={setSelected} onCheck={handleCheck} onNext={handleNext} 
+                                onFlag={(id) => { setFlagId(id); setShowFlag(true); }} />
                         }
                     </AnimatePresence>
                 </div>
             </div>
+
+            <FlagModal
+                show={showFlag}
+                contentType="QUESTION"
+                contentId={flagId}
+                onClose={() => setShowFlag(false)}
+            />
         </motion.div>
     );
 };
