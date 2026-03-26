@@ -289,7 +289,7 @@ export function ContentTab() {
       )}
 
       {/* Sub-tab switcher */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 select-none">
         {[{ k: 'lessons', label: 'Lessons', icon: <BookOpen size={14} /> }, { k: 'terms', label: 'Glossary Terms', icon: <BookA size={14} /> }].map(t => (
           <button key={t.k} onClick={() => setSubTab(t.k as 'lessons' | 'terms')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black border-2 transition-all ${subTab === t.k ? 'border-brand-primary bg-brand-primary/10 text-brand-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>

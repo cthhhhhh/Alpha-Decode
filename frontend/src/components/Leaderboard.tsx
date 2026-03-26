@@ -77,11 +77,11 @@ const Leaderboard = ({ authUsername }: Props) => {
 
                 {/* Filter toggles moved to top right */}
                 <div className="flex items-center gap-3">
-                    <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden bg-white">
+                    <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden bg-white select-none">
                         {(['allTime', 'weekly'] as const).map(p => (
                             <button
                                 key={p}
-                                onClick={() => { setPeriod(p); setLoading(true); }}
+                                onClick={() => { if (period !== p) { setPeriod(p); setLoading(true); } }}
                                 className={`px-4 py-1.5 text-xs font-black uppercase tracking-wide transition-colors
                                     ${period === p ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'text-slate-500 hover:bg-slate-50'}`}
                             >
@@ -89,11 +89,11 @@ const Leaderboard = ({ authUsername }: Props) => {
                             </button>
                         ))}
                     </div>
-                    <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden bg-white">
+                    <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden bg-white select-none">
                         {(['xp', 'streak'] as const).map(s => (
                             <button
                                 key={s}
-                                onClick={() => { setSort(s); setLoading(true); }}
+                                onClick={() => { if (sort !== s) { setSort(s); setLoading(true); } }}
                                 className={`px-4 py-1.5 text-xs font-black uppercase tracking-wide transition-colors
                                     ${sort === s ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'text-slate-500 hover:bg-slate-50'}`}
                             >

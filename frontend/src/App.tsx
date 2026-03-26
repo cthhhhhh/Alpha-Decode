@@ -308,7 +308,7 @@ export default function App() {
   const handleDailyQuizComplete = (correct: number, total: number) => {
     const isPerfect = correct === total;
     const newStreak = isPerfect ? streak + 1 : 0;
-    
+
     // Optimistic UI update
     setStreak(newStreak);
     localStorage.setItem('streak', newStreak.toString());
@@ -323,38 +323,38 @@ export default function App() {
       fetch('/api/auth/xp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ 
-          xpToAdd: isPerfect ? 10 : 0, 
-          streakToSet: newStreak, 
-          dailyQuizCountIncrement: true 
+        body: JSON.stringify({
+          xpToAdd: isPerfect ? 10 : 0,
+          streakToSet: newStreak,
+          dailyQuizCountIncrement: true
         }),
       })
         .then(r => r.json())
-        .then(data => { 
+        .then(data => {
           if (data.newAchievements) showAchievementToasts(data.newAchievements);
           // Sync exact state from DB reality
           if (data.streak !== undefined) {
-             setStreak(data.streak);
-             localStorage.setItem('streak', data.streak.toString());
+            setStreak(data.streak);
+            localStorage.setItem('streak', data.streak.toString());
           }
           if (data.level !== undefined) {
-             setLevel(data.level);
-             localStorage.setItem('level', data.level.toString());
+            setLevel(data.level);
+            localStorage.setItem('level', data.level.toString());
           }
           if (data.xp !== undefined) {
-             setXp(data.xp);
-             localStorage.setItem('xp', data.xp.toString());
+            setXp(data.xp);
+            localStorage.setItem('xp', data.xp.toString());
           }
           if (data.dailyQuizCompletedToday === true) {
-             setDailyQuizCompleted(true);
-             if (data.dailyQuizLastDate) {
-               localStorage.setItem('dailyQuizDate', data.dailyQuizLastDate);
-             }
+            setDailyQuizCompleted(true);
+            if (data.dailyQuizLastDate) {
+              localStorage.setItem('dailyQuizDate', data.dailyQuizLastDate);
+            }
           }
         })
         .catch(err => console.error('Failed to save quiz XP:', err));
     }
-    
+
     // Fallback UI close
     setShowDailyQuiz(false);
   };
@@ -499,7 +499,7 @@ export default function App() {
   const completeOnboarding = () => {
     const newLevel = onboardingScore + 1;
     const startingXp = onboardingScore * 50; // 50 XP per level past Level 1
-    
+
     setLevel(newLevel);
     setXp(startingXp); // Also set the state just in case
     setShowOnboarding(false);
@@ -593,7 +593,7 @@ export default function App() {
                     <div className="w-14 h-14 bg-brand-yellow rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg rotate-3">
                       <Star size={28} className="text-white fill-white" />
                     </div>
-                    <p className="text-lg font-black text-slate-900 leading-tight">1 Correct = 1 Star</p>
+                    <p className="text-lg font-black text-slate-900 leading-tight">1 Lesson = 5 Stars</p>
                     <p className="text-xs font-bold text-slate-500 mt-2">Get all questions correct to unlock the next level!</p>
                   </motion.div>
 

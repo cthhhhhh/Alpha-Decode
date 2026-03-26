@@ -52,7 +52,7 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
       </div>
 
       {/* Tab Nav */}
-      <div className="flex gap-2 mb-6 bg-slate-100 p-1.5 rounded-2xl">
+      <div className="flex gap-2 mb-6 bg-slate-100 p-1.5 rounded-2xl select-none">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === t.key ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>
