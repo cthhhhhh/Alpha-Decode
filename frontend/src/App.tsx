@@ -516,6 +516,7 @@ export default function App() {
         authToken={authToken}
         authUsername={authUsername}
         profilePic={profilePic}
+        onLogout={handleLogout}
       />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 pb-32">
