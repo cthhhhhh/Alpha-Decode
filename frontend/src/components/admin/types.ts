@@ -44,6 +44,24 @@ export interface Lesson {
   emoji?: string;
 }
 
+export interface Question {
+  id: number;
+  question_type: 'INTRO' | 'SELECT' | 'TRANSLATE';
+  title: string;
+  content?: string;
+  explanation: string;
+  // SELECT
+  options?: string[];
+  correctAnswer?: number;
+  // TRANSLATE
+  wordbank?: string[];
+  target?: string;
+}
+
+export interface LessonWithQuestions extends Lesson {
+  quiz: { id: number; questions: Question[] };
+}
+
 export interface Term {
   id: number;
   term: string;
