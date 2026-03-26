@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown, User } from 'lucide-react';
 
 interface Props {
     authToken: string | null;
     authUsername: string | null;
     profilePic: string | null;
     onLogout: () => void;
+    onNavigateProfile?: () => void;
 }
 
-export default function Header({ authToken, authUsername, profilePic, onLogout }: Props) {
+export default function Header({ authToken, authUsername, profilePic, onLogout, onNavigateProfile }: Props) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -45,28 +46,38 @@ export default function Header({ authToken, authUsername, profilePic, onLogout }
                     {authToken ? (
                         <div className="relative" ref={dropdownRef}>
                             <button
+                                type="button"
                                 onClick={() => setDropdownOpen(v => !v)}
+                                aria-expanded={dropdownOpen}
+                                aria-label="Account menu"
                                 className="flex items-center gap-2 bg-slate-100 pl-1.5 pr-3 py-1.5 rounded-xl text-sm font-bold text-slate-700 select-none border border-slate-200 shadow-sm hover:bg-slate-200 transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
-                                    {profilePic ? (
-                                        <img
-                                            src={profilePic.startsWith('http') ? profilePic : `/avatars/${profilePic}`}
-                                            alt="Avatar"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-green-500 via-emerald-600 to-indigo-800 flex items-center justify-center text-white text-[10px] font-black shadow-sm">
-                                            {(authUsername || 'U').charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <span>{authUsername}</span>
-                                <ChevronDown size={14} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                                    <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
+                                        {profilePic ? (
+                                            <img
+                                                src={profilePic.startsWith('http') ? profilePic : `/avatars/${profilePic}`}
+                                                alt="Avatar"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-green-500 via-emerald-600 to-indigo-800 flex items-center justify-center text-white text-[10px] font-black shadow-sm">
+                                                {(authUsername || 'U').charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="max-w-[9rem] truncate">{authUsername}</span>
+                                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {dropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                                    <button
+                                        onClick={() => { setDropdownOpen(false); onNavigateProfile?.(); }}
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                                    >
+                                        <User size={15} />
+                                        View profile
+                                    </button>
                                     <button
                                         onClick={() => { setDropdownOpen(false); onLogout(); }}
                                         className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-red-50 hover:text-red-500 transition-colors"
