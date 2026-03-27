@@ -44,24 +44,24 @@ public class LeaderboardController {
         if ("weekly".equals(period)) {
             if ("streak".equals(sort)) {
                 topUsers = userRepository
-                        .findAllByRoleNotOrderByWeeklyXpDescLevelDesc(Role.ADMIN, pageable)
+                        .findAllByRoleNotOrderByWeeklyCoinsDescLevelDesc(Role.ADMIN, pageable)
                         .getContent()
                         .stream()
                         .sorted((a, b) -> b.getStreak() != a.getStreak()
                                 ? Integer.compare(b.getStreak(), a.getStreak())
-                                : Integer.compare(b.getWeeklyXp(), a.getWeeklyXp()))
+                                : Integer.compare(b.getWeeklyCoins(), a.getWeeklyCoins()))
                         .collect(Collectors.toList());
             } else {
                 topUsers = userRepository
-                        .findAllByRoleNotOrderByWeeklyXpDescLevelDesc(Role.ADMIN, pageable)
+                        .findAllByRoleNotOrderByWeeklyCoinsDescLevelDesc(Role.ADMIN, pageable)
                         .getContent();
             }
         } else {
             if ("streak".equals(sort)) {
-                topUsers = userRepository.findAllByRoleNotOrderByStreakDescXpDesc(Role.ADMIN, pageable).getContent();
+                topUsers = userRepository.findAllByRoleNotOrderByStreakDescCoinsDesc(Role.ADMIN, pageable).getContent();
             } else {
-                // Default: Stars (XP) primarily
-                topUsers = userRepository.findAllByRoleNotOrderByXpDescLevelDesc(Role.ADMIN, pageable).getContent();
+                // Default: Coins primarily
+                topUsers = userRepository.findAllByRoleNotOrderByCoinsDescLevelDesc(Role.ADMIN, pageable).getContent();
             }
         }
 
@@ -71,7 +71,7 @@ public class LeaderboardController {
                         rank.getAndIncrement(),
                         u.getUsername(),
                         u.getLevel(),
-                        "weekly".equals(period) ? u.getWeeklyXp() : u.getXp(),
+                        "weekly".equals(period) ? u.getWeeklyCoins() : u.getCoins(),
                         u.getStreak()))
                 .collect(Collectors.toList());
 
@@ -95,19 +95,19 @@ public class LeaderboardController {
         if ("weekly".equals(period)) {
             if ("streak".equals(sort)) {
                 long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndWeeklyXpGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyXp());
+                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyCoins());
                 rank = streakGreater + sameStreakBetterXp + 1;
             } else {
-                long xpGreater = userRepository.countByRoleNotAndWeeklyXpGreaterThan(Role.ADMIN, currentUser.getWeeklyXp());
+                long xpGreater = userRepository.countByRoleNotAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getWeeklyCoins());
                 rank = xpGreater + 1;
             }
         } else {
             if ("streak".equals(sort)) {
                 long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndXpGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getXp());
+                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getCoins());
                 rank = streakGreater + sameStreakBetterXp + 1;
             } else {
-                long xpGreater = userRepository.countByRoleNotAndXpGreaterThan(Role.ADMIN, currentUser.getXp());
+                long xpGreater = userRepository.countByRoleNotAndCoinsGreaterThan(Role.ADMIN, currentUser.getCoins());
                 rank = xpGreater + 1;
             }
         }
@@ -118,7 +118,7 @@ public class LeaderboardController {
                 (int) rank,
                 currentUser.getUsername(),
                 currentUser.getLevel(),
-                "weekly".equals(period) ? currentUser.getWeeklyXp() : currentUser.getXp(),
+                "weekly".equals(period) ? currentUser.getWeeklyCoins() : currentUser.getCoins(),
                 currentUser.getStreak()));
         return ResponseEntity.ok(result);
     }
@@ -130,7 +130,7 @@ public class LeaderboardController {
         private int rank;
         private String username;
         private int level;
-        private int xp;
+        private int coins;
         private int streak;
     }
 }

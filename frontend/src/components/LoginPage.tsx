@@ -49,7 +49,7 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', data.role);
       localStorage.setItem('username', data.username);
-      onLoginSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
+      onLoginSuccess(data.token, data.role, data.username, data.level, data.coins, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {

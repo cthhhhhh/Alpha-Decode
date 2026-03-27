@@ -62,9 +62,9 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
-        if (request.getXp() != null) {
-            user.setXp(request.getXp());
-            user.setWeeklyXp(request.getXp());
+        if (request.getCoins() != null) {
+            user.setCoins(request.getCoins());
+            user.setWeeklyCoins(request.getCoins());
         }
         if (request.getMaxUnlockedLessonIndex() != null) user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
 
@@ -89,9 +89,9 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.ADMIN);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
-        if (request.getXp() != null) {
-            user.setXp(request.getXp());
-            user.setWeeklyXp(request.getXp());
+        if (request.getCoins() != null) {
+            user.setCoins(request.getCoins());
+            user.setWeeklyCoins(request.getCoins());
         }
 
         checkStreakLapse(user);
@@ -139,9 +139,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
         User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
-        user.setXp(user.getXp() + request.getXpToAdd());
-        user.setWeeklyXp(user.getWeeklyXp() + request.getXpToAdd());
-        int newLevel = user.getXp() / 50 + 1;
+        user.setCoins(user.getCoins() + request.getCoinsToAdd());
+        user.setWeeklyCoins(user.getWeeklyCoins() + request.getCoinsToAdd());
+        int newLevel = user.getCoins() / 50 + 1;
         user.setLevel(newLevel);
 
         if (request.getMaxUnlockedLessonIndex() != null
@@ -268,7 +268,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO.AuthResponse completeOnboarding(UserDTO.OnboardingRequest request) {
         User user = getCurrentUser();
         user.setLevel(request.getLevel());
-        user.setXp(request.getXp());
+        user.setCoins(request.getCoins());
         user.setOnboardingCompleted(true);
         User savedUser = userRepository.save(user);
         return toAuthResponse(savedUser, null, null);
@@ -306,7 +306,7 @@ public class UserServiceImpl implements UserService {
                 user.getRole().name(),
                 user.getUsername(),
                 user.getLevel(),
-                user.getXp(),
+                user.getCoins(),
                 user.getMaxUnlockedLessonIndex(),
                 user.getStreak(),
                 user.getProfilePic(),
@@ -326,8 +326,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void resetProgress(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setXp(0);
-        user.setWeeklyXp(0);
+        user.setCoins(0);
+        user.setWeeklyCoins(0);
         user.setLevel(1);
         user.setStreak(0);
         user.setMaxUnlockedLessonIndex(0);

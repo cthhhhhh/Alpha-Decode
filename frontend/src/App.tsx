@@ -106,9 +106,9 @@ export default function App() {
             setLevel(data.level);
             localStorage.setItem('level', data.level.toString());
           }
-          if (data.xp !== undefined) {
-            setXp(data.xp);
-            localStorage.setItem('xp', data.xp.toString());
+          if (data.coins !== undefined) {
+            setXp(data.coins);
+            localStorage.setItem('xp', data.coins.toString());
           }
           if (data.streak !== undefined) {
             setStreak(data.streak);
@@ -364,7 +364,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
-          xpToAdd: isPerfect ? 10 : 0,
+          coinsToAdd: isPerfect ? 10 : 0,
           streakToSet: newStreak,
           dailyQuizCountIncrement: true
         }),
@@ -381,9 +381,9 @@ export default function App() {
             setLevel(data.level);
             localStorage.setItem('level', data.level.toString());
           }
-          if (data.xp !== undefined) {
-            setXp(data.xp);
-            localStorage.setItem('xp', data.xp.toString());
+          if (data.coins !== undefined) {
+            setXp(data.coins);
+            localStorage.setItem('xp', data.coins.toString());
           }
           if (data.dailyQuizCompletedToday === true) {
             setDailyQuizCompleted(true);
@@ -418,14 +418,14 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ 
-            xpToAdd: rewardXp,
+            coinsToAdd: rewardXp,
             ...(shouldUnlockNext ? { maxUnlockedLessonIndex: nextIdx } : {})
           }),
         })
           .then(r => r.json())
           .then(data => { 
             if (data.newAchievements) showAchievementToasts(data.newAchievements);
-            if (data.xp !== undefined) { setXp(data.xp); localStorage.setItem('xp', data.xp.toString()); }
+            if (data.coins !== undefined) { setXp(data.coins); localStorage.setItem('xp', data.coins.toString()); }
             if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
             if (data.maxUnlockedLessonIndex !== undefined) {
               localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
@@ -500,14 +500,14 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
-            xpToAdd: rewardXp,
+            coinsToAdd: rewardXp,
             ...(shouldUnlockNext ? { maxUnlockedLessonIndex: nextIdx } : {}),
           }),
         })
           .then(r => r.json())
           .then(data => {
             if (data.newAchievements) showAchievementToasts(data.newAchievements);
-            if (data.xp !== undefined) { setXp(data.xp); localStorage.setItem('xp', data.xp.toString()); }
+            if (data.coins !== undefined) { setXp(data.coins); localStorage.setItem('xp', data.coins.toString()); }
             if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
             if (data.maxUnlockedLessonIndex !== undefined) {
               localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
@@ -553,13 +553,13 @@ export default function App() {
         },
         body: JSON.stringify({
           level: onboardingScore + 1,
-          xp: onboardingScore * 50
+          coins: onboardingScore * 50
         })
       })
         .then(r => r.json())
         .then(data => {
           setLevel(data.level);
-          setXp(data.xp);
+          setXp(data.coins);
           setShowOnboarding(false);
           localStorage.setItem('onboardingFinished', 'true');
           navigate('/home');
@@ -694,7 +694,7 @@ export default function App() {
                 <div className="hidden lg:block sticky top-24 self-start">
                   <LearnSidebarLeft
                     level={level}
-                    xp={xp}
+                    coins={xp}
                     lessonsCompleted={lessons.filter(l => l.completed).length}
                     streak={streak}
                     loginDates={loginDates}
@@ -858,7 +858,7 @@ export default function App() {
               fetch('/api/auth/xp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ xpToAdd: 0, streakToSet: 0, dailyQuizCountIncrement: true }),
+                body: JSON.stringify({ coinsToAdd: 0, streakToSet: 0, dailyQuizCountIncrement: true }),
               }).catch(() => { });
             }
           }

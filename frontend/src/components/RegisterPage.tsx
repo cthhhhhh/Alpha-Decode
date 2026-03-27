@@ -49,7 +49,7 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
       localStorage.setItem('username', data.username);
       localStorage.removeItem('initialLevel');
       localStorage.removeItem('initialXp');
-      onRegisterSuccess(data.token, data.role, data.username, data.level, data.xp, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
+      onRegisterSuccess(data.token, data.role, data.username, data.level, data.coins, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {

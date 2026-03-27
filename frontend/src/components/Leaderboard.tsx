@@ -6,7 +6,7 @@ interface LeaderboardEntry {
     rank: number;
     username: string;
     level: number;
-    xp: number;
+    coins: number;
     streak: number;
 }
 
@@ -144,7 +144,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                             ) : (
                                                 <>
                                                     <Coins size={13} className="text-brand-yellow" />
-                                                    <span className="text-xs font-black text-slate-500">{entry.xp} Coins</span>
+                                                    <span className="text-xs font-black text-slate-500">{entry.coins} Coins</span>
                                                 </>
                                             )}
                                         </div>
@@ -200,7 +200,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     {sort === 'streak' ? (
                                         <div className="flex items-center gap-0.5">
                                             <Coins size={11} className="text-brand-yellow" />
-                                            <span className="text-[11px] font-bold text-slate-400">{entry.xp} Coins</span>
+                                            <span className="text-[11px] font-bold text-slate-400">{entry.coins} Coins</span>
                                         </div>
                                     ) : (
                                         entry.streak > 0 && (
@@ -223,7 +223,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                 ) : (
                                     <>
                                         <Coins size={16} className="text-brand-yellow" />
-                                        <span className="font-black text-slate-700">{entry.xp} Coins</span>
+                                        <span className="font-black text-slate-700">{entry.coins} Coins</span>
                                     </>
                                 )}
                             </div>
@@ -265,7 +265,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     {sort === 'streak' ? (
                                         <div className="flex items-center gap-0.5">
                                             <Coins size={11} className="text-brand-yellow" />
-                                            <span className="text-[11px] font-bold text-slate-400">{myRank.entry.xp} Coins</span>
+                                            <span className="text-[11px] font-bold text-slate-400">{myRank.entry.coins} Coins</span>
                                         </div>
                                     ) : (
                                         myRank.entry.streak > 0 && (
@@ -286,7 +286,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                 ) : (
                                     <>
                                         <Coins size={16} className="text-brand-yellow" />
-                                        <span className="font-black text-slate-700">{myRank.entry.xp} Coins</span>
+                                        <span className="font-black text-slate-700">{myRank.entry.coins} Coins</span>
                                     </>
                                 )}
                             </div>

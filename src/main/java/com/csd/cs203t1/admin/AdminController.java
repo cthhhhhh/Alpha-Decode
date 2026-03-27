@@ -46,7 +46,7 @@ public class AdminController {
             "email", user.getEmail(),
             "role", user.getRole().name(),
             "level", user.getLevel(),
-            "xp", user.getXp(),
+            "coins", user.getCoins(),
             "enabled", (Object) user.isEnabled(),
             "isOnline", (Object) sessionTracker.isOnline(user.getUsername())
         )).toList());
@@ -99,7 +99,7 @@ public class AdminController {
     public ResponseEntity<?> getUserStats(@PathVariable Long id) {
         User user = userRepository.findById(id).orElseThrow();
         return ResponseEntity.ok(Map.of(
-            "xp", user.getXp(),
+            "coins", user.getCoins(),
             "level", user.getLevel(),
             "streak", user.getStreak(),
             "lessonsCompleted", user.getMaxUnlockedLessonIndex(),

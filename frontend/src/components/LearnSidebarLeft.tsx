@@ -3,7 +3,7 @@ import { Zap, BookOpen, Flame } from 'lucide-react';
 
 interface Props {
   level: number;
-  xp: number;
+  coins: number;
   lessonsCompleted: number;
   streak: number;
   loginDates: string[];
@@ -12,8 +12,8 @@ interface Props {
 
 const XP_PER_LEVEL = 50;
 
-export default function LearnSidebarLeft({ level, xp, lessonsCompleted, streak, loginDates, onViewGlossary }: Props) {
-  const relXp = xp % XP_PER_LEVEL;
+export default function LearnSidebarLeft({ level, coins, lessonsCompleted, streak, loginDates, onViewGlossary }: Props) {
+  const relXp = coins % XP_PER_LEVEL;
   const xpLeft = XP_PER_LEVEL - relXp;
   const progressPct = Math.min((relXp / XP_PER_LEVEL) * 100, 100);
 

@@ -25,50 +25,50 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByRole(Role role);
 
-    Page<User> findAllByRoleNotOrderByXpDescLevelDesc(Role role, Pageable pageable);
+    Page<User> findAllByRoleNotOrderByCoinsDescLevelDesc(Role role, Pageable pageable);
 
-    Page<User> findAllByRoleNotOrderByWeeklyXpDescLevelDesc(Role role, Pageable pageable);
+    Page<User> findAllByRoleNotOrderByWeeklyCoinsDescLevelDesc(Role role, Pageable pageable);
 
-    Page<User> findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(Role role, LocalDate since, Pageable pageable);
+    Page<User> findByRoleNotAndDailyQuizLastDateGreaterThanEqualOrderByCoinsDescLevelDesc(Role role, LocalDate since, Pageable pageable);
 
-    Page<User> findAllByRoleNotOrderByLevelDescXpDesc(Role role, Pageable pageable);
+    Page<User> findAllByRoleNotOrderByLevelDescCoinsDesc(Role role, Pageable pageable);
 
-    Page<User> findAllByRoleNotOrderByStreakDescXpDesc(Role role, Pageable pageable);
+    Page<User> findAllByRoleNotOrderByStreakDescCoinsDesc(Role role, Pageable pageable);
 
-    long countByRoleNotAndXpGreaterThan(Role role, int xp);
+    long countByRoleNotAndCoinsGreaterThan(Role role, int coins);
 
-    long countByRoleNotAndWeeklyXpGreaterThan(Role role, int weeklyXp);
+    long countByRoleNotAndWeeklyCoinsGreaterThan(Role role, int weeklyCoins);
 
     long countByRoleNotAndLevelGreaterThan(Role role, int level);
 
-    long countByRoleNotAndLevelAndXpGreaterThan(Role role, int level, int xp);
+    long countByRoleNotAndLevelAndCoinsGreaterThan(Role role, int level, int coins);
 
     long countByRoleNotAndStreakGreaterThan(Role role, int streak);
 
-    long countByRoleNotAndStreakAndXpGreaterThan(Role role, int streak, int xp);
+    long countByRoleNotAndStreakAndCoinsGreaterThan(Role role, int streak, int coins);
 
-    long countByRoleNotAndStreakAndWeeklyXpGreaterThan(Role role, int streak, int weeklyXp);
+    long countByRoleNotAndStreakAndWeeklyCoinsGreaterThan(Role role, int streak, int weeklyCoins);
 
-    Page<User> findAllByOrderByXpDescLevelDesc(Pageable pageable);
+    Page<User> findAllByOrderByCoinsDescLevelDesc(Pageable pageable);
 
     List<User> findByStreakGreaterThanAndDailyQuizLastDateBefore(int streak, LocalDate date);
 
-    Page<User> findByDailyQuizLastDateGreaterThanEqualOrderByXpDescLevelDesc(LocalDate since, Pageable pageable);
+    Page<User> findByDailyQuizLastDateGreaterThanEqualOrderByCoinsDescLevelDesc(LocalDate since, Pageable pageable);
 
-    Page<User> findAllByOrderByStreakDescXpDesc(Pageable pageable);
+    Page<User> findAllByOrderByStreakDescCoinsDesc(Pageable pageable);
 
-    long countByXpGreaterThan(int xp);
+    long countByCoinsGreaterThan(int coins);
 
     long countByStreakGreaterThan(int streak);
 
-    long countByStreakAndXpGreaterThan(int streak, int xp);
+    long countByStreakAndCoinsGreaterThan(int streak, int coins);
     
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.weeklyXp = 0")
+    @Query("UPDATE User u SET u.weeklyCoins = 0")
     void resetAllWeeklyXp();
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.onboardingCompleted = true WHERE u.level > 1 OR u.xp > 0 OR u.onboardingCompleted = true")
+    @Query("UPDATE User u SET u.onboardingCompleted = true WHERE u.level > 1 OR u.coins > 0 OR u.onboardingCompleted = true")
     void markExistingUsersAsOnboarded();
 }

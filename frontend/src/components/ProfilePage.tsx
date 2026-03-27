@@ -14,7 +14,7 @@ interface UserProfile {
     username: string;
     role: string;
     level: number;
-    xp: number;
+    coins: number;
     maxUnlockedLessonIndex: number;
     streak: number;
 }
@@ -64,7 +64,7 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate, onLogout }: Pr
     );
 
     const lessonsCompleted = profile.role === 'ADMIN' ? TOTAL_LESSONS : Math.min(profile.maxUnlockedLessonIndex, TOTAL_LESSONS);
-    const xpProgress = profile.xp % XP_PER_LEVEL;
+    const xpProgress = profile.coins % XP_PER_LEVEL;
     const xpForNext = XP_PER_LEVEL;
     const progressPct = Math.min((xpProgress / xpForNext) * 100, 100);
 

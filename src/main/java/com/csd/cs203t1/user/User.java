@@ -51,10 +51,10 @@ public class User {
 	private int level = 1;
 
 	@Column(nullable = false)
-	private int xp = 0;
+	private int coins = 0;
 
 	@Column(columnDefinition = "integer default 0", nullable = false)
-	private int weeklyXp = 0;
+	private int weeklyCoins = 0;
 
 	@Column(columnDefinition = "integer default 0", nullable = false)
 	private int maxUnlockedLessonIndex = 0;

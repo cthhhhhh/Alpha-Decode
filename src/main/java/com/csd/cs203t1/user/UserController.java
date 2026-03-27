@@ -56,7 +56,7 @@ public class UserController {
     @PostMapping("/xp")
     public ResponseEntity<?> addXp(@RequestBody UserDTO.XpUpdateRequest request) {
         try {
-            if (request.getXpToAdd() < 0) throw new IllegalArgumentException("XP to add must be non-negative");
+            if (request.getCoinsToAdd() < 0) throw new IllegalArgumentException("Coins to add must be non-negative");
             UserDTO.AuthResponse response = userService.updateXp(request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {

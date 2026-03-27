@@ -16,7 +16,7 @@ public class UserDTO {
         private String email;
         private String password;
         private Integer level;
-        private Integer xp;
+        private Integer coins;
         private Integer maxUnlockedLessonIndex;
     }
 
@@ -36,7 +36,7 @@ public class UserDTO {
         private String role;
         private String username;
         private Integer level;
-        private Integer xp;
+        private Integer coins;
         private Integer maxUnlockedLessonIndex;
         private Integer streak;
         private String profilePic;
@@ -47,18 +47,18 @@ public class UserDTO {
 
         // Backwards-compatible constructor for endpoints that don't check achievements
         public AuthResponse(String token, String role, String username,
-                            Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak, String profilePic) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, null, null, null, null);
+                            Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String profilePic) {
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, null, null, null, null);
         }
 
         public AuthResponse(String token, String role, String username,
-                            Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak, String profilePic, String dailyQuizLastDate) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null, null);
+                            Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String profilePic, String dailyQuizLastDate) {
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null, null);
         }
 
         public AuthResponse(String token, String role, String username,
-                            Integer level, Integer xp, Integer maxUnlockedLessonIndex, Integer streak) {
-            this(token, role, username, level, xp, maxUnlockedLessonIndex, streak, null, null, null, null, null);
+                            Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak) {
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, null, null, null, null, null);
         }
     }
 
@@ -75,7 +75,7 @@ public class UserDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class XpUpdateRequest {
-        private int xpToAdd;
+        private int coinsToAdd;
         private Integer maxUnlockedLessonIndex;
         private Integer streakToSet;
         private boolean dailyQuizCountIncrement;
@@ -125,6 +125,6 @@ public class UserDTO {
     @NoArgsConstructor
     public static class OnboardingRequest {
         private int level;
-        private int xp;
+        private int coins;
     }
 }
