@@ -10,5 +10,8 @@ import java.util.List;
 public interface UserAchievementRepository extends JpaRepository<UserAchievement, Long> {
     List<UserAchievement> findByUser(User user);
     boolean existsByUserAndAchievement(User user, Achievement achievement);
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByAchievement(Achievement achievement);
     void deleteByUser(User user);
 }

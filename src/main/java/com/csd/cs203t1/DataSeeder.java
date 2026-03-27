@@ -2,6 +2,7 @@ package com.csd.cs203t1;
 
 import com.csd.cs203t1.achievement.Achievement;
 import com.csd.cs203t1.achievement.AchievementRepository;
+import com.csd.cs203t1.achievement.UserAchievementRepository;
 import com.csd.cs203t1.achievement.TriggerType;
 import com.csd.cs203t1.lesson.Lesson;
 import com.csd.cs203t1.lesson.LessonDTO;
@@ -35,18 +36,20 @@ public class DataSeeder implements CommandLineRunner {
     private final TermRepository termRepository;
     private final QuizRepository quizRepository;
     private final AchievementRepository achievementRepository;
+    private final UserAchievementRepository userAchievementRepository;
     private final UserRepository userRepository;
     private final JdbcTemplate jdbcTemplate;
 
     public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
             TermRepository termRepository, QuizRepository quizRepository,
-            AchievementRepository achievementRepository, UserRepository userRepository,
-            JdbcTemplate jdbcTemplate) {
+            AchievementRepository achievementRepository, UserAchievementRepository userAchievementRepository,
+            UserRepository userRepository, JdbcTemplate jdbcTemplate) {
         this.lessonService = lessonService;
         this.lessonRepository = lessonRepository;
         this.termRepository = termRepository;
         this.quizRepository = quizRepository;
         this.achievementRepository = achievementRepository;
+        this.userAchievementRepository = userAchievementRepository;
         this.userRepository = userRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -744,6 +747,14 @@ public class DataSeeder implements CommandLineRunner {
     // ─── Achievements ────────────────────────────────────────────────────────────
 
     private void seedAchievements() {
+        // Surgical cleanup of duplicates/unwanted
+        List.of("Wealthy", "Coin Collector", "Coins Grinder", "Star Collector").forEach(name -> {
+            achievementRepository.findByName(name).ifPresent(a -> {
+                userAchievementRepository.deleteByAchievement(a);
+                achievementRepository.delete(a);
+            });
+        });
+
         List<Achievement> defaults = List.of(
                 achievement("First Lesson", "Complete your very first lesson", "🌱", TriggerType.LESSON_COMPLETE, 1),
                 achievement("Halfway There", "Complete 10 out of 20 lessons", "🚀", TriggerType.LESSON_COMPLETE, 10),
