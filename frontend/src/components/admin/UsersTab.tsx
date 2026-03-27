@@ -20,6 +20,7 @@ export function UsersTab() {
     title: string; message: string; confirmLabel: string; type: 'danger' | 'info' | 'warning' | 'success'; onConfirm: () => void;
   } | null>(null);
   const [rolePicker, setRolePicker] = useState<UserData | null>(null);
+  const currentUser = localStorage.getItem('username');
 
   const showConfirm = (title: string, message: string, confirmLabel: string, type: 'danger' | 'info' | 'warning' | 'success', onConfirm: () => void) =>
     setModal({ title, message, confirmLabel, type, onConfirm });
@@ -212,15 +213,18 @@ export function UsersTab() {
                           className="p-2 rounded-xl text-indigo-500 hover:bg-indigo-50 transition-colors">
                           <UserCheck size={18} />
                         </button>
-                        <button onClick={() => handleBanToggle(user)} title={user.enabled ? 'Ban' : 'Unban'}
-                          className={`p-2 rounded-xl transition-colors ${user.enabled ? 'text-orange-500 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'}`}>
+                        <button onClick={() => handleBanToggle(user)} 
+                          disabled={user.username === currentUser}
+                          title={user.username === currentUser ? 'You cannot ban yourself' : (user.enabled ? 'Ban' : 'Unban')}
+                          className={`p-2 rounded-xl transition-colors ${user.username === currentUser ? 'text-slate-200 cursor-not-allowed' : (user.enabled ? 'text-orange-500 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50')}`}>
                           {user.enabled ? <Ban size={18} /> : <CheckCircle size={18} />}
                         </button>
                         <button onClick={() => handleReset(user)} title="Reset progress" className="p-2 rounded-xl text-blue-500 hover:bg-blue-50 transition-colors">
                           <RotateCcw size={18} />
                         </button>
-                        <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN'} title="Delete user"
-                          className={`p-2 rounded-xl transition-colors ${user.role === 'ADMIN' ? 'text-slate-200 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}>
+                        <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN' || user.username === currentUser} 
+                          title={user.username === currentUser ? 'You cannot delete yourself' : (user.role === 'ADMIN' ? 'Admin users cannot be deleted' : 'Delete user')}
+                          className={`p-2 rounded-xl transition-colors ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}>
                           <Trash2 size={18} />
                         </button>
                         <button onClick={() => toggleExpand(user.id)} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition-colors">

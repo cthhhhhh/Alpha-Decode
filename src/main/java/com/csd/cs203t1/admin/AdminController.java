@@ -54,6 +54,10 @@ public class AdminController {
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        User currentUser = userService.getCurrentUser();
+        if (currentUser.getId().equals(id)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "You cannot delete yourself"));
+        }
         userService.deleteUserById(id);
         return ResponseEntity.ok().build();
     }
@@ -71,6 +75,10 @@ public class AdminController {
 
     @PostMapping("/users/{id}/ban")
     public ResponseEntity<?> banUser(@PathVariable Long id) {
+        User currentUser = userService.getCurrentUser();
+        if (currentUser.getId().equals(id)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "You cannot ban yourself"));
+        }
         userService.setUserEnabled(id, false);
         return ResponseEntity.ok(Map.of("message", "User banned successfully"));
     }
