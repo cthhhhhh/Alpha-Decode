@@ -938,17 +938,20 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={
+        authToken ? <Navigate to="/home" replace /> :
         <LoginPage
           onLoginSuccess={handleAuthSuccess}
-          onGoToRegister={() => navigate('/register')}
-          onBack={() => navigate('/')}
+          onGoToRegister={() => navigate('/register', { replace: true })}
+          onBack={() => navigate(-1)}
+
         />
       } />
       <Route path="/register" element={
+        authToken ? <Navigate to="/home" replace /> :
         <RegisterPage
           onRegisterSuccess={handleAuthSuccess}
-          onGoToLogin={() => navigate('/login')}
-          onBack={() => navigate('/')}
+          onGoToLogin={() => navigate('/login', { replace: true })}
+          onBack={() => navigate(-1)}
         />
       } />
       <Route path="/onboarding" element={
@@ -961,8 +964,8 @@ export default function App() {
             questions={onboardingQuestions}
             onAnswer={handleOnboardingAnswer}
             onComplete={completeOnboarding}
-            onLogin={() => navigate('/login')}
-            onBack={() => navigate('/')}
+            onLogin={() => navigate('/login', { replace: true })}
+            onBack={() => navigate('/', { replace: true })}
             isLoggedIn={!!authToken}
           />
         </div>
