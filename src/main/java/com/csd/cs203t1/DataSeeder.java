@@ -751,8 +751,8 @@ public class DataSeeder implements CommandLineRunner {
                 achievement("Streak Starter", "Maintain a 3-day streak", "🔥", TriggerType.STREAK_DAYS, 3),
                 achievement("Week Warrior", "Maintain a 7-day streak", "⚡", TriggerType.STREAK_DAYS, 7),
                 achievement("Daily Devotee", "Complete the daily quiz 5 times", "📅", TriggerType.DAILY_QUIZ_COUNT, 5),
-                achievement("XP Grinder", "Earn 50 stars", "⭐", TriggerType.XP_REACHED, 50),
-                achievement("Star Collector", "Earn 100 stars", "🌟", TriggerType.XP_REACHED, 100));
+                achievement("XP Grinder", "Earn 50 coins", "🪙", TriggerType.XP_REACHED, 50),
+                achievement("Coin Collector", "Earn 100 coins", "💰", TriggerType.XP_REACHED, 100));
 
         for (Achievement a : defaults) {
             achievementRepository.findByName(a.getName()).ifPresentOrElse(existing -> {

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { BookOpen, CheckCircle2, XCircle, Star, Trophy, Flag, RotateCcw } from 'lucide-react';
+import { BookOpen, CheckCircle2, XCircle, Coins, Trophy, Flag, RotateCcw } from 'lucide-react';
 import FlagModal from './FlagModal';
 
 function fisherYates<T>(arr: T[]): void {
@@ -186,7 +186,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                 )}
                 {!isGradedStep && !isFinished && (
                     <div className="flex items-center gap-1 text-brand-yellow font-black">
-                        <Star size={20} fill="currentColor" />
+                        <Coins size={20} />
                         <span>Intro</span>
                     </div>
                 )}
@@ -305,7 +305,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                         
                         if (accuracy === 100) {
                             title = "Sigma Performance!";
-                            subtitle = "Maximum Rizz! +5 Stars earned.";
+                            subtitle = "Maximum Rizz! +5 Coins earned.";
                         } else if (accuracy >= 80) {
                             title = "So Close!";
                             subtitle = "Almost a Sigma! Try again for stars.";
@@ -343,9 +343,9 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                         </div>
                                     ) : (
                                         <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
-                                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
+                                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Coins Earned</p>
                                             <div className="flex items-center justify-center gap-1">
-                                                <Star size={24} className={accuracy === 100 ? "text-brand-yellow" : "text-slate-300"} fill="currentColor" />
+                                                <Coins size={24} className={accuracy === 100 ? "text-brand-yellow" : "text-slate-300"} />
                                                 <p className="text-3xl font-black text-slate-900">
                                                     {initialCompleted || accuracy < 100 ? '+0' : '+5'}
                                                 </p>

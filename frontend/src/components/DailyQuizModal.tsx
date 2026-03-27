@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, XCircle, Trophy, Star, Flame, Flag } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Trophy, Coins, Flame, Flag } from 'lucide-react';
 import FlagModal from './FlagModal';
 
 interface Props {
@@ -166,7 +166,7 @@ const ResultScreen = ({ correctCount, total, answerLog, onClose }:
 
     if (accuracy === 100) {
         title = "YOU ATE NO CAP!";
-        subtitle = "Absolute Sigma! +10 Stars & +1 Streak.";
+        subtitle = "Absolute Sigma! +10 Coins & +1 Streak.";
     } else if (accuracy >= 80) {
         title = "ALMOST COOKED FR";
         subtitle = "So close to a perfect streak! Try again.";
@@ -211,7 +211,7 @@ const ResultScreen = ({ correctCount, total, answerLog, onClose }:
                     {isPerfect ? (
                         <div className="space-y-1">
                             <div className="flex items-center justify-center gap-1">
-                                <Star size={20} className="text-brand-yellow" fill="currentColor" />
+                                <Coins size={20} className="text-brand-yellow" />
                                 <span className="text-xl font-black text-brand-primary">+10</span>
                             </div>
                             <div className="flex items-center justify-center gap-1">

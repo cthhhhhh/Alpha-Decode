@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Star, Flame, Shield, ChevronUp, User } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -620,8 +620,8 @@ export default function App() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[11px] font-black text-white/60 uppercase tracking-wider">All correct →</span>
                         <div className="flex items-center gap-1 bg-brand-yellow/20 border border-brand-yellow/40 text-brand-yellow px-3 py-1 rounded-full text-sm font-black">
-                          <Star size={13} fill="currentColor" />
-                          <span>+10 Stars</span>
+                          <Coins size={13} />
+                          <span>+10 Coins</span>
                         </div>
                         <div className="flex items-center gap-1 bg-brand-accent/20 border border-brand-accent/40 text-brand-accent px-3 py-1 rounded-full text-sm font-black">
                           <Flame size={13} fill="currentColor" />
@@ -655,9 +655,9 @@ export default function App() {
                     className="bg-brand-yellow/10 border-2 border-brand-yellow/40 rounded-3xl p-6 text-center transition-shadow hover:shadow-xl hover:shadow-brand-yellow/10"
                   >
                     <div className="w-14 h-14 bg-brand-yellow rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg rotate-3">
-                      <Star size={28} className="text-white fill-white" />
+                      <Coins size={28} className="text-white" />
                     </div>
-                    <p className="text-lg font-black text-slate-900 leading-tight">1 Lesson = 5 Stars</p>
+                    <p className="text-lg font-black text-slate-900 leading-tight">1 Lesson = 5 Coins</p>
                     <p className="text-xs font-bold text-slate-500 mt-2">Get all questions correct to unlock the next level!</p>
                   </motion.div>
 

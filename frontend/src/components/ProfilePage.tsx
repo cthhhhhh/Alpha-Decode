@@ -214,10 +214,10 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate, onLogout }: Pr
                     </div>
                 </div>
 
-                {/* Stars progress bar */}
+                {/* Coins progress bar */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between text-xs font-black text-slate-500 uppercase tracking-wide mb-2">
-                        <span>Stars Progress</span>
+                        <span>Coins Progress</span>
                         <span>{xpProgress}/{xpForNext} to next milestone</span>
                     </div>
                     <div className="h-3 bg-slate-100 rounded-full overflow-hidden">

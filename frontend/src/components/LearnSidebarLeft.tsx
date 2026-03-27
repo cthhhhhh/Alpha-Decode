@@ -53,7 +53,7 @@ export default function LearnSidebarLeft({ level, xp, lessonsCompleted, streak, 
           />
         </div>
         <p className="text-[11px] font-bold text-slate-400">
-          {relXp} / {XP_PER_LEVEL} Stars  •  {xpLeft} to Level {level + 1}
+          {relXp} / {XP_PER_LEVEL} Coins  •  {xpLeft} to Level {level + 1}
         </p>
       </motion.div>
 

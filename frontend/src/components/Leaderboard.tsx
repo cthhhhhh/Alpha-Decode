@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Flame, Zap, Crown, Star } from 'lucide-react';
+import { Trophy, Flame, Zap, Crown, Coins } from 'lucide-react';
 
 interface LeaderboardEntry {
     rank: number;
@@ -72,7 +72,7 @@ const Leaderboard = ({ authUsername }: Props) => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
                 <div>
                     <h2 className="text-3xl font-black text-slate-800">Leaderboard</h2>
-                    <p className="text-slate-500 lowercase first-letter:uppercase">Top players ranked by {sort === 'xp' ? 'stars' : 'streak'}.</p>
+                    <p className="text-slate-500 lowercase first-letter:uppercase">Top players ranked by {sort === 'xp' ? 'coins' : 'streak'}.</p>
                 </div>
 
                 {/* Filter toggles moved to top right */}
@@ -97,7 +97,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                 className={`px-4 py-1.5 text-xs font-black uppercase tracking-wide transition-colors
                                     ${sort === s ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'text-slate-500 hover:bg-slate-50'}`}
                             >
-                                {s === 'xp' ? 'By Stars' : 'By Streak'}
+                                {s === 'xp' ? 'By Coins' : 'By Streak'}
                             </button>
                         ))}
                     </div>
@@ -143,8 +143,8 @@ const Leaderboard = ({ authUsername }: Props) => {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Star size={13} className="text-brand-yellow fill-current" />
-                                                    <span className="text-xs font-black text-slate-500">{entry.xp} Stars</span>
+                                                    <Coins size={13} className="text-brand-yellow" />
+                                                    <span className="text-xs font-black text-slate-500">{entry.xp} Coins</span>
                                                 </>
                                             )}
                                         </div>
@@ -199,8 +199,8 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     </div>
                                     {sort === 'streak' ? (
                                         <div className="flex items-center gap-0.5">
-                                            <Star size={11} className="text-brand-yellow fill-current" />
-                                            <span className="text-[11px] font-bold text-slate-400">{entry.xp} Stars</span>
+                                            <Coins size={11} className="text-brand-yellow" />
+                                            <span className="text-[11px] font-bold text-slate-400">{entry.xp} Coins</span>
                                         </div>
                                     ) : (
                                         entry.streak > 0 && (
@@ -222,8 +222,8 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     </>
                                 ) : (
                                     <>
-                                        <Star size={16} className="text-brand-yellow fill-current" />
-                                        <span className="font-black text-slate-700">{entry.xp} Stars</span>
+                                        <Coins size={16} className="text-brand-yellow" />
+                                        <span className="font-black text-slate-700">{entry.xp} Coins</span>
                                     </>
                                 )}
                             </div>
@@ -264,8 +264,8 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     </div>
                                     {sort === 'streak' ? (
                                         <div className="flex items-center gap-0.5">
-                                            <Star size={11} className="text-brand-yellow fill-current" />
-                                            <span className="text-[11px] font-bold text-slate-400">{myRank.entry.xp} Stars</span>
+                                            <Coins size={11} className="text-brand-yellow" />
+                                            <span className="text-[11px] font-bold text-slate-400">{myRank.entry.xp} Coins</span>
                                         </div>
                                     ) : (
                                         myRank.entry.streak > 0 && (
@@ -285,8 +285,8 @@ const Leaderboard = ({ authUsername }: Props) => {
                                     </>
                                 ) : (
                                     <>
-                                        <Star size={16} className="text-brand-yellow fill-current" />
-                                        <span className="font-black text-slate-700">{myRank.entry.xp} Stars</span>
+                                        <Coins size={16} className="text-brand-yellow" />
+                                        <span className="font-black text-slate-700">{myRank.entry.xp} Coins</span>
                                     </>
                                 )}
                             </div>

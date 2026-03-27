@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle2, XCircle, Trophy, Star, Shield, Flag } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Trophy, Coins, Shield, Flag } from 'lucide-react';
 import FlagModal from './FlagModal';
 import type { RevisionQuiz } from '../types';
 
@@ -168,7 +168,7 @@ const ResultScreen = ({ correctCount, total, answerLog, onClose }:
 
     if (accuracy === 100) {
         title = "Sigma Performance!";
-        subtitle = "Checkpoint Cleared FR! +5 Stars earned.";
+        subtitle = "Checkpoint Cleared FR! +5 Coins earned.";
     } else if (accuracy >= 80) {
         title = "So Close!";
         subtitle = "Almost a Sigma! Try again for stars.";
@@ -209,9 +209,9 @@ const ResultScreen = ({ correctCount, total, answerLog, onClose }:
                     <p className="text-3xl font-black text-purple-700">{accuracy}%</p>
                 </div>
                 <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">
-                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Stars Earned</p>
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Coins Earned</p>
                     <div className="flex items-center justify-center gap-1">
-                        <Star size={24} className={isPerfect ? "text-brand-yellow" : "text-slate-300"} fill="currentColor" />
+                        <Coins size={24} className={isPerfect ? "text-brand-yellow" : "text-slate-300"} />
                         <p className="text-3xl font-black text-slate-900">
                             {isPerfect ? '+5' : '+0'}
                         </p>
