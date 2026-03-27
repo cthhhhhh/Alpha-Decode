@@ -56,6 +56,11 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        try {
+            jdbcTemplate.execute("ALTER TABLE users DROP COLUMN weekly_xp");
+        } catch (Exception e) {
+            // Probably already dropped
+        }
         fixFlagConstraints();
         seedLessons();
         seedTerms();
@@ -748,7 +753,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedAchievements() {
         // Surgical cleanup of duplicates/unwanted
-        List.of("Wealthy", "Coin Collector", "Coins Grinder", "Star Collector").forEach(name -> {
+        List.of("XP Grinder", "Star Collector", "Coin Collector", "Coins Grinder", "Wealthy").forEach(name -> {
             achievementRepository.findByName(name).ifPresent(a -> {
                 userAchievementRepository.deleteByAchievement(a);
                 achievementRepository.delete(a);
@@ -762,8 +767,8 @@ public class DataSeeder implements CommandLineRunner {
                 achievement("Streak Starter", "Maintain a 3-day streak", "🔥", TriggerType.STREAK_DAYS, 3),
                 achievement("Week Warrior", "Maintain a 7-day streak", "⚡", TriggerType.STREAK_DAYS, 7),
                 achievement("Daily Devotee", "Complete the daily quiz 5 times", "📅", TriggerType.DAILY_QUIZ_COUNT, 5),
-                achievement("XP Grinder", "Earn 50 coins", "🪙", TriggerType.XP_REACHED, 50),
-                achievement("Coin Collector", "Earn 100 coins", "💰", TriggerType.XP_REACHED, 100));
+                achievement("Coin Grinder", "Earn 50 coins", "🪙", TriggerType.XP_REACHED, 50),
+                achievement("Wealthy", "Earn 100 coins", "💰", TriggerType.XP_REACHED, 100));
 
         for (Achievement a : defaults) {
             achievementRepository.findByName(a.getName()).ifPresentOrElse(existing -> {
