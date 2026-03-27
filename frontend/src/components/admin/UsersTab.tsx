@@ -17,12 +17,12 @@ export function UsersTab() {
   const [userStats, setUserStats] = useState<Record<number, UserStats>>({});
   const filterRef = useRef<HTMLDivElement>(null);
   const [modal, setModal] = useState<{
-    title: string; message: string; confirmLabel: string; confirmClass: string; onConfirm: () => void;
+    title: string; message: string; confirmLabel: string; type: 'danger' | 'info' | 'warning' | 'success'; onConfirm: () => void;
   } | null>(null);
   const [rolePicker, setRolePicker] = useState<UserData | null>(null);
 
-  const showConfirm = (title: string, message: string, confirmLabel: string, confirmClass: string, onConfirm: () => void) =>
-    setModal({ title, message, confirmLabel, confirmClass, onConfirm });
+  const showConfirm = (title: string, message: string, confirmLabel: string, type: 'danger' | 'info' | 'warning' | 'success', onConfirm: () => void) =>
+    setModal({ title, message, confirmLabel, type, onConfirm });
   const closeModal = () => setModal(null);
 
   const fetchUsers = () => {
@@ -58,7 +58,7 @@ export function UsersTab() {
   };
 
   const handleDelete = (id: number) => {
-    showConfirm('Delete User', 'Permanently delete this account and all its data? This cannot be undone.', 'Delete', 'bg-red-500 text-white', async () => {
+    showConfirm('Delete User', 'Permanently delete this account and all its data? This cannot be undone.', 'Delete', 'danger', async () => {
       closeModal();
       const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: authHeaders() });
       if (res.ok) setUsers(u => u.filter(x => x.id !== id));
@@ -79,7 +79,7 @@ export function UsersTab() {
       isBanning ? 'Ban User' : 'Unban User',
       isBanning ? `Ban ${user.username}? They won't be able to log in until unbanned.` : `Restore access for ${user.username}?`,
       isBanning ? 'Ban' : 'Unban',
-      isBanning ? 'bg-orange-500 text-white' : 'bg-green-500 text-white',
+      isBanning ? 'warning' : 'success',
       async () => {
         closeModal();
         const res = await fetch(`/api/admin/users/${user.id}/${isBanning ? 'ban' : 'unban'}`, { method: 'POST', headers: authHeaders() });
@@ -89,7 +89,7 @@ export function UsersTab() {
   };
 
   const handleReset = (user: UserData) => {
-    showConfirm('Reset Progress', `Clear all XP, level, streak, and lesson progress for ${user.username}? This cannot be undone.`, 'Reset', 'bg-blue-500 text-white', async () => {
+    showConfirm('Reset Progress', `Clear all XP, level, streak, and lesson progress for ${user.username}? This cannot be undone.`, 'Reset', 'info', async () => {
       closeModal();
       await fetch(`/api/admin/users/${user.id}/reset`, { method: 'POST', headers: authHeaders() });
       fetchUsers();
@@ -107,12 +107,13 @@ export function UsersTab() {
       <AnimatePresence>
         {modal && (
           <ConfirmModal
+          isOpen={!!modal}
             title={modal.title}
             message={modal.message}
             confirmLabel={modal.confirmLabel}
-            confirmClass={modal.confirmClass}
+            type={modal.type}
             onConfirm={modal.onConfirm}
-            onCancel={closeModal}
+            onClose={closeModal}
           />
         )}
         {rolePicker && (

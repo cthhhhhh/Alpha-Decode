@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertTriangle, Info, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Info, Trash2, X,UserCheck2} from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -7,9 +7,9 @@ interface Props {
   onConfirm: () => void;
   title: string;
   message: string;
-  confirmText?: string;
+  confirmLabel?: string;
   cancelText?: string;
-  type?: 'danger' | 'info' | 'warning';
+  type: 'danger' | 'info' | 'warning'| 'success'; //danger-> delete, warning->ban, success-> unban
 }
 
 export function ConfirmModal({
@@ -18,20 +18,22 @@ export function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirm',
+  confirmLabel = 'Confirm',
   cancelText = 'Cancel',
   type = 'info'
 }: Props) {
   const iconMap = {
     danger: <Trash2 className="text-red-500" size={24} />,
     warning: <AlertTriangle className="text-brand-yellow" size={24} />,
-    info: <Info className="text-brand-primary" size={24} />
+    info: <Info className="text-brand-primary" size={24} />,
+    success: <UserCheck2 className="text-green-500" size={24} />
   };
 
   const buttonColors = {
     danger: 'bg-red-500 hover:bg-red-600 shadow-[0_4px_0_#b91c1c]',
     warning: 'bg-brand-yellow hover:bg-yellow-500 shadow-[0_4px_0_#ca8a04]',
-    info: 'bg-brand-primary hover:bg-brand-primary/90 shadow-[0_4px_0_#3d8b02]'
+    info: 'bg-brand-primary hover:bg-brand-primary/90 shadow-[0_4px_0_#3d8b02]',
+    success: 'bg-green-500 hover:bg-green-600 shadow-[0_4px_0_#15803d]'
   };
 
   return (
@@ -55,7 +57,8 @@ export function ConfirmModal({
             <div className="pt-8 pb-4 px-8 flex flex-col items-center text-center">
               <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mb-4 ${
                 type === 'danger' ? 'bg-red-50' : 
-                type === 'warning' ? 'bg-brand-yellow/10' : 'bg-brand-primary/10'
+                type === 'warning' ? 'bg-brand-yellow/10' :
+                type == 'info' ? 'bg-brand-primary/10' : 'bg-green/10'
               }`}>
                 {iconMap[type]}
               </div>
@@ -72,7 +75,7 @@ export function ConfirmModal({
                 }}
                 className={`w-full py-4 rounded-2xl text-white font-black text-lg transition-all active:translate-y-1 active:shadow-none ${buttonColors[type]}`}
               >
-                {confirmText.toUpperCase()}
+                {confirmLabel.toUpperCase()}
               </button>
               <button
                 onClick={onClose}

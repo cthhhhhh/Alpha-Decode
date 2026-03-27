@@ -328,17 +328,18 @@ export function ContentTab() {
     <div>
       {confirmDelete && (
         <ConfirmModal
+          isOpen={!!confirmDelete}
           title={`Delete ${confirmDelete.type === 'lesson' ? 'Lesson' : confirmDelete.type === 'term' ? 'Term' : 'Question'}`}
           message={`Are you sure you want to permanently delete this ${confirmDelete.type}?`}
           confirmLabel="Delete"
-          confirmClass="bg-red-500 text-white"
+          type="danger"
           onConfirm={() => {
             if (confirmDelete.type === 'lesson') executeDeleteLesson(confirmDelete.id);
             else if (confirmDelete.type === 'term') executeDeleteTerm(confirmDelete.id);
             else if ((confirmDelete.type as string) === 'revision-quiz') executeDeleteRQ(confirmDelete.id);
             else executeDeleteQuestion(confirmDelete.id);
           }}
-          onCancel={() => setConfirmDelete(null)}
+          onClose={() => setConfirmDelete(null)}
         />
       )}
 
