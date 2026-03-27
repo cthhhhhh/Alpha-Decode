@@ -59,6 +59,9 @@ public class User {
 	@Column(columnDefinition = "integer default 0", nullable = false)
 	private int maxUnlockedLessonIndex = 0;
 
+	@Column(columnDefinition = "text default ''", nullable = false)
+	private String completedRevisionQuizIds = "";
+
 	@Column(columnDefinition = "integer default 0")
 	private int streak = 0;
 

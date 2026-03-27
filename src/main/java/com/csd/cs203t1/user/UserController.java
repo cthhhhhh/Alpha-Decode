@@ -62,7 +62,7 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Not authenticated");
+            return ResponseEntity.status(500).body("Internal server error");
         }
     }
 
@@ -74,7 +74,7 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Not authenticated");
+            return ResponseEntity.status(500).body("Internal server error");
         }
     }
 

@@ -148,12 +148,22 @@ public class UserServiceImpl implements UserService {
                 && request.getMaxUnlockedLessonIndex() > user.getMaxUnlockedLessonIndex()) {
             user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
         }
-        if (request.getStreakToSet() != null) {
-            user.setStreak(request.getStreakToSet());
+        Integer streakToSet = request.getStreakToSet();
+        if (streakToSet != null && streakToSet > user.getStreak()) {
+            user.setStreak(streakToSet);
         }
         if (request.isDailyQuizCountIncrement()) {
             user.setDailyQuizCount(user.getDailyQuizCount() + 1);
             user.setDailyQuizLastDate(LocalDate.now());
+        }
+        if (request.getCompletedRevisionQuizId() != null) {
+            String currentIds = user.getCompletedRevisionQuizIds();
+            String newId = request.getCompletedRevisionQuizId().toString();
+            if (currentIds == null || currentIds.isEmpty()) {
+                user.setCompletedRevisionQuizIds(newId);
+            } else if (!java.util.Arrays.asList(currentIds.split(",")).contains(newId)) {
+                user.setCompletedRevisionQuizIds(currentIds + "," + newId);
+            }
         }
 
         User savedUser = userRepository.save(user);
@@ -171,6 +181,7 @@ public class UserServiceImpl implements UserService {
         if (maxUnlockedLessonIndex > user.getMaxUnlockedLessonIndex()) {
             user.setMaxUnlockedLessonIndex(maxUnlockedLessonIndex);
         }
+        // This endpoint isn't usually used for quizzes, but for completeness:
         User savedUser = userRepository.save(user);
         List<Achievement> newAchievements = achievementService.checkAndUnlock(savedUser);
         List<UserDTO.NewAchievementDTO> notifs = toNotifDTOs(newAchievements);
@@ -313,6 +324,7 @@ public class UserServiceImpl implements UserService {
                 lastDate,
                 completedToday,
                 user.isOnboardingCompleted(),
+                user.getCompletedRevisionQuizIds(),
                 achievements != null && !achievements.isEmpty() ? achievements : null
         );
     }
@@ -325,6 +337,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void resetProgress(Long id) {
+        java.util.Objects.requireNonNull(id, "ID must not be null");
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setCoins(0);
         user.setWeeklyCoins(0);
@@ -339,6 +352,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void setUserEnabled(Long id, boolean enabled) {
+        java.util.Objects.requireNonNull(id, "ID must not be null");
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setEnabled(enabled);
         userRepository.save(user);

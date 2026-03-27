@@ -41,7 +41,7 @@ public class AchievementServiceImpl implements AchievementService {
                         .achievement(a)
                         .unlockedAt(LocalDateTime.now())
                         .build();
-                userAchievementRepository.save(ua);
+                userAchievementRepository.save(java.util.Objects.requireNonNull(ua));
                 newlyUnlocked.add(a);
             }
             return newlyUnlocked;
@@ -61,7 +61,7 @@ public class AchievementServiceImpl implements AchievementService {
                         .achievement(a)
                         .unlockedAt(LocalDateTime.now())
                         .build();
-                userAchievementRepository.save(ua);
+                userAchievementRepository.save(java.util.Objects.requireNonNull(ua));
                 newlyUnlocked.add(a);
             }
         }

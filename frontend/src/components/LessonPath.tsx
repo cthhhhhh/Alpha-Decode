@@ -48,18 +48,30 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
     const buildNodes = (): PathNode[] => {
         const nodes: PathNode[] = [];
         let visibleIdx = 0;
-        lessons.forEach((lesson, originalIdx) => {
-            if (lesson.locked) return;
+        let pathBlocked = false;
+
+        for (let originalIdx = 0; originalIdx < lessons.length; originalIdx++) {
+            if (pathBlocked) break;
+            
+            const lesson = lessons[originalIdx];
+            if (lesson.locked) continue;
+            
             nodes.push({ kind: 'lesson', lesson, visibleIndex: visibleIdx++ });
+            
             const checkpoint = revisionQuizzes.find(rq => rq.afterLessonIndex === originalIdx);
             if (checkpoint && lesson.completed) {
+                const isCompleted = completedRevisionIds.has(checkpoint.id.toString());
                 nodes.push({
                     kind: 'checkpoint',
                     quiz: checkpoint,
-                    isCompleted: completedRevisionIds.has(checkpoint.id),
+                    isCompleted: isCompleted,
                 });
+                
+                if (!isCompleted) {
+                    pathBlocked = true;
+                }
             }
-        });
+        }
         return nodes;
     };
 
