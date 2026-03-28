@@ -4,6 +4,10 @@ import com.csd.cs203t1.achievement.Achievement;
 import com.csd.cs203t1.achievement.AchievementService;
 import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.security.JwtUtil;
+import com.csd.cs203t1.shop.Item;
+import com.csd.cs203t1.shop.ItemRepository;
+import com.csd.cs203t1.shop.UserItem;
+import com.csd.cs203t1.shop.UserItemRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,12 +34,16 @@ public class UserServiceImpl implements UserService {
     private final UserAchievementRepository userAchievementRepository;
     private final UserBookmarkRepository userBookmarkRepository;
     private final FlagRepository flagRepository;
+    private final ItemRepository itemRepository;
+    private final UserItemRepository userItemRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
                            JwtUtil jwtUtil, AchievementService achievementService,
                            UserAchievementRepository userAchievementRepository,
                            UserBookmarkRepository userBookmarkRepository,
-                           FlagRepository flagRepository) {
+                           FlagRepository flagRepository,
+                           ItemRepository itemRepository,
+                           UserItemRepository userItemRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -43,6 +51,8 @@ public class UserServiceImpl implements UserService {
         this.userAchievementRepository = userAchievementRepository;
         this.userBookmarkRepository = userBookmarkRepository;
         this.flagRepository = flagRepository;
+        this.itemRepository = itemRepository;
+        this.userItemRepository = userItemRepository;
     }
 
 
@@ -216,7 +226,8 @@ public class UserServiceImpl implements UserService {
         userAchievementRepository.deleteByUser(user);
         userBookmarkRepository.deleteByUser(user);
         flagRepository.deleteByReportedBy(user);
-        
+        userItemRepository.deleteByUser(user);
+
         userRepository.delete(user);
     }
 
@@ -228,7 +239,8 @@ public class UserServiceImpl implements UserService {
         userAchievementRepository.deleteByUser(user);
         userBookmarkRepository.deleteByUser(user);
         flagRepository.deleteByReportedBy(user);
-        
+        userItemRepository.deleteByUser(user);
+
         userRepository.delete(user);
     }
 
@@ -281,7 +293,33 @@ public class UserServiceImpl implements UserService {
         user.setLevel(request.getLevel());
         user.setCoins(request.getCoins());
         user.setOnboardingCompleted(true);
+        if (request.getFaceId() != null) user.setFaceId(request.getFaceId());
+        if (request.getBodyTypeId() != null) user.setBodyTypeId(request.getBodyTypeId());
+        if (request.getHairId() != null) user.setHairId(request.getHairId());
         User savedUser = userRepository.save(user);
+
+        // Grant starter items
+        List<Item> starterItems = itemRepository.findByIsStarterTrue();
+        for (Item item : starterItems) {
+            if (!userItemRepository.existsByUserAndItem(savedUser, item)) {
+                UserItem userItem = new UserItem();
+                userItem.setUser(savedUser);
+                userItem.setItem(item);
+                userItemRepository.save(userItem);
+            }
+        }
+
+        // Auto-equip starter outfit if none equipped
+        if (savedUser.getEquippedOutfitId() == null) {
+            starterItems.stream()
+                .filter(i -> i.getType() == com.csd.cs203t1.shop.ItemType.OUTFIT)
+                .findFirst()
+                .ifPresent(i -> {
+                    savedUser.setEquippedOutfitId(i.getId());
+                    userRepository.save(savedUser);
+                });
+        }
+
         return toAuthResponse(savedUser, null, null);
     }
     
@@ -325,7 +363,12 @@ public class UserServiceImpl implements UserService {
                 completedToday,
                 user.isOnboardingCompleted(),
                 user.getCompletedRevisionQuizIds(),
-                achievements != null && !achievements.isEmpty() ? achievements : null
+                achievements != null && !achievements.isEmpty() ? achievements : null,
+                user.getFaceId(),
+                user.getBodyTypeId(),
+                user.getHairId(),
+                user.getEquippedOutfitId(),
+                user.getEquippedPetId()
         );
     }
 

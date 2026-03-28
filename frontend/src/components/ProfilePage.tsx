@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Flame, Zap, Edit3, Check, X, Shield, AlertCircle, LogOut } from 'lucide-react';
 import AchievementsSection from './AchievementsSection';
+import Avatar from './avatar/Avatar';
 
 interface Props {
     authUsername: string | null;
     authToken: string | null;
+    faceId?: string | null;
+    bodyTypeId?: string | null;
+    hairId?: string | null;
+    equippedOutfitId?: number | null;
+    equippedPetId?: number | null;
+    itemAssetMap?: Record<number, string>;
     onUsernameUpdate: (newUsername: string, newToken: string) => void;
     onLogout: () => void;
 }
@@ -22,7 +29,7 @@ interface UserProfile {
 const XP_PER_LEVEL = 50;
 const TOTAL_LESSONS = 20;
 
-const ProfilePage = ({ authUsername, authToken, onUsernameUpdate, onLogout }: Props) => {
+const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, equippedOutfitId, equippedPetId, itemAssetMap = {}, onUsernameUpdate, onLogout }: Props) => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [fetchError, setFetchError] = useState(false);
     const [editingName, setEditingName] = useState(false);
@@ -163,8 +170,21 @@ const ProfilePage = ({ authUsername, authToken, onUsernameUpdate, onLogout }: Pr
             >
                 {/* Avatar + name */}
                 <div className="flex items-center gap-5 mb-6">
-                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white text-4xl font-black shadow-lg select-none">
-                        {profile.username.charAt(0).toUpperCase()}
+                    <div className="w-20 shrink-0">
+                        {faceId ? (
+                            <Avatar
+                                faceId={faceId}
+                                bodyTypeId={bodyTypeId}
+                                hairId={hairId}
+                                outfitAssetId={equippedOutfitId ? itemAssetMap[equippedOutfitId] : null}
+                                petAssetId={equippedPetId ? itemAssetMap[equippedPetId] : null}
+                                size="md"
+                            />
+                        ) : (
+                            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white text-4xl font-black shadow-lg select-none">
+                                {profile.username.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         {editingName ? (

@@ -80,4 +80,19 @@ public class User {
 	@Column(nullable = false, columnDefinition = "boolean default false")
 	private boolean onboardingCompleted = false;
 
+	@Column
+	private String faceId;
+
+	@Column
+	private String bodyTypeId;
+
+	@Column
+	private String hairId;
+
+	@Column
+	private Long equippedOutfitId;
+
+	@Column
+	private Long equippedPetId;
+
 }

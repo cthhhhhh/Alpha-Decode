@@ -45,21 +45,26 @@ public class UserDTO {
         private Boolean onboardingCompleted;
         private String completedRevisionQuizIds;
         private List<NewAchievementDTO> newAchievements;
+        private String faceId;
+        private String bodyTypeId;
+        private String hairId;
+        private Long equippedOutfitId;
+        private Long equippedPetId;
 
         // Backwards-compatible constructor for endpoints that don't check achievements
         public AuthResponse(String token, String role, String username,
                             Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String profilePic) {
-            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, null, null, null, null, null);
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, null, null, null, null, null, null, null, null, null, null);
         }
 
         public AuthResponse(String token, String role, String username,
                             Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String profilePic, String dailyQuizLastDate) {
-            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null, null, null);
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null, null, null, null, null, null, null, null);
         }
 
         public AuthResponse(String token, String role, String username,
                             Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak) {
-            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, null, null, null, null, null, null);
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, null, null, null, null, null, null, null, null, null, null, null);
         }
     }
 
@@ -129,5 +134,8 @@ public class UserDTO {
     public static class OnboardingRequest {
         private int level;
         private int coins;
+        private String faceId;
+        private String bodyTypeId;
+        private String hairId;
     }
 }

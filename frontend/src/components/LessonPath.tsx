@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
     BookOpen,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import type { Lesson, RevisionQuiz } from '../types';
 import FlagModal from './FlagModal';
+import Avatar from './avatar/Avatar';
 
 interface Props {
     lessons: Lesson[];
@@ -21,6 +22,13 @@ interface Props {
     revisionQuizzes: RevisionQuiz[];
     completedRevisionIds: Set<string>;
     onStartRevision: (quiz: RevisionQuiz) => void;
+    faceId?: string | null;
+    bodyTypeId?: string | null;
+    hairId?: string | null;
+    equippedOutfitId?: number | null;
+    equippedPetId?: number | null;
+    itemAssetMap?: Record<number, string>;
+    maxUnlockedLessonIndex?: number;
 }
 
 interface LevelMeta {
@@ -42,8 +50,9 @@ type PathNode =
     | { kind: 'lesson'; lesson: Lesson; visibleIndex: number }
     | { kind: 'checkpoint'; quiz: RevisionQuiz; isCompleted: boolean };
 
-const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision }: Props) => {
+const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision, faceId, bodyTypeId, hairId, equippedOutfitId, equippedPetId, itemAssetMap = {} }: Props) => {
     const [flagTarget, setFlagTarget] = useState<{ id: number; type: 'LESSON' | 'QUIZ'; context: string } | null>(null);
+    const [isWalking, setIsWalking] = useState(false);
 
     const buildNodes = (): PathNode[] => {
         const nodes: PathNode[] = [];
@@ -76,6 +85,26 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
     };
 
     const nodes = buildNodes();
+
+    // Walking animation: detect when the avatar's current node changes
+    const unlockedLessonsForWalk = nodes.filter(n => n.kind === 'lesson').map(n => (n as { kind: 'lesson'; lesson: Lesson; visibleIndex: number }).lesson);
+    const firstIncompleteLessonForWalk = unlockedLessonsForWalk.find(l => !l.completed);
+    const avatarLessonId = firstIncompleteLessonForWalk?.id ?? null;
+    const prevAvatarLessonIdRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (avatarLessonId === null) {
+            prevAvatarLessonIdRef.current = null;
+            return;
+        }
+        if (prevAvatarLessonIdRef.current !== null && prevAvatarLessonIdRef.current !== avatarLessonId) {
+            setIsWalking(true);
+            const t = setTimeout(() => setIsWalking(false), 1200);
+            prevAvatarLessonIdRef.current = avatarLessonId;
+            return () => clearTimeout(t);
+        }
+        prevAvatarLessonIdRef.current = avatarLessonId;
+    }, [avatarLessonId]);
 
     const NODE_STEP = 160;
     const svgHeight = Math.max(600, nodes.length * NODE_STEP + 200);
@@ -145,12 +174,44 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                     const unlockedLessons = nodes.filter(n => n.kind === 'lesson').map(n => (n as { kind: 'lesson'; lesson: Lesson; visibleIndex: number }).lesson);
                     const firstIncompleteIndex = unlockedLessons.findIndex(l => !l.completed);
 
+                    // Show avatar above the current (first incomplete) lesson
+                    const isAvatarNode = isCurrent && visibleIndex === firstIncompleteIndex && faceId;
+
                     return (
                         <div
                             key={lesson.id}
-                            className="relative flex flex-col items-center mt-16 first:mt-0"
+                            className="flex flex-col items-center mt-16 first:mt-0"
                             style={{ transform: `translateX(${lesson.x}px)` }}
                         >
+                            {/* Relative wrapper scoped to the circle so avatar positioning uses circle bounds */}
+                            <div className="relative">
+                            {isAvatarNode && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                                    className="absolute z-20 pointer-events-none"
+                                    style={{ bottom: 0, left: '100%', transform: 'translate(8px, 0)' }}
+                                >
+                                    <motion.div
+                                        animate={isWalking
+                                            ? { y: [0, -7, 0, -7, 0, -7, 0], rotate: [0, -4, 0, 4, 0, -4, 0] }
+                                            : { y: 0, rotate: 0 }}
+                                        transition={isWalking
+                                            ? { duration: 1.0, ease: 'easeInOut' }
+                                            : { duration: 0.2 }}
+                                    >
+                                        <Avatar
+                                            faceId={faceId}
+                                            bodyTypeId={bodyTypeId}
+                                            hairId={hairId}
+                                            outfitAssetId={equippedOutfitId ? itemAssetMap[equippedOutfitId] : null}
+                                            petAssetId={equippedPetId ? itemAssetMap[equippedPetId] : null}
+                                            size="sm"
+                                        />
+                                    </motion.div>
+                                </motion.div>
+                            )}
                             <motion.button
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 whileTap={{ scale: 0.9 }}
@@ -179,6 +240,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                     {visibleIndex + 1}
                                 </div>
                             </motion.button>
+                            </div>{/* end circle relative wrapper */}
 
                             <div className="mt-4 relative flex items-center justify-center">
                                 <span className="font-black uppercase tracking-tight text-[10px] px-3 py-1 rounded-full shadow-sm border whitespace-nowrap bg-white/90 text-slate-600 border-slate-100">

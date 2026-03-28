@@ -24,6 +24,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import com.csd.cs203t1.user.UserRepository;
+import com.csd.cs203t1.shop.Item;
+import com.csd.cs203t1.shop.ItemRepository;
+import com.csd.cs203t1.shop.ItemType;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -37,12 +40,14 @@ public class DataSeeder implements CommandLineRunner {
         private final AchievementRepository achievementRepository;
         private final UserAchievementRepository userAchievementRepository;
         private final UserRepository userRepository;
+        private final ItemRepository itemRepository;
 
         public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
                         TermRepository termRepository, QuizRepository quizRepository,
                         AchievementRepository achievementRepository,
                         UserAchievementRepository userAchievementRepository,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        ItemRepository itemRepository) {
                 this.lessonService = lessonService;
                 this.lessonRepository = lessonRepository;
                 this.termRepository = termRepository;
@@ -50,6 +55,7 @@ public class DataSeeder implements CommandLineRunner {
                 this.achievementRepository = achievementRepository;
                 this.userAchievementRepository = userAchievementRepository;
                 this.userRepository = userRepository;
+                this.itemRepository = itemRepository;
         }
 
         @Override
@@ -60,6 +66,7 @@ public class DataSeeder implements CommandLineRunner {
                 seedOnboardingQuiz();
                 seedRevisionQuiz();
                 seedAchievements();
+                seedItems();
                 userRepository.markExistingUsersAsOnboarded();
         }
         // ─── Lessons ────────────────────────────────────────────────────────────────
@@ -981,5 +988,33 @@ public class DataSeeder implements CommandLineRunner {
                                 .name(name).description(description).icon(icon)
                                 .triggerType(triggerType).threshold(threshold)
                                 .build();
+        }
+
+        // ─── Shop Items ──────────────────────────────────────────────────────────────
+
+        private void seedItems() {
+                if (itemRepository.count() > 0) return;
+
+                itemRepository.saveAll(List.of(
+                        item("Casual Tee",     "outfit_casual",  ItemType.OUTFIT, 0,   true),
+                        item("Hoodie",         "outfit_hoodie",  ItemType.OUTFIT, 40,  false),
+                        item("Tracksuit",      "outfit_track",   ItemType.OUTFIT, 60,  false),
+                        item("Business Suit",  "outfit_suit",    ItemType.OUTFIT, 100, false),
+                        item("School Uniform", "outfit_school",  ItemType.OUTFIT, 75,  false),
+                        item("Winter Jacket",  "outfit_winter",  ItemType.OUTFIT, 120, false),
+                        item("Cat",            "pet_cat",        ItemType.PET,    80,  false),
+                        item("Dog",            "pet_dog",        ItemType.PET,    80,  false),
+                        item("Rabbit",         "pet_rabbit",     ItemType.PET,    60,  false)
+                ));
+        }
+
+        private Item item(String name, String assetId, ItemType type, int price, boolean isStarter) {
+                Item i = new Item();
+                i.setName(name);
+                i.setAssetId(assetId);
+                i.setType(type);
+                i.setPrice(price);
+                i.setStarter(isStarter);
+                return i;
         }
 }
