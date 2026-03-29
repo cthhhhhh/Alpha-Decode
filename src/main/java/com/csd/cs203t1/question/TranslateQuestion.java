@@ -20,9 +20,11 @@ import lombok.experimental.SuperBuilder;
 public class TranslateQuestion extends Question{
 
 	@NonNull
+	@jakarta.persistence.Column(columnDefinition = "TEXT")
 	private List<String> wordbank;
 
 	@NonNull
+	@jakarta.persistence.Column(columnDefinition = "TEXT")
 	private String target;
 
 }

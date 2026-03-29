@@ -48,14 +48,15 @@ public abstract class Question {
 	private String question_type;
 
 	@NonNull
-	@Column(nullable=false)
+	@Column(nullable=false, columnDefinition = "TEXT")
 	private String explanation;
 
 	@NonNull
-	@Column(nullable=false)
+	@Column(nullable=false, columnDefinition = "TEXT")
 	private String title;
 	//quiz_type is auto constructed via inheritance
 
+	@Column(columnDefinition = "TEXT")
 	private String content;
 
 	@ManyToOne

@@ -101,9 +101,21 @@ public class LessonDraftController {
             @RequestBody LessonDraftDTO.ReviewRequest req) {
         if ("APPROVE".equalsIgnoreCase(req.getAction())) {
             Lesson lesson = draftService.approveDraft(id);
-            return ResponseEntity.ok(lesson);
+            return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "action", "APPROVE",
+                    "draftId", id,
+                    "lessonId", lesson.getId(),
+                    "lessonTitle", lesson.getTitle()
+            ));
         } else if ("REJECT".equalsIgnoreCase(req.getAction())) {
-            return ResponseEntity.ok(draftService.rejectDraft(id, req.getRejectionNote()));
+            LessonDraftDTO.DraftSummary rejected = draftService.rejectDraft(id, req.getRejectionNote());
+            return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "action", "REJECT",
+                    "draftId", id,
+                    "status", rejected.getStatus()
+            ));
         }
         return ResponseEntity.badRequest().body("action must be APPROVE or REJECT");
     }

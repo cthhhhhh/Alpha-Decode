@@ -7,6 +7,7 @@ import type { DraftSummary, DraftDetail } from './types';
 export function DraftsTab() {
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [previewDraft, setPreviewDraft] = useState<DraftDetail | null>(null);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectNote, setRejectNote] = useState('');
@@ -15,32 +16,58 @@ export function DraftsTab() {
 
   const load = () => {
     setLoading(true);
+    setError('');
     fetch('/api/drafts/submitted', { headers: authHeaders() })
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) throw new Error(await r.text() || 'Failed to load submitted drafts');
+        return r.json();
+      })
       .then(setDrafts)
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : 'Failed to load submitted drafts';
+        setError(msg.includes('Failed to fetch')
+          ? 'Cannot reach backend server. Start Spring Boot on port 8080 and keep Vite running.'
+          : msg);
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const openPreview = async (id: number) => {
-    const res = await fetch(`/api/drafts/${id}`, { headers: authHeaders() });
-    const detail: DraftDetail = await res.json();
-    setPreviewDraft(detail);
-    setExpandedPreviewQ(null);
+    setError('');
+    try {
+      const res = await fetch(`/api/drafts/${id}`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await res.text() || 'Failed to load draft preview');
+      const detail: DraftDetail = await res.json();
+      setPreviewDraft(detail);
+      setExpandedPreviewQ(null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to load draft preview';
+      setError(msg.includes('Failed to fetch')
+        ? 'Cannot reach backend server. Start Spring Boot on port 8080 and keep Vite running.'
+        : msg);
+    }
   };
 
   const handleApprove = async (id: number) => {
     setActionLoading(id);
+    setError('');
     try {
       const res = await fetch(`/api/drafts/${id}/review`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ action: 'APPROVE' }),
       });
-      if (!res.ok) throw new Error('Approval failed');
+      if (!res.ok) throw new Error(await res.text() || 'Approval failed');
       setDrafts(d => d.filter(x => x.id !== id));
       if (previewDraft?.id === id) setPreviewDraft(null);
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Approval failed';
+      setError(msg.includes('Failed to fetch')
+        ? 'Cannot reach backend server. Start Spring Boot on port 8080 and keep Vite running.'
+        : msg);
     } finally {
       setActionLoading(null);
     }
@@ -48,17 +75,24 @@ export function DraftsTab() {
 
   const handleReject = async (id: number) => {
     setActionLoading(id);
+    setError('');
     try {
       const res = await fetch(`/api/drafts/${id}/review`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ action: 'REJECT', rejectionNote: rejectNote }),
       });
-      if (!res.ok) throw new Error('Rejection failed');
+      if (!res.ok) throw new Error(await res.text() || 'Rejection failed');
       setDrafts(d => d.filter(x => x.id !== id));
       setRejectingId(null);
       setRejectNote('');
       if (previewDraft?.id === id) setPreviewDraft(null);
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Rejection failed';
+      setError(msg.includes('Failed to fetch')
+        ? 'Cannot reach backend server. Start Spring Boot on port 8080 and keep Vite running.'
+        : msg);
     } finally {
       setActionLoading(null);
     }
@@ -84,6 +118,11 @@ export function DraftsTab() {
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-bold">
+          {error}
+        </div>
+      )}
       {drafts.map(draft => (
         <motion.div key={draft.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">

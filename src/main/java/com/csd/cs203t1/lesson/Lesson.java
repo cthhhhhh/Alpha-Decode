@@ -29,18 +29,19 @@ public class Lesson {
 	private @Id @GeneratedValue (strategy = GenerationType.IDENTITY) Long id;
 
 	@NonNull
-	@Column(nullable=false)
+	@Column(nullable=false, columnDefinition = "TEXT")
 	private String title;
 
 	@NonNull
+	@Column(columnDefinition = "TEXT")
 	private String colour;
 
 	@NonNull
-	@Column(nullable=false)
+	@Column(nullable=false, columnDefinition = "TEXT")
 	private String story;
 
 	@NonNull
-	@Column(nullable=false)
+	@Column(columnDefinition = "TEXT")
 	private String emoji;
 
 	

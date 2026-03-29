@@ -97,5 +97,4 @@ public class LessonServiceImpl implements LessonService {
 				? value.substring(0, LEGACY_VARCHAR_LIMIT)
 				: value;
 	}
-
 }
