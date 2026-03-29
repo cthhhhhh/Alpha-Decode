@@ -71,8 +71,6 @@ public class User {
 	@Column
 	private LocalDate dailyQuizLastDate;
 
-	@Column
-	private String profilePic;
 
 	@Column(nullable = false, columnDefinition = "boolean default true")
 	private boolean enabled = true;

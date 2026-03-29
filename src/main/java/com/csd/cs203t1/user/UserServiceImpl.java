@@ -55,8 +55,6 @@ public class UserServiceImpl implements UserService {
         this.userItemRepository = userItemRepository;
     }
 
-
-
     @Override
     public UserDTO.AuthResponse register(UserDTO.RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -210,9 +208,6 @@ public class UserServiceImpl implements UserService {
             }
             user.setUsername(request.getUsername());
         }
-        if (request.getProfilePic() != null) {
-            user.setProfilePic(request.getProfilePic());
-        }
         User savedUser = userRepository.save(user);
         String token = generateToken(savedUser);
         return toAuthResponse(savedUser, token, null);
@@ -358,7 +353,6 @@ public class UserServiceImpl implements UserService {
                 user.getCoins(),
                 user.getMaxUnlockedLessonIndex(),
                 user.getStreak(),
-                user.getProfilePic(),
                 lastDate,
                 completedToday,
                 user.isOnboardingCompleted(),
