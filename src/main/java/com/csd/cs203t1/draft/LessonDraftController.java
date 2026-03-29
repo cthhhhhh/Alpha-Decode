@@ -41,6 +41,13 @@ public class LessonDraftController {
         return ResponseEntity.ok(draftService.getMyDraftStats(user));
     }
 
+    @PreAuthorize("hasRole('CONTRIBUTOR')")
+    @GetMapping("/my/approved")
+    public ResponseEntity<List<LessonDraftDTO.DraftSummary>> getMyApproved() {
+        User user = userService.getCurrentUser();
+        return ResponseEntity.ok(draftService.getMyApprovedDrafts(user));
+    }
+
     @PreAuthorize("hasAnyRole('CONTRIBUTOR', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<LessonDraftDTO.DraftDetail> getDraftDetail(@PathVariable Long id) {

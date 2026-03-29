@@ -1,4 +1,4 @@
-export type DraftStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+export type DraftStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'DELETED';
 
 export interface DraftQuestion {
   question_type: 'INTRO' | 'SELECT' | 'TRANSLATE';
@@ -21,6 +21,7 @@ export interface DraftSummary {
   createdAt: string;
   updatedAt: string;
   contributorUsername: string;
+  lessonId?: number;
 }
 
 export interface DraftDetail extends DraftSummary {
@@ -34,6 +35,7 @@ export interface ContributorStats {
   submitted: number;
   approved: number;
   rejected: number;
+  deleted: number;
 }
 
-export type ContributorTab = 'dashboard' | 'my-drafts' | 'create';
+export type ContributorTab = 'dashboard' | 'my-drafts' | 'approved' | 'create';

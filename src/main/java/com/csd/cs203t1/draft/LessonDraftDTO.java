@@ -35,6 +35,8 @@ public class LessonDraftDTO {
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private String contributorUsername;
+        /** ID of the live lesson created from this draft (null until approved). */
+        private Long lessonId;
     }
 
     @Getter
@@ -54,6 +56,8 @@ public class LessonDraftDTO {
         private LocalDateTime updatedAt;
         private String contributorUsername;
         private List<QuestionDTO> questions;
+        /** ID of the live lesson created from this draft (null until approved). */
+        private Long lessonId;
     }
 
     @Getter

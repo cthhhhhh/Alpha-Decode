@@ -1,9 +1,13 @@
 package com.csd.cs203t1.lesson;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.csd.cs203t1.draft.DraftStatus;
+import com.csd.cs203t1.draft.LessonDraft;
+import com.csd.cs203t1.draft.LessonDraftRepository;
 import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.QuestionDTO;
 import com.csd.cs203t1.question.QuestionMapper;
@@ -18,12 +22,15 @@ public class LessonServiceImpl implements LessonService {
 	final LessonRepository lessons;
 	final QuestionRepository questions;
 	final QuizRepository quizzes;
+	final LessonDraftRepository lessonDraftRepository;
 	private static final int LEGACY_VARCHAR_LIMIT = 255;
 
-	public LessonServiceImpl(LessonRepository lessons, QuestionRepository questions, QuizRepository quizzes){
+	public LessonServiceImpl(LessonRepository lessons, QuestionRepository questions,
+							 QuizRepository quizzes, LessonDraftRepository lessonDraftRepository){
         this.lessons = lessons;
 		this.questions = questions;
 		this.quizzes = quizzes;
+		this.lessonDraftRepository = lessonDraftRepository;
     }
 	@Override
 	public List<Lesson> listLessons(){
@@ -56,11 +63,19 @@ public class LessonServiceImpl implements LessonService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteLesson(Long id){
 		if(!lessons.existsById(id)){
 			throw new RuntimeException("Lesson not found");
 		}
 		lessons.deleteById(id);
+		// If this lesson was created from a contributor draft, mark that draft as DELETED
+		// so the contributor can see their lesson was removed.
+		lessonDraftRepository.findByLessonId(id).ifPresent(draft -> {
+			draft.setStatus(DraftStatus.DELETED);
+			draft.setUpdatedAt(LocalDateTime.now());
+			lessonDraftRepository.save(draft);
+		});
 	}
 
 	@Override

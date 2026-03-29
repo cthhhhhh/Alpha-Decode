@@ -42,6 +42,14 @@ public class LessonDraft {
     @Builder.Default
     private DraftStatus status = DraftStatus.DRAFT;
 
+    /**
+     * The ID of the live lesson created when this draft was approved.
+     * Null until the draft is approved. Set to the lesson's ID on approval.
+     * Used to detect when the admin deletes that lesson (status → DELETED).
+     */
+    @Column
+    private Long lessonId;
+
     @Column(columnDefinition = "TEXT")
     private String rejectionNote;
 

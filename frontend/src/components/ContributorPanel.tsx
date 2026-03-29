@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Pencil, FileText, Activity, PlusCircle, ArrowLeft } from 'lucide-react';
+import { Pencil, FileText, Activity, PlusCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import type { ContributorTab, DraftDetail } from './contributor/types';
 import { ContributorDashboardTab } from './contributor/ContributorDashboardTab';
 import { MyDraftsTab } from './contributor/MyDraftsTab';
+import { ApprovedTab } from './contributor/ApprovedTab';
 import { CreateDraftTab } from './contributor/CreateDraftTab';
 
 export default function ContributorPanel({ onBack }: { onBack?: () => void }) {
@@ -13,6 +14,7 @@ export default function ContributorPanel({ onBack }: { onBack?: () => void }) {
   const TABS: { key: ContributorTab; label: string; icon: React.ReactNode }[] = [
     { key: 'dashboard',  label: 'Dashboard',   icon: <Activity size={16} /> },
     { key: 'my-drafts',  label: 'My Drafts',   icon: <FileText size={16} /> },
+    { key: 'approved',   label: 'Approved',    icon: <CheckCircle2 size={16} /> },
     { key: 'create',     label: 'Create Draft', icon: <PlusCircle size={16} /> },
   ];
 
@@ -66,6 +68,7 @@ export default function ContributorPanel({ onBack }: { onBack?: () => void }) {
           exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.15 }}>
           {activeTab === 'dashboard' && <ContributorDashboardTab />}
           {activeTab === 'my-drafts' && <MyDraftsTab onEditDraft={handleEditDraft} />}
+          {activeTab === 'approved' && <ApprovedTab />}
           {activeTab === 'create' && (
             <CreateDraftTab editingDraft={editingDraft} onSaved={handleSaved} />
           )}

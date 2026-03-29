@@ -78,6 +78,7 @@ public class LessonDraftServiceImpl implements LessonDraftService {
         if (draft.getStatus() == DraftStatus.SUBMITTED || draft.getStatus() == DraftStatus.APPROVED) {
             throw new IllegalStateException("Cannot delete a SUBMITTED or APPROVED draft");
         }
+        // DRAFT, REJECTED, and DELETED statuses are all removable by the contributor
         draftRepository.delete(draft);
     }
 
@@ -96,7 +97,17 @@ public class LessonDraftServiceImpl implements LessonDraftService {
 
     @Override
     public List<LessonDraftDTO.DraftSummary> getMyDrafts(User contributor) {
-        return draftRepository.findByContributorOrderByUpdatedAtDesc(contributor)
+        // Only returns active working drafts: DRAFT, SUBMITTED, REJECTED
+        // APPROVED and DELETED appear in getMyApprovedDrafts instead
+        return draftRepository.findByContributorAndStatusInOrderByUpdatedAtDesc(
+                        contributor, List.of(DraftStatus.DRAFT, DraftStatus.SUBMITTED, DraftStatus.REJECTED))
+                .stream().map(this::toSummary).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LessonDraftDTO.DraftSummary> getMyApprovedDrafts(User contributor) {
+        return draftRepository.findByContributorAndStatusInOrderByUpdatedAtDesc(
+                        contributor, List.of(DraftStatus.APPROVED, DraftStatus.DELETED))
                 .stream().map(this::toSummary).collect(Collectors.toList());
     }
 
@@ -115,6 +126,7 @@ public class LessonDraftServiceImpl implements LessonDraftService {
         stats.put("submitted", draftRepository.countByContributorAndStatus(contributor, DraftStatus.SUBMITTED));
         stats.put("approved", draftRepository.countByContributorAndStatus(contributor, DraftStatus.APPROVED));
         stats.put("rejected", draftRepository.countByContributorAndStatus(contributor, DraftStatus.REJECTED));
+        stats.put("deleted", draftRepository.countByContributorAndStatus(contributor, DraftStatus.DELETED));
         return stats;
     }
 
@@ -161,6 +173,7 @@ public class LessonDraftServiceImpl implements LessonDraftService {
         Lesson lesson = lessonService.addLesson(lessonDTO, questionDTOs);
 
         draft.setStatus(DraftStatus.APPROVED);
+        draft.setLessonId(lesson.getId());
         draft.setUpdatedAt(LocalDateTime.now());
         draftRepository.save(draft);
 
@@ -222,6 +235,7 @@ public class LessonDraftServiceImpl implements LessonDraftService {
                 .createdAt(draft.getCreatedAt())
                 .updatedAt(draft.getUpdatedAt())
                 .contributorUsername(draft.getContributor().getUsername())
+                .lessonId(draft.getLessonId())
                 .build();
     }
 
@@ -248,6 +262,7 @@ public class LessonDraftServiceImpl implements LessonDraftService {
                 .updatedAt(draft.getUpdatedAt())
                 .contributorUsername(draft.getContributor().getUsername())
                 .questions(questions)
+                .lessonId(draft.getLessonId())
                 .build();
     }
 }

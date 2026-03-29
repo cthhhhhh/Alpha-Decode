@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { FileText, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { FileText, Clock, CheckCircle2, XCircle, AlertCircle, Trash2 } from 'lucide-react';
 import type { ContributorStats } from './types';
 import { authHeaders } from './utils';
 
@@ -11,7 +11,14 @@ export function ContributorDashboardTab() {
   useEffect(() => {
     fetch('/api/drafts/my/stats', { headers: authHeaders() })
       .then(r => r.json())
-      .then(data => setStats({ total: data.total, draft: data.draft, submitted: data.submitted, approved: data.approved, rejected: data.rejected }))
+      .then(data => setStats({
+        total: data.total,
+        draft: data.draft,
+        submitted: data.submitted,
+        approved: data.approved,
+        rejected: data.rejected,
+        deleted: data.deleted ?? 0,
+      }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -56,6 +63,24 @@ export function ContributorDashboardTab() {
             </p>
             <p className="text-xs text-red-600 font-bold mt-0.5">
               Review the feedback in My Drafts and re-submit when ready.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {stats && stats.deleted > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-zinc-100 border border-zinc-300 rounded-2xl px-5 py-4 flex items-start gap-3"
+        >
+          <Trash2 size={18} className="text-zinc-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-black text-zinc-700 text-sm">
+              {stats.deleted} of your approved lesson{stats.deleted > 1 ? 's have' : ' has'} been removed by an admin
+            </p>
+            <p className="text-xs text-zinc-600 font-bold mt-0.5">
+              Check the Approved tab to dismiss or review the deleted entries.
             </p>
           </div>
         </motion.div>

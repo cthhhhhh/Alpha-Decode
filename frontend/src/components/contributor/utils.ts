@@ -5,4 +5,5 @@ export const STATUS_STYLES: Record<string, { label: string; className: string }>
   SUBMITTED: { label: 'Submitted', className: 'bg-yellow-100 text-yellow-700' },
   APPROVED:  { label: 'Approved',  className: 'bg-green-100 text-green-700' },
   REJECTED:  { label: 'Rejected',  className: 'bg-red-100 text-red-700' },
+  DELETED:   { label: 'Deleted',   className: 'bg-zinc-200 text-zinc-600' },
 };

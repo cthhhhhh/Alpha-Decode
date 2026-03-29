@@ -19,6 +19,8 @@ public interface LessonDraftService {
 
     List<LessonDraftDTO.DraftSummary> getMyDrafts(User contributor);
 
+    List<LessonDraftDTO.DraftSummary> getMyApprovedDrafts(User contributor);
+
     LessonDraftDTO.DraftDetail getDraftDetail(Long id, User contributor);
 
     Map<String, Long> getMyDraftStats(User contributor);
