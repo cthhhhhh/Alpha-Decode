@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -19,6 +19,10 @@ import AdminPanel from './components/AdminPanel';
 import Leaderboard from './components/Leaderboard';
 import ProfilePage from './components/ProfilePage';
 import HomePage from './components/HomePage';
+import ShopPage from './components/ShopPage';
+import WardrobePage from './components/WardrobePage';
+import AvatarCreator from './components/avatar/AvatarCreator';
+import { useItemAssetMap } from './hooks/useItemAssetMap';
 
 interface NewAchievement {
   name: string;
@@ -45,12 +49,29 @@ export default function App() {
   const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
   const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('profilePic'));
 
+  // --- Avatar State ---
+  const [faceId, setFaceId] = useState<string | null>(null);
+  const [bodyTypeId, setBodyTypeId] = useState<string | null>(null);
+  const [hairId, setHairId] = useState<string | null>(null);
+  const [equippedOutfitId, setEquippedOutfitId] = useState<number | null>(null);
+  const [equippedPetId, setEquippedPetId] = useState<number | null>(null);
+
+  // Onboarding avatar creation (pending until quiz completes)
+  const [pendingFaceId, setPendingFaceId] = useState('face_1');
+  const [pendingBodyTypeId, setPendingBodyTypeId] = useState('body_1');
+  const [pendingHairId, setPendingHairId] = useState('hair_short');
+  const [avatarCreationDone, setAvatarCreationDone] = useState(false);
+
+  const itemAssetMap = useItemAssetMap(authToken);
+
   // --- Active Tab State (derived from URL) ---
   const isLeaderboard = location.pathname.startsWith('/leaderboard');
   const isGlossary = location.pathname.startsWith('/glossary');
   const isProfile = location.pathname.startsWith('/profile');
   const isAdmin = location.pathname.startsWith('/admin');
-  const isLearn = !isLeaderboard && !isGlossary && !isProfile && !isAdmin;
+  const isShop = location.pathname.startsWith('/shop');
+  const isWardrobe = location.pathname.startsWith('/wardrobe');
+  const isLearn = !isLeaderboard && !isGlossary && !isProfile && !isAdmin && !isShop && !isWardrobe;
 
   const [loginDates, setLoginDates] = useState<string[]>(() => {
     const saved = localStorage.getItem('loginDates');
@@ -152,6 +173,11 @@ export default function App() {
             setCompletedRevisionIds(new Set(ids));
             localStorage.setItem('completedRevisionQuizIds', JSON.stringify(ids));
           }
+          if (data.faceId) setFaceId(data.faceId);
+          if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
+          if (data.hairId) setHairId(data.hairId);
+          setEquippedOutfitId(data.equippedOutfitId ?? null);
+          setEquippedPetId(data.equippedPetId ?? null);
         }).catch(() => { });
 
       return () => clearInterval(pingInterval);
@@ -273,7 +299,7 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => {
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
@@ -315,6 +341,12 @@ export default function App() {
         localStorage.removeItem('dailyQuizStartedDate');
       }
     }
+    if (faceIdArg) setFaceId(faceIdArg);
+    if (bodyTypeIdArg) setBodyTypeId(bodyTypeIdArg);
+    if (hairIdArg) setHairId(hairIdArg);
+    if (equippedOutfitIdArg !== undefined) setEquippedOutfitId(equippedOutfitIdArg ?? null);
+    if (equippedPetIdArg !== undefined) setEquippedPetId(equippedPetIdArg ?? null);
+
     const isDoneWithOnboarding = onboardingCompleted === true;
     setShowOnboarding(!isDoneWithOnboarding);
     if (isDoneWithOnboarding) {
@@ -343,7 +375,26 @@ export default function App() {
     setXp(0);
     setLevel(1);
     setStreak(0);
+    setFaceId(null);
+    setBodyTypeId(null);
+    setHairId(null);
+    setEquippedOutfitId(null);
+    setEquippedPetId(null);
+    setAvatarCreationDone(false);
     navigate('/login');
+  };
+
+  const handleEquipChange = (outfitId: number | null, petId: number | null) => {
+    setEquippedOutfitId(outfitId);
+    setEquippedPetId(petId);
+  };
+
+  const handleCoinsUpdate = (newCoins: number) => {
+    setXp(newCoins);
+    const newLevel = Math.floor(newCoins / 50) + 1;
+    setLevel(newLevel);
+    localStorage.setItem('xp', newCoins.toString());
+    localStorage.setItem('level', newLevel.toString());
   };
 
   // --- Handlers ---
@@ -562,13 +613,22 @@ export default function App() {
         },
         body: JSON.stringify({
           level: onboardingScore + 1,
-          coins: onboardingScore * 50
+          coins: onboardingScore * 50,
+          faceId: pendingFaceId,
+          bodyTypeId: pendingBodyTypeId,
+          hairId: pendingHairId,
         })
       })
         .then(r => r.json())
         .then(data => {
           setLevel(data.level);
           setXp(data.coins);
+          if (data.faceId) setFaceId(data.faceId);
+          if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
+          if (data.hairId) setHairId(data.hairId);
+          setEquippedOutfitId(data.equippedOutfitId ?? null);
+          setEquippedPetId(data.equippedPetId ?? null);
+          setAvatarCreationDone(false);
           setShowOnboarding(false);
           localStorage.setItem('onboardingFinished', 'true');
           navigate('/home');
@@ -589,6 +649,8 @@ export default function App() {
         authToken={authToken}
         authUsername={authUsername}
         profilePic={profilePic}
+        faceId={faceId}
+        hairId={hairId}
         onLogout={handleLogout}
         onNavigateHome={() => navigate('/home')}
         onNavigateProfile={() => navigate('/profile')}
@@ -696,6 +758,12 @@ export default function App() {
                     revisionQuizzes={revisionQuizzes}
                     completedRevisionIds={authRole === 'ADMIN' ? new Set(revisionQuizzes.map(rq => rq.id)) : completedRevisionIds}
                     onStartRevision={setActiveRevisionQuiz}
+                    faceId={faceId}
+                    bodyTypeId={bodyTypeId}
+                    hairId={hairId}
+                    equippedOutfitId={equippedOutfitId}
+                    equippedPetId={equippedPetId}
+                    itemAssetMap={itemAssetMap}
                   />
                 </div>
 
@@ -757,6 +825,12 @@ export default function App() {
               <ProfilePage
                 authUsername={authUsername}
                 authToken={authToken}
+                faceId={faceId}
+                bodyTypeId={bodyTypeId}
+                hairId={hairId}
+                equippedOutfitId={equippedOutfitId}
+                equippedPetId={equippedPetId}
+                itemAssetMap={itemAssetMap}
                 onUsernameUpdate={(newUsername, newToken) => {
                   setAuthUsername(newUsername);
                   setAuthToken(newToken);
@@ -764,6 +838,46 @@ export default function App() {
                   localStorage.setItem('token', newToken);
                 }}
                 onLogout={handleLogout}
+              />
+            </motion.div>
+          )}
+
+          {/* Shop Tab */}
+          {isShop && (
+            <motion.div
+              key="shop"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <ShopPage
+                authToken={authToken}
+                coins={xp}
+                itemAssetMap={itemAssetMap}
+                onCoinsUpdate={handleCoinsUpdate}
+                onEquip={handleEquipChange}
+                hairId={hairId}
+              />
+            </motion.div>
+          )}
+
+          {/* Wardrobe Tab */}
+          {isWardrobe && (
+            <motion.div
+              key="wardrobe"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <WardrobePage
+                authToken={authToken}
+                faceId={faceId}
+                bodyTypeId={bodyTypeId}
+                hairId={hairId}
+                equippedOutfitId={equippedOutfitId}
+                equippedPetId={equippedPetId}
+                itemAssetMap={itemAssetMap}
+                onEquipChange={handleEquipChange}
               />
             </motion.div>
           )}
@@ -812,6 +926,24 @@ export default function App() {
           >
             <Search size={24} />
             <span className="text-[10px] font-black uppercase">Glossary</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate('/shop')}
+            className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isShop ? 'text-amber-500 bg-amber-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+          >
+            <ShoppingBag size={24} />
+            <span className="text-[10px] font-black uppercase">Shop</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate('/wardrobe')}
+            className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isWardrobe ? 'text-purple-500 bg-purple-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+          >
+            <Shirt size={24} />
+            <span className="text-[10px] font-black uppercase">Wardrobe</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -956,18 +1088,22 @@ export default function App() {
       } />
       <Route path="/onboarding" element={
         <div className="min-h-screen bg-slate-50 flex flex-col">
-          <OnboardingModal
-            show={true}
-            qIndex={onboardingQIndex}
-            score={onboardingScore}
-            finished={onboardingFinished}
-            questions={onboardingQuestions}
-            onAnswer={handleOnboardingAnswer}
-            onComplete={completeOnboarding}
-            onLogin={() => navigate('/login', { replace: true })}
-            onBack={() => navigate('/', { replace: true })}
-            isLoggedIn={!!authToken}
-          />
+          {!avatarCreationDone ? (
+            <AvatarCreator onComplete={(f, b, h) => { setPendingFaceId(f); setPendingBodyTypeId(b); setPendingHairId(h); setAvatarCreationDone(true); }} />
+          ) : (
+            <OnboardingModal
+              show={true}
+              qIndex={onboardingQIndex}
+              score={onboardingScore}
+              finished={onboardingFinished}
+              questions={onboardingQuestions}
+              onAnswer={handleOnboardingAnswer}
+              onComplete={completeOnboarding}
+              onLogin={() => navigate('/login', { replace: true })}
+              onBack={() => navigate('/', { replace: true })}
+              isLoggedIn={!!authToken}
+            />
+          )}
         </div>
       } />
       <Route path="/" element={
@@ -991,6 +1127,14 @@ export default function App() {
       } />
       <Route path="/admin/*" element={
         (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
+      } />
+      <Route path="/shop/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
+      } />
+      <Route path="/wardrobe/*" element={
+        !authToken ? <Navigate to="/login" replace /> :
           (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       {/* Fallback: redirect unknown URLs to login if not authenticated, else home */}

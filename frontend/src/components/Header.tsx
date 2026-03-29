@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { LogOut, ChevronDown, User } from 'lucide-react';
+import Avatar from './avatar/Avatar';
 
 interface Props {
     authToken: string | null;
     authUsername: string | null;
     profilePic: string | null;
+    faceId?: string | null;
+    hairId?: string | null;
     onLogout: () => void;
     onNavigateHome?: () => void;
     onNavigateProfile?: () => void;
 }
 
-export default function Header({ authToken, authUsername, profilePic, onLogout, onNavigateHome, onNavigateProfile }: Props) {
+export default function Header({ authToken, authUsername, profilePic, faceId, hairId, onLogout, onNavigateHome, onNavigateProfile }: Props) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +62,9 @@ export default function Header({ authToken, authUsername, profilePic, onLogout, 
                                 className="flex items-center gap-2 bg-slate-100 pl-1.5 pr-3 py-1.5 rounded-xl text-sm font-bold text-slate-700 select-none border border-slate-200 shadow-sm hover:bg-slate-200 transition-colors"
                             >
                                     <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
-                                        {profilePic ? (
+                                        {faceId ? (
+                                            <Avatar faceId={faceId} hairId={hairId} faceOnly size="sm" />
+                                        ) : profilePic ? (
                                             <img
                                                 src={profilePic.startsWith('http') ? profilePic : `/avatars/${profilePic}`}
                                                 alt="Avatar"
