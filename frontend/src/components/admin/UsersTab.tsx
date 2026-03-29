@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, SlidersHorizontal, UserCheck, Ban, CheckCircle, RotateCcw, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, SlidersHorizontal, UserCheck, Ban, CheckCircle, RotateCcw, Trash2, ChevronDown, ChevronUp, Coins, Zap, Trophy, Clock, BookOpen } from 'lucide-react';
 import type { UserData, UserStats } from './types';
 import { authHeaders, ROLE_COLOR } from './utils';
 import { ConfirmModal } from './ConfirmModal';
@@ -175,11 +175,11 @@ export function UsersTab() {
             </colgroup>
             <thead>
               <tr className="text-xs uppercase tracking-wider font-black text-slate-400 border-b-2 border-slate-100">
-                <th className="px-10 py-4 text-left">User</th>
-                <th className="px-7 py-4 text-left">Role</th>
-                <th className="px-5 py-4 text-left">Level / Coins</th>
-                <th className="px-7 py-4 text-left">Status</th>
-                <th className="px-7 py-4 text-left">Actions</th>
+                <th className="px-10 py-5 text-left">User</th>
+                <th className="px-7 py-5 text-left">Role</th>
+                <th className="px-5 py-5 text-left">Statistics</th>
+                <th className="px-7 py-5 text-left">Status</th>
+                <th className="px-7 py-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -199,35 +199,55 @@ export function UsersTab() {
                     <td className="px-5 py-5">
                       <span className={`px-3 py-1 rounded-full text-sm font-black ${ROLE_COLOR[user.role]}`}>{user.role}</span>
                     </td>
-                    <td className="px-5 py-5 font-bold text-slate-600 text-base">
-                      Lvl {user.level} <span className="text-slate-400 font-medium text-sm">({user.coins} Coins)</span>
+                    <td className="px-5 py-5">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 group/stat">
+                          <div className="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20 shadow-sm transition-all group-hover/stat:scale-110">
+                            <Trophy size={14} />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Rank</p>
+                            <p className="text-sm font-black text-slate-800">Lvl {user.level}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 group/stat">
+                          <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 border border-amber-200 shadow-sm transition-all group-hover/stat:scale-110">
+                            <Coins size={14} />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Coins</p>
+                            <p className="text-sm font-black text-slate-800">{user.coins.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-5">
-                      <span className={`px-3 py-1 rounded-full text-sm font-black ${user.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                        {user.enabled ? 'Active' : 'Banned'}
-                      </span>
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider ${user.enabled ? 'bg-green-50/50 border-green-100 text-green-600' : 'bg-red-50/50 border-red-100 text-red-600'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                        {user.enabled ? 'Verified' : 'Banned'}
+                      </div>
                     </td>
                     <td className="px-5 py-5">
-                      <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         <button onClick={() => openRolePicker(user)} title="Change role"
-                          className="p-2 rounded-xl text-indigo-500 hover:bg-indigo-50 transition-colors">
+                          className="p-2.5 rounded-xl text-indigo-500 bg-indigo-50/30 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all active:scale-95 shadow-sm">
                           <UserCheck size={18} />
                         </button>
                         <button onClick={() => handleBanToggle(user)} 
                           disabled={user.username === currentUser}
-                          title={user.username === currentUser ? 'You cannot ban yourself' : (user.enabled ? 'Ban' : 'Unban')}
-                          className={`p-2 rounded-xl transition-colors ${user.username === currentUser ? 'text-slate-200 cursor-not-allowed' : (user.enabled ? 'text-orange-500 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50')}`}>
+                          className={`p-2.5 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.username === currentUser ? 'text-slate-200' : (user.enabled ? 'text-orange-500 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-100' : 'text-green-600 bg-green-50/30 hover:bg-green-50 hover:border-green-100')}`}>
                           {user.enabled ? <Ban size={18} /> : <CheckCircle size={18} />}
                         </button>
-                        <button onClick={() => handleReset(user)} title="Reset progress" className="p-2 rounded-xl text-blue-500 hover:bg-blue-50 transition-colors">
+                        <button onClick={() => handleReset(user)} title="Reset progress" 
+                          className="p-2.5 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm">
                           <RotateCcw size={18} />
                         </button>
                         <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN' || user.username === currentUser} 
-                          title={user.username === currentUser ? 'You cannot delete yourself' : (user.role === 'ADMIN' ? 'Admin users cannot be deleted' : 'Delete user')}
-                          className={`p-2 rounded-xl transition-colors ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}>
+                          className={`p-2.5 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200' : 'text-red-500 bg-red-50/30 hover:bg-red-50 hover:border-red-100'}`}>
                           <Trash2 size={18} />
                         </button>
-                        <button onClick={() => toggleExpand(user.id)} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition-colors">
+                        <button onClick={() => toggleExpand(user.id)} 
+                          className={`p-2.5 rounded-xl transition-all shadow-sm ${expandedId === user.id ? 'bg-slate-200 text-slate-800' : 'text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600'}`}>
                           {expandedId === user.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                         </button>
                       </div>
@@ -237,18 +257,23 @@ export function UsersTab() {
                     <tr key={`stats-${user.id}`}>
                       <td colSpan={5} className="px-5 pb-4 bg-slate-50">
                         {userStats[user.id] ? (
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
                             {[
-                              { label: 'Level', val: userStats[user.id].level },
-                              { label: 'Coins', val: userStats[user.id].coins },
-                              { label: 'Streak', val: `${userStats[user.id].streak} days` },
-                              { label: 'Lessons Done', val: userStats[user.id].lessonsCompleted },
-                              { label: 'Daily Quizzes', val: userStats[user.id].dailyQuizzesTaken },
-                              { label: 'Last Active', val: userStats[user.id].lastActive },
+                              { label: 'Level', val: userStats[user.id].level, icon: <Trophy size={14} />, color: 'text-brand-primary bg-brand-primary/10' },
+                              { label: 'Coins', val: userStats[user.id].coins.toLocaleString(), icon: <Coins size={14} />, color: 'text-amber-600 bg-amber-50' },
+                              { label: 'Streak', val: `${userStats[user.id].streak} days`, icon: <Zap size={14} />, color: 'text-orange-500 bg-orange-50' },
+                              { label: 'Lessons', val: userStats[user.id].lessonsCompleted, icon: <BookOpen size={14} />, color: 'text-indigo-600 bg-indigo-50' },
+                              { label: 'Quizzes', val: userStats[user.id].dailyQuizzesTaken, icon: <CheckCircle size={14} />, color: 'text-green-600 bg-green-50' },
+                              { label: 'Active', val: userStats[user.id].lastActive, icon: <Clock size={14} />, color: 'text-slate-600 bg-slate-100' },
                             ].map(s => (
-                              <div key={s.label} className="bg-white rounded-xl p-3 border border-slate-200">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{s.label}</p>
-                                <p className="font-black text-slate-800 text-sm mt-0.5">{s.val}</p>
+                              <div key={s.label} className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${s.color}`}>
+                                  {s.icon}
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{s.label}</p>
+                                  <p className="font-black text-slate-800 text-sm">{s.val}</p>
+                                </div>
                               </div>
                             ))}
                           </div>
