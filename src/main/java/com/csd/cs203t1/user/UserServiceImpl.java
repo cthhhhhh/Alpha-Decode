@@ -147,7 +147,7 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     @Transactional
-    public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
+    public UserDTO.AuthResponse updateCoins(UserDTO.CoinUpdateRequest request) {
         User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         user.setCoins(user.getCoins() + request.getCoinsToAdd());
         user.setWeeklyCoins(user.getWeeklyCoins() + request.getCoinsToAdd());

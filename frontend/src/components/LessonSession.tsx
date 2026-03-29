@@ -339,7 +339,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                         <div className="bg-brand-accent/10 p-6 rounded-3xl border-2 border-brand-accent/20 text-center">
                                             <RotateCcw size={24} className="text-brand-accent mx-auto mb-2" />
                                             <p className="text-sm font-black text-brand-accent uppercase tracking-widest mb-1">Practice Complete</p>
-                                            <p className="text-[10px] font-bold text-slate-500">No XP awarded in practice mode</p>
+                                            <p className="text-[10px] font-bold text-slate-500">No Coins awarded in practice mode</p>
                                         </div>
                                     ) : (
                                         <div className="bg-slate-50 p-6 rounded-3xl border-2 border-slate-100">

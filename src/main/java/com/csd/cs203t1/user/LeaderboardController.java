@@ -35,7 +35,7 @@ public class LeaderboardController {
     public ResponseEntity<List<LeaderboardEntryDTO>> getLeaderboard(
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false, defaultValue = "allTime") String period,
-            @RequestParam(required = false, defaultValue = "xp") String sort) {
+            @RequestParam(required = false, defaultValue = "coins") String sort) {
 
         int count = (limit != null && limit > 0) ? limit : defaultLimit;
         Pageable pageable = PageRequest.of(0, count);
@@ -81,7 +81,7 @@ public class LeaderboardController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getMyRank(
             @RequestParam(required = false, defaultValue = "allTime") String period,
-            @RequestParam(required = false, defaultValue = "xp") String sort) {
+            @RequestParam(required = false, defaultValue = "coins") String sort) {
         User currentUser = userService.getCurrentUser();
         
         if (currentUser.getRole() == Role.ADMIN) {
@@ -95,20 +95,20 @@ public class LeaderboardController {
         if ("weekly".equals(period)) {
             if ("streak".equals(sort)) {
                 long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyCoins());
-                rank = streakGreater + sameStreakBetterXp + 1;
+                long sameStreakBetterCoins = userRepository.countByRoleNotAndStreakAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyCoins());
+                rank = streakGreater + sameStreakBetterCoins + 1;
             } else {
-                long xpGreater = userRepository.countByRoleNotAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getWeeklyCoins());
-                rank = xpGreater + 1;
+                long coinsGreater = userRepository.countByRoleNotAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getWeeklyCoins());
+                rank = coinsGreater + 1;
             }
         } else {
             if ("streak".equals(sort)) {
                 long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-                long sameStreakBetterXp = userRepository.countByRoleNotAndStreakAndCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getCoins());
-                rank = streakGreater + sameStreakBetterXp + 1;
+                long sameStreakBetterCoins = userRepository.countByRoleNotAndStreakAndCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getCoins());
+                rank = streakGreater + sameStreakBetterCoins + 1;
             } else {
-                long xpGreater = userRepository.countByRoleNotAndCoinsGreaterThan(Role.ADMIN, currentUser.getCoins());
-                rank = xpGreater + 1;
+                long coinsGreater = userRepository.countByRoleNotAndCoinsGreaterThan(Role.ADMIN, currentUser.getCoins());
+                rank = coinsGreater + 1;
             }
         }
 

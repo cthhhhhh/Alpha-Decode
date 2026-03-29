@@ -90,7 +90,7 @@ export function UsersTab() {
   };
 
   const handleReset = (user: UserData) => {
-    showConfirm('Reset Progress', `Clear all XP, level, streak, and lesson progress for ${user.username}? This cannot be undone.`, 'Reset', 'info', async () => {
+    showConfirm('Reset Progress', `Clear all coins, level, streak, and lesson progress for ${user.username}? This cannot be undone.`, 'Reset', 'info', async () => {
       closeModal();
       await fetch(`/api/admin/users/${user.id}/reset`, { method: 'POST', headers: authHeaders() });
       fetchUsers();
@@ -99,7 +99,7 @@ export function UsersTab() {
 
   const filtered = users
     .filter(u => (u.username.toLowerCase().includes(query.toLowerCase()) || u.email.toLowerCase().includes(query.toLowerCase())) && (roleFilter === 'ALL' || u.role === roleFilter))
-    .sort((a, b) => sortMode === 'id' ? a.id - b.id : sortMode === 'alpha' ? a.username.localeCompare(b.username) : b.level - a.level || b.xp - a.xp);
+    .sort((a, b) => sortMode === 'id' ? a.id - b.id : sortMode === 'alpha' ? a.username.localeCompare(b.username) : b.level - a.level || b.coins - a.coins);
 
   if (loading) return <div className="text-center p-12 text-slate-400 font-bold animate-pulse">Loading users...</div>;
 
@@ -146,7 +146,7 @@ export function UsersTab() {
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Sort by</p>
                     {(['id', 'alpha', 'level'] as const).map(m => (
                       <button key={m} onClick={() => { setSortMode(m); setShowFilters(false); }} className={`block w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold ${sortMode === m ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'}`}>
-                        {m === 'id' ? 'ID' : m === 'alpha' ? 'A–Z' : 'Level / XP'}
+                        {m === 'id' ? 'ID' : m === 'alpha' ? 'A–Z' : 'Level / Coins'}
                       </button>
                     ))}
                   </div>
@@ -177,7 +177,7 @@ export function UsersTab() {
               <tr className="text-xs uppercase tracking-wider font-black text-slate-400 border-b-2 border-slate-100">
                 <th className="px-10 py-4 text-left">User</th>
                 <th className="px-7 py-4 text-left">Role</th>
-                <th className="px-5 py-4 text-left">Lvl / XP</th>
+                <th className="px-5 py-4 text-left">Level / Coins</th>
                 <th className="px-7 py-4 text-left">Status</th>
                 <th className="px-7 py-4 text-left">Actions</th>
               </tr>
@@ -200,7 +200,7 @@ export function UsersTab() {
                       <span className={`px-3 py-1 rounded-full text-sm font-black ${ROLE_COLOR[user.role]}`}>{user.role}</span>
                     </td>
                     <td className="px-5 py-5 font-bold text-slate-600 text-base">
-                      Lvl {user.level} <span className="text-slate-400 font-medium text-sm">({user.xp} XP)</span>
+                      Lvl {user.level} <span className="text-slate-400 font-medium text-sm">({user.coins} Coins)</span>
                     </td>
                     <td className="px-5 py-5">
                       <span className={`px-3 py-1 rounded-full text-sm font-black ${user.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
@@ -240,7 +240,7 @@ export function UsersTab() {
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3">
                             {[
                               { label: 'Level', val: userStats[user.id].level },
-                              { label: 'XP', val: userStats[user.id].xp },
+                              { label: 'Coins', val: userStats[user.id].coins },
                               { label: 'Streak', val: `${userStats[user.id].streak} days` },
                               { label: 'Lessons Done', val: userStats[user.id].lessonsCompleted },
                               { label: 'Daily Quizzes', val: userStats[user.id].dailyQuizzesTaken },

@@ -27,7 +27,7 @@ const Leaderboard = ({ authUsername }: Props) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [period, setPeriod] = useState<'allTime' | 'weekly'>('allTime');
-    const [sort, setSort] = useState<'xp' | 'streak'>('xp');
+    const [sort, setSort] = useState<'coins' | 'streak'>('coins');
     const [myRank, setMyRank] = useState<MyRankResponse | null>(null);
 
     useEffect(() => {
@@ -72,7 +72,7 @@ const Leaderboard = ({ authUsername }: Props) => {
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
                 <div>
                     <h2 className="text-3xl font-black text-slate-800">Leaderboard</h2>
-                    <p className="text-slate-500 lowercase first-letter:uppercase">Top players ranked by {sort === 'xp' ? 'coins' : 'streak'}.</p>
+                    <p className="text-slate-500 lowercase first-letter:uppercase">Top players ranked by {sort === 'coins' ? 'coins' : 'streak'}.</p>
                 </div>
 
                 {/* Filter toggles moved to top right */}
@@ -90,14 +90,14 @@ const Leaderboard = ({ authUsername }: Props) => {
                         ))}
                     </div>
                     <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden bg-white select-none">
-                        {(['xp', 'streak'] as const).map(s => (
+                        {(['coins', 'streak'] as const).map(s => (
                             <button
                                 key={s}
                                 onClick={() => { if (sort !== s) { setSort(s); setLoading(true); } }}
                                 className={`px-4 py-1.5 text-xs font-black uppercase tracking-wide transition-colors
                                     ${sort === s ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'text-slate-500 hover:bg-slate-50'}`}
                             >
-                                {s === 'xp' ? 'By Coins' : 'By Streak'}
+                                {s === 'coins' ? 'By Coins' : 'By Streak'}
                             </button>
                         ))}
                     </div>
@@ -213,7 +213,7 @@ const Leaderboard = ({ authUsername }: Props) => {
                                 </div>
                             </div>
 
-                            {/* XP or Streak value based on sort */}
+                            {/* Coins or Streak value based on sort */}
                             <div className="flex items-center gap-1 shrink-0">
                                 {sort === 'streak' ? (
                                     <>

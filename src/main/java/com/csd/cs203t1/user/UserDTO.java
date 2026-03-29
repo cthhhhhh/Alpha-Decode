@@ -80,7 +80,7 @@ public class UserDTO {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class XpUpdateRequest {
+    public static class CoinUpdateRequest {
         private int coinsToAdd;
         private Integer maxUnlockedLessonIndex;
         private Integer streakToSet;

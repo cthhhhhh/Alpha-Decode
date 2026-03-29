@@ -53,7 +53,7 @@ public class AchievementServiceImpl implements AchievementService {
                 case LESSON_COMPLETE -> user.getMaxUnlockedLessonIndex() >= a.getThreshold();
                 case STREAK_DAYS -> user.getStreak() >= a.getThreshold();
                 case DAILY_QUIZ_COUNT -> user.getDailyQuizCount() >= a.getThreshold();
-                case XP_REACHED -> user.getCoins() >= a.getThreshold();
+                case COINS_REACHED, XP_REACHED -> user.getCoins() >= a.getThreshold();
             };
             if (meets) {
                 UserAchievement ua = UserAchievement.builder()

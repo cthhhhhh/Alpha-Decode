@@ -53,11 +53,11 @@ public class UserController {
         }
     }
 
-    @PostMapping("/xp")
-    public ResponseEntity<?> addXp(@RequestBody UserDTO.XpUpdateRequest request) {
+    @PostMapping("/coins")
+    public ResponseEntity<?> addCoins(@RequestBody UserDTO.CoinUpdateRequest request) {
         try {
             if (request.getCoinsToAdd() < 0) throw new IllegalArgumentException("Coins to add must be non-negative");
-            UserDTO.AuthResponse response = userService.updateXp(request);
+            UserDTO.AuthResponse response = userService.updateCoins(request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

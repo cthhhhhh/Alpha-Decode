@@ -959,8 +959,8 @@ public class DataSeeder implements CommandLineRunner {
                                 achievement("Week Warrior", "Maintain a 7-day streak", "⚡", TriggerType.STREAK_DAYS, 7),
                                 achievement("Daily Devotee", "Complete the daily quiz 5 times", "📅",
                                                 TriggerType.DAILY_QUIZ_COUNT, 5),
-                                achievement("Coin Grinder", "Earn 50 coins", "🪙", TriggerType.XP_REACHED, 50),
-                                achievement("Wealthy", "Earn 100 coins", "💰", TriggerType.XP_REACHED, 100));
+                                achievement("Coin Grinder", "Earn 50 coins", "🪙", TriggerType.COINS_REACHED, 50),
+                                achievement("Wealthy", "Earn 100 coins", "💰", TriggerType.COINS_REACHED, 100));
 
                 // Self-healing: Delete any achievements not in the defaults list
                 List<String> defaultNames = defaults.stream().map(Achievement::getName).toList();
