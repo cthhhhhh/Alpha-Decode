@@ -70,7 +70,8 @@ public class UserServiceImpl implements UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER);
+        Role assignedRole = "CONTRIBUTOR".equalsIgnoreCase(request.getRole()) ? Role.CONTRIBUTOR : Role.USER;
+        user.setRole(assignedRole);
         if (request.getLevel() != null) user.setLevel(request.getLevel());
         if (request.getCoins() != null) {
             user.setCoins(request.getCoins());

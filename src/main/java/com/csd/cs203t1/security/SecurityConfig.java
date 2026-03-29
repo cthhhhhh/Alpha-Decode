@@ -66,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.OPTIONS, "/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/error")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/drafts/**")).authenticated()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/api/admin/**")).hasRole("ADMIN")
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/index.html")).permitAll()

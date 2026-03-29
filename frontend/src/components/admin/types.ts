@@ -78,4 +78,21 @@ export interface RevisionQuiz {
   questions: Question[];
 }
 
-export type Tab = 'dashboard' | 'users' | 'reports' | 'content';
+export type Tab = 'dashboard' | 'users' | 'reports' | 'content' | 'drafts';
+
+export interface DraftSummary {
+  id: number;
+  title: string;
+  colour: string;
+  emoji: string;
+  status: string;
+  rejectionNote?: string;
+  createdAt: string;
+  updatedAt: string;
+  contributorUsername: string;
+}
+
+export interface DraftDetail extends DraftSummary {
+  story: string;
+  questions: Question[];
+}

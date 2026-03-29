@@ -18,6 +18,7 @@ public class UserDTO {
         private Integer level;
         private Integer coins;
         private Integer maxUnlockedLessonIndex;
+        private String role;
     }
 
     @Data
