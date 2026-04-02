@@ -88,6 +88,12 @@ public class User {
 	private String hairId;
 
 	@Column
+	private String skinColor;
+
+	@Column
+	private String hairColor;
+
+	@Column
 	private Long equippedOutfitId;
 
 	@Column

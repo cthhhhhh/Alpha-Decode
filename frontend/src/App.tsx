@@ -53,6 +53,8 @@ export default function App() {
   const [faceId, setFaceId] = useState<string | null>(null);
   const [bodyTypeId, setBodyTypeId] = useState<string | null>(null);
   const [hairId, setHairId] = useState<string | null>(null);
+  const [skinColor, setSkinColor] = useState<string | null>(null);
+  const [hairColor, setHairColor] = useState<string | null>(null);
   const [equippedOutfitId, setEquippedOutfitId] = useState<number | null>(null);
   const [equippedPetId, setEquippedPetId] = useState<number | null>(null);
 
@@ -60,6 +62,8 @@ export default function App() {
   const [pendingFaceId, setPendingFaceId] = useState('face_1');
   const [pendingBodyTypeId, setPendingBodyTypeId] = useState('body_1');
   const [pendingHairId, setPendingHairId] = useState('hair_short');
+  const [pendingSkinColor, setPendingSkinColor] = useState('#f1c27d');
+  const [pendingHairColor, setPendingHairColor] = useState('#2c1810');
   const [avatarCreationDone, setAvatarCreationDone] = useState(false);
 
   const itemAssetMap = useItemAssetMap(authToken);
@@ -176,6 +180,8 @@ export default function App() {
           if (data.faceId) setFaceId(data.faceId);
           if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
           if (data.hairId) setHairId(data.hairId);
+          if (data.skinColor) setSkinColor(data.skinColor);
+          if (data.hairColor) setHairColor(data.hairColor);
           setEquippedOutfitId(data.equippedOutfitId ?? null);
           setEquippedPetId(data.equippedPetId ?? null);
         }).catch(() => { });
@@ -299,7 +305,7 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null, skinColorArg?: string | null, hairColorArg?: string | null) => {
     setAuthToken(token);
     setAuthRole(role);
     setAuthUsername(username);
@@ -344,6 +350,8 @@ export default function App() {
     if (faceIdArg) setFaceId(faceIdArg);
     if (bodyTypeIdArg) setBodyTypeId(bodyTypeIdArg);
     if (hairIdArg) setHairId(hairIdArg);
+    if (skinColorArg) setSkinColor(skinColorArg);
+    if (hairColorArg) setHairColor(hairColorArg);
     if (equippedOutfitIdArg !== undefined) setEquippedOutfitId(equippedOutfitIdArg ?? null);
     if (equippedPetIdArg !== undefined) setEquippedPetId(equippedPetIdArg ?? null);
 
@@ -617,6 +625,8 @@ export default function App() {
           faceId: pendingFaceId,
           bodyTypeId: pendingBodyTypeId,
           hairId: pendingHairId,
+          skinColor: pendingSkinColor,
+          hairColor: pendingHairColor,
         })
       })
         .then(r => r.json())
@@ -626,6 +636,8 @@ export default function App() {
           if (data.faceId) setFaceId(data.faceId);
           if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
           if (data.hairId) setHairId(data.hairId);
+          if (data.skinColor) setSkinColor(data.skinColor);
+          if (data.hairColor) setHairColor(data.hairColor);
           setEquippedOutfitId(data.equippedOutfitId ?? null);
           setEquippedPetId(data.equippedPetId ?? null);
           setAvatarCreationDone(false);
@@ -651,6 +663,8 @@ export default function App() {
         profilePic={profilePic}
         faceId={faceId}
         hairId={hairId}
+        skinColor={skinColor}
+        hairColor={hairColor}
         onLogout={handleLogout}
         onNavigateHome={() => navigate('/home')}
         onNavigateProfile={() => navigate('/profile')}
@@ -828,6 +842,8 @@ export default function App() {
                 faceId={faceId}
                 bodyTypeId={bodyTypeId}
                 hairId={hairId}
+                skinColor={skinColor}
+                hairColor={hairColor}
                 equippedOutfitId={equippedOutfitId}
                 equippedPetId={equippedPetId}
                 itemAssetMap={itemAssetMap}
@@ -874,6 +890,8 @@ export default function App() {
                 faceId={faceId}
                 bodyTypeId={bodyTypeId}
                 hairId={hairId}
+                skinColor={skinColor}
+                hairColor={hairColor}
                 equippedOutfitId={equippedOutfitId}
                 equippedPetId={equippedPetId}
                 itemAssetMap={itemAssetMap}
@@ -1089,7 +1107,7 @@ export default function App() {
       <Route path="/onboarding" element={
         <div className="min-h-screen bg-slate-50 flex flex-col">
           {!avatarCreationDone ? (
-            <AvatarCreator onComplete={(f, b, h) => { setPendingFaceId(f); setPendingBodyTypeId(b); setPendingHairId(h); setAvatarCreationDone(true); }} />
+            <AvatarCreator onComplete={(f, b, h, sk, hc) => { setPendingFaceId(f); setPendingBodyTypeId(b); setPendingHairId(h); setPendingSkinColor(sk); setPendingHairColor(hc); setAvatarCreationDone(true); }} />
           ) : (
             <OnboardingModal
               show={true}

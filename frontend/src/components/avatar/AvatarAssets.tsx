@@ -9,56 +9,56 @@
 // ─── Bodies ─────────────────────────────────────────────────────────────────
 // Bodies draw: neck, torso, legs (NO head circle — face SVG provides it)
 
-export function Body1() {
-  // Slim, light skin
+export function Body1({ skinColor = '#f1c27d' }: { skinColor?: string }) {
+  // Slim body
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Arms */}
-      <rect x="19" y="60" width="14" height="44" rx="7" fill="#e2c9a8" />
-      <rect x="67" y="60" width="14" height="44" rx="7" fill="#e2c9a8" />
+      <rect x="19" y="60" width="14" height="44" rx="7" fill={skinColor} />
+      <rect x="67" y="60" width="14" height="44" rx="7" fill={skinColor} />
       {/* Neck */}
-      <rect x="44" y="44" width="12" height="16" rx="3" fill="#e2c9a8" />
+      <rect x="44" y="44" width="12" height="16" rx="3" fill={skinColor} />
       {/* Torso */}
-      <rect x="32" y="58" width="36" height="50" rx="6" fill="#e2c9a8" />
+      <rect x="32" y="58" width="36" height="50" rx="6" fill={skinColor} />
       {/* Legs */}
-      <rect x="32" y="106" width="15" height="50" rx="4" fill="#e2c9a8" />
-      <rect x="53" y="106" width="15" height="50" rx="4" fill="#e2c9a8" />
+      <rect x="32" y="106" width="15" height="50" rx="4" fill={skinColor} />
+      <rect x="53" y="106" width="15" height="50" rx="4" fill={skinColor} />
     </svg>
   );
 }
 
-export function Body2() {
-  // Medium, tan skin
+export function Body2({ skinColor = '#f1c27d' }: { skinColor?: string }) {
+  // Medium body
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Arms */}
-      <rect x="15" y="60" width="16" height="44" rx="7" fill="#d4a574" />
-      <rect x="69" y="60" width="16" height="44" rx="7" fill="#d4a574" />
+      <rect x="15" y="60" width="16" height="44" rx="7" fill={skinColor} />
+      <rect x="69" y="60" width="16" height="44" rx="7" fill={skinColor} />
       {/* Neck */}
-      <rect x="43" y="44" width="14" height="16" rx="3" fill="#d4a574" />
+      <rect x="43" y="44" width="14" height="16" rx="3" fill={skinColor} />
       {/* Torso */}
-      <rect x="28" y="58" width="44" height="52" rx="7" fill="#d4a574" />
+      <rect x="28" y="58" width="44" height="52" rx="7" fill={skinColor} />
       {/* Legs */}
-      <rect x="28" y="108" width="18" height="48" rx="4" fill="#d4a574" />
-      <rect x="54" y="108" width="18" height="48" rx="4" fill="#d4a574" />
+      <rect x="28" y="108" width="18" height="48" rx="4" fill={skinColor} />
+      <rect x="54" y="108" width="18" height="48" rx="4" fill={skinColor} />
     </svg>
   );
 }
 
-export function Body3() {
-  // Broad, dark skin
+export function Body3({ skinColor = '#f1c27d' }: { skinColor?: string }) {
+  // Broad body
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Arms */}
-      <rect x="8" y="60" width="18" height="46" rx="8" fill="#8d6e4c" />
-      <rect x="74" y="60" width="18" height="46" rx="8" fill="#8d6e4c" />
+      <rect x="8" y="60" width="18" height="46" rx="8" fill={skinColor} />
+      <rect x="74" y="60" width="18" height="46" rx="8" fill={skinColor} />
       {/* Neck */}
-      <rect x="42" y="44" width="16" height="16" rx="3" fill="#8d6e4c" />
+      <rect x="42" y="44" width="16" height="16" rx="3" fill={skinColor} />
       {/* Torso */}
-      <rect x="22" y="58" width="56" height="54" rx="9" fill="#8d6e4c" />
+      <rect x="22" y="58" width="56" height="54" rx="9" fill={skinColor} />
       {/* Legs */}
-      <rect x="22" y="110" width="22" height="46" rx="4" fill="#8d6e4c" />
-      <rect x="56" y="110" width="22" height="46" rx="4" fill="#8d6e4c" />
+      <rect x="22" y="110" width="22" height="46" rx="4" fill={skinColor} />
+      <rect x="56" y="110" width="22" height="46" rx="4" fill={skinColor} />
     </svg>
   );
 }
@@ -67,54 +67,102 @@ export function Body3() {
 // Hair layers sit on top of FaceComp. All use viewBox="0 0 100 160".
 // Head circle: cx=50, cy=26, r=22. Hair covers top of head (y~4–26) without
 // obscuring the eye/mouth zone (y~20–35).
+//
+// "Back" variants (HairLongBack, HairBobBack) are rendered BEHIND the face
+// to simulate hair flowing behind the head. They use the same viewBox.
 
-export function HairShort({ headOnly = false }: { headOnly?: boolean }) {
+export function HairShort({ headOnly = false, color = '#4a2e0a' }: { headOnly?: boolean; color?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Arc cap: traces head circle from (30,17) up through (50,4) to (70,17) */}
-      <path d="M 30 17 A 22 22 0 0 1 70 17 Z" fill="#4a2e0a" />
+      {/* Short cap — sits above eyes (eyes at cy=22) */}
+      <path d="M 29 16 A 22 22 0 0 1 71 16 Z" fill={color} />
     </svg>
   );
 }
 
-export function HairLong({ headOnly = false }: { headOnly?: boolean }) {
+// Back panel for long hair — rendered behind the face layer
+export function HairLongBack({ headOnly = false, color = '#7b3f00' }: { headOnly?: boolean; color?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Side panels outside face circle, extend below shoulder */}
-      <rect x="17" y="15" width="15" height="42" rx="7" fill="#7b3f00" />
-      <rect x="68" y="15" width="15" height="42" rx="7" fill="#7b3f00" />
-      {/* Top cap arc */}
-      <path d="M 30 17 A 22 22 0 0 1 70 17 Z" fill="#7b3f00" />
+      {/* Wide back panel: arc from top of head, flows down to mid-torso */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 L 74 72 Q 72 80 61 78 Q 50 81 39 78 Q 28 80 26 72 Z" fill={color} />
     </svg>
   );
 }
 
-export function HairCurly({ headOnly = false }: { headOnly?: boolean }) {
+// Front wisps for long hair — rendered in front of the face layer
+export function HairLong({ headOnly = false, color = '#7b3f00' }: { headOnly?: boolean; color?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Poof above and to sides of head */}
-      <circle cx="50" cy="3"  r="11" fill="#1a1a1a" />
-      <circle cx="34" cy="8"  r="10" fill="#1a1a1a" />
-      <circle cx="66" cy="8"  r="10" fill="#1a1a1a" />
-      <circle cx="28" cy="19" r="9"  fill="#1a1a1a" />
-      <circle cx="72" cy="19" r="9"  fill="#1a1a1a" />
+      {/* Top cap */}
+      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
+      {/* Left face-framing wisp (thin, in front of face) */}
+      <path d="M 30 18 C 26 23 24 38 25 54 Q 26 59 30 57 C 28 43 28 26 32 19 A 22 22 0 0 0 30 18 Z" fill={color} />
+      {/* Right face-framing wisp */}
+      <path d="M 70 18 C 74 23 76 38 75 54 Q 74 59 70 57 C 72 43 72 26 68 19 A 22 22 0 0 1 70 18 Z" fill={color} />
     </svg>
   );
 }
 
-export function HairSpiky({ headOnly = false }: { headOnly?: boolean }) {
+// Back panel for bob hair — rendered behind the face layer
+export function HairBobBack({ headOnly = false, color = '#7b3f00' }: { headOnly?: boolean; color?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Base arc same as HairShort */}
-      <path d="M 30 17 A 22 22 0 0 1 70 17 Z" fill="#2c1810" />
-      {/* Upward spikes from crown */}
-      <polygon points="38,15 34,1  43,14" fill="#2c1810" />
-      <polygon points="50,13 48,0  54,13" fill="#2c1810" />
-      <polygon points="62,15 66,1  57,14" fill="#2c1810" />
+      {/* Shoulder-length back panel */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 L 73 52 Q 71 60 61 58 Q 50 61 39 58 Q 29 60 27 52 Z" fill={color} />
+    </svg>
+  );
+}
+
+// Front pieces for bob hair — straight-cut sides to chin level
+export function HairBob({ headOnly = false, color = '#7b3f00' }: { headOnly?: boolean; color?: string }) {
+  const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
+  return (
+    <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      {/* Top cap */}
+      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
+      {/* Left side curtain — simple outward-tapering strip to chin level */}
+      <path d="M 28 17 L 30 18 L 33 52 L 26 52 Z" fill={color} />
+      {/* Right side curtain */}
+      <path d="M 72 17 L 70 18 L 67 52 L 74 52 Z" fill={color} />
+    </svg>
+  );
+}
+
+export function HairCurly({ headOnly = false, color = '#1a1a1a' }: { headOnly?: boolean; color?: string }) {
+  const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
+  return (
+    <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      {/* Base cap */}
+      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
+      {/* Poof clusters — all positioned so cy - r >= 2 (no clipping) */}
+      <circle cx="50" cy="13" r="11" fill={color} />
+      <circle cx="37" cy="12" r="10" fill={color} />
+      <circle cx="63" cy="12" r="10" fill={color} />
+      <circle cx="27" cy="20" r="9"  fill={color} />
+      <circle cx="73" cy="20" r="9"  fill={color} />
+      <circle cx="43" cy="10" r="8"  fill={color} />
+      <circle cx="57" cy="10" r="8"  fill={color} />
+    </svg>
+  );
+}
+
+export function HairSpiky({ headOnly = false, color = '#2c1810' }: { headOnly?: boolean; color?: string }) {
+  const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
+  return (
+    <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      {/* Base cap */}
+      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
+      {/* 5 organic spikes — tips at y=4-6, all within viewBox */}
+      <path d="M 31 18 Q 29 7 35 6 Q 41 7 38 17 Z" fill={color} />
+      <path d="M 39 16 Q 37 5 43 4 Q 49 5 46 15 Z" fill={color} />
+      <path d="M 47 15 Q 46 3 50 3 Q 54 3 53 15 Z" fill={color} />
+      <path d="M 54 15 Q 51 5 57 4 Q 63 5 61 16 Z" fill={color} />
+      <path d="M 62 17 Q 59 7 65 6 Q 71 7 69 18 Z" fill={color} />
     </svg>
   );
 }
@@ -123,12 +171,12 @@ export function HairSpiky({ headOnly = false }: { headOnly?: boolean }) {
 // Faces draw: head circle (skin tone) + facial features at (cx=50, cy=26, r=22)
 // When headOnly=true, viewBox is cropped to show just the head circle (for faceOnly mode)
 
-export function Face1({ headOnly = false }: { headOnly?: boolean }) {
+export function Face1({ headOnly = false, skinColor = '#f1c27d' }: { headOnly?: boolean; skinColor?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Head */}
-      <circle cx="50" cy="26" r="22" fill="#ffe0bd" stroke="#f0c090" strokeWidth="1.5" />
+      <circle cx="50" cy="26" r="22" fill={skinColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" />
       {/* Eyes */}
       <ellipse cx="42" cy="22" rx="3" ry="3.5" fill="#3d2b1f" />
       <ellipse cx="58" cy="22" rx="3" ry="3.5" fill="#3d2b1f" />
@@ -143,12 +191,12 @@ export function Face1({ headOnly = false }: { headOnly?: boolean }) {
   );
 }
 
-export function Face2({ headOnly = false }: { headOnly?: boolean }) {
+export function Face2({ headOnly = false, skinColor = '#f1c27d' }: { headOnly?: boolean; skinColor?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Head */}
-      <circle cx="50" cy="26" r="22" fill="#f1c27d" stroke="#daa052" strokeWidth="1.5" />
+      <circle cx="50" cy="26" r="22" fill={skinColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" />
       {/* Eyes — cool, half-closed */}
       <rect x="40" y="20" width="8" height="5" rx="2.5" fill="#1a1a2e" />
       <rect x="52" y="20" width="8" height="5" rx="2.5" fill="#1a1a2e" />
@@ -160,12 +208,12 @@ export function Face2({ headOnly = false }: { headOnly?: boolean }) {
   );
 }
 
-export function Face3({ headOnly = false }: { headOnly?: boolean }) {
+export function Face3({ headOnly = false, skinColor = '#f1c27d' }: { headOnly?: boolean; skinColor?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Head */}
-      <circle cx="50" cy="26" r="22" fill="#8d5524" stroke="#6b3a1f" strokeWidth="1.5" />
+      <circle cx="50" cy="26" r="22" fill={skinColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" />
       {/* Round eyes */}
       <circle cx="42" cy="22" r="4" fill="#fff" />
       <circle cx="58" cy="22" r="4" fill="#fff" />
@@ -179,12 +227,12 @@ export function Face3({ headOnly = false }: { headOnly?: boolean }) {
   );
 }
 
-export function Face4({ headOnly = false }: { headOnly?: boolean }) {
+export function Face4({ headOnly = false, skinColor = '#f1c27d' }: { headOnly?: boolean; skinColor?: string }) {
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       {/* Head */}
-      <circle cx="50" cy="26" r="22" fill="#ffd5b0" stroke="#e8b080" strokeWidth="1.5" />
+      <circle cx="50" cy="26" r="22" fill={skinColor} stroke="rgba(0,0,0,0.12)" strokeWidth="1.5" />
       {/* Star eyes */}
       <text x="42" y="27" fontSize="9" textAnchor="middle" fill="#ff6b6b">★</text>
       <text x="58" y="27" fontSize="9" textAnchor="middle" fill="#ff6b6b">★</text>
@@ -201,132 +249,128 @@ export function Face4({ headOnly = false }: { headOnly?: boolean }) {
 }
 
 // ─── Outfits ─────────────────────────────────────────────────────────────────
-// Outfits draw clothes at the torso/leg position; transparent in head area (y < 50)
+// Outfits draw clothes scaled to match each body type.
+// All share viewBox="0 0 100 160". Each accepts bodyTypeId to pick the right fit.
 
-export function OutfitCasual() {
+interface Fit {
+  slvLx: number; slvRx: number; slvW: number;
+  torX: number;  torW: number;  torY: number; torH: number;
+  legLx: number; legRx: number; legW: number; legY: number; legH: number;
+}
+
+// Derived from body part positions + 2px outward coverage on each exposed edge
+const BODY_FIT: Record<string, Fit> = {
+  // Body1: arms x=19-33/67-81, torso x=32-68, legs x=32-47/53-68
+  body_1: { slvLx:17, slvRx:67, slvW:16, torX:30, torW:40, torY:57, torH:52, legLx:30, legRx:53, legW:17, legY:106, legH:50 },
+  // Body2: arms x=15-31/69-85, torso x=28-72, legs x=28-46/54-72
+  body_2: { slvLx:13, slvRx:69, slvW:18, torX:26, torW:48, torY:57, torH:54, legLx:26, legRx:54, legW:20, legY:108, legH:48 },
+  // Body3: arms x=8-26/74-92,  torso x=22-78, legs x=22-44/56-78
+  body_3: { slvLx: 6, slvRx:72, slvW:22, torX:20, torW:60, torY:57, torH:56, legLx:20, legRx:54, legW:26, legY:110, legH:46 },
+};
+const DEFAULT_FIT = BODY_FIT['body_2'];
+
+export function OutfitCasual({ bodyTypeId }: { bodyTypeId?: string }) {
+  const f = BODY_FIT[bodyTypeId ?? ''] ?? DEFAULT_FIT;
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Sleeves — vertical rounded tubes */}
-      <rect x="13" y="57" width="18" height="30" rx="8" fill="#6ab4f0" />
-      <rect x="69" y="57" width="18" height="30" rx="8" fill="#6ab4f0" />
-      {/* T-shirt body (overlaps inner sleeve edge for seamless join) */}
-      <rect x="30" y="58" width="40" height="52" rx="7" fill="#6ab4f0" />
-      {/* Collar */}
+      <rect x={f.slvLx} y="57" width={f.slvW} height="30" rx="8" fill="#6ab4f0" />
+      <rect x={f.slvRx} y="57" width={f.slvW} height="30" rx="8" fill="#6ab4f0" />
+      <rect x={f.torX} y={f.torY} width={f.torW} height={f.torH} rx="7" fill="#6ab4f0" />
       <path d="M43 58 Q50 65 57 58" stroke="#4a9ad4" strokeWidth="1.5" fill="none" />
-      {/* Pants */}
-      <rect x="30" y="108" width="17" height="48" rx="4" fill="#4a4a6a" />
-      <rect x="53" y="108" width="17" height="48" rx="4" fill="#4a4a6a" />
+      <rect x={f.legLx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#4a4a6a" />
+      <rect x={f.legRx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#4a4a6a" />
     </svg>
   );
 }
 
-export function OutfitHoodie() {
+export function OutfitHoodie({ bodyTypeId }: { bodyTypeId?: string }) {
+  const f = BODY_FIT[bodyTypeId ?? ''] ?? DEFAULT_FIT;
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Sleeves — vertical rounded tubes */}
-      <rect x="10" y="55" width="18" height="32" rx="9" fill="#7c6fa0" />
-      <rect x="72" y="55" width="18" height="32" rx="9" fill="#7c6fa0" />
-      {/* Hoodie body (overlaps inner sleeve edge) */}
-      <rect x="27" y="56" width="46" height="54" rx="8" fill="#7c6fa0" />
-      {/* Hood detail */}
-      <path d="M35 56 Q50 48 65 56" fill="#6a5e8a" />
-      {/* Pocket */}
+      <rect x={f.slvLx} y="55" width={f.slvW} height="32" rx="9" fill="#7c6fa0" />
+      <rect x={f.slvRx} y="55" width={f.slvW} height="32" rx="9" fill="#7c6fa0" />
+      <rect x={f.torX} y={f.torY-1} width={f.torW} height={f.torH+1} rx="8" fill="#7c6fa0" />
+      <path d={`M${f.torX+9} ${f.torY-1} Q50 ${f.torY-9} ${f.torX+f.torW-9} ${f.torY-1}`} fill="#6a5e8a" />
       <rect x="38" y="76" width="24" height="13" rx="5" fill="#6a5e8a" />
-      {/* Pants */}
-      <rect x="27" y="108" width="18" height="48" rx="4" fill="#2d2d4e" />
-      <rect x="55" y="108" width="18" height="48" rx="4" fill="#2d2d4e" />
+      <rect x={f.legLx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#2d2d4e" />
+      <rect x={f.legRx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#2d2d4e" />
     </svg>
   );
 }
 
-export function OutfitTrack() {
+export function OutfitTrack({ bodyTypeId }: { bodyTypeId?: string }) {
+  const f = BODY_FIT[bodyTypeId ?? ''] ?? DEFAULT_FIT;
+  const legLcx = f.legLx + Math.round(f.legW / 2);
+  const legRcx = f.legRx + Math.round(f.legW / 2);
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Sleeves — vertical rounded tubes */}
-      <rect x="10" y="55" width="18" height="28" rx="7" fill="#e05050" />
-      <rect x="72" y="55" width="18" height="28" rx="7" fill="#e05050" />
-      {/* Sleeve stripes */}
-      <rect x="10" y="62" width="18" height="3" fill="#c03030" opacity="0.5" />
-      <rect x="72" y="62" width="18" height="3" fill="#c03030" opacity="0.5" />
-      {/* Tracksuit jacket (overlaps inner sleeve edge) */}
-      <rect x="27" y="56" width="46" height="52" rx="6" fill="#e05050" />
-      {/* Stripe */}
-      <rect x="27" y="63" width="46" height="4" fill="#c03030" opacity="0.5" />
-      {/* Zip */}
-      <line x1="50" y1="56" x2="50" y2="108" stroke="#c03030" strokeWidth="2" />
-      {/* Track pants */}
-      <rect x="27" y="106" width="18" height="50" rx="4" fill="#e05050" />
-      <rect x="55" y="106" width="18" height="50" rx="4" fill="#e05050" />
-      <line x1="36" y1="106" x2="36" y2="156" stroke="#c03030" strokeWidth="1.5" />
-      <line x1="64" y1="106" x2="64" y2="156" stroke="#c03030" strokeWidth="1.5" />
+      <rect x={f.slvLx} y="55" width={f.slvW} height="28" rx="7" fill="#e05050" />
+      <rect x={f.slvRx} y="55" width={f.slvW} height="28" rx="7" fill="#e05050" />
+      <rect x={f.slvLx} y="62" width={f.slvW} height="3" fill="#c03030" opacity="0.5" />
+      <rect x={f.slvRx} y="62" width={f.slvW} height="3" fill="#c03030" opacity="0.5" />
+      <rect x={f.torX} y={f.torY-1} width={f.torW} height={f.torH+1} rx="6" fill="#e05050" />
+      <rect x={f.torX} y="63" width={f.torW} height="4" fill="#c03030" opacity="0.5" />
+      <line x1="50" y1={f.torY-1} x2="50" y2={f.legY+2} stroke="#c03030" strokeWidth="2" />
+      <rect x={f.legLx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#e05050" />
+      <rect x={f.legRx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#e05050" />
+      <line x1={legLcx} y1={f.legY} x2={legLcx} y2="156" stroke="#c03030" strokeWidth="1.5" />
+      <line x1={legRcx} y1={f.legY} x2={legRcx} y2="156" stroke="#c03030" strokeWidth="1.5" />
     </svg>
   );
 }
 
-export function OutfitSuit() {
+export function OutfitSuit({ bodyTypeId }: { bodyTypeId?: string }) {
+  const f = BODY_FIT[bodyTypeId ?? ''] ?? DEFAULT_FIT;
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Sleeves — vertical rounded tubes */}
-      <rect x="9" y="54" width="18" height="30" rx="7" fill="#1a2e4a" />
-      <rect x="73" y="54" width="18" height="30" rx="7" fill="#1a2e4a" />
-      {/* Suit jacket (overlaps inner sleeve edge) */}
-      <rect x="26" y="55" width="48" height="55" rx="6" fill="#1a2e4a" />
-      {/* Lapels */}
+      <rect x={f.slvLx} y="54" width={f.slvW} height="30" rx="7" fill="#1a2e4a" />
+      <rect x={f.slvRx} y="54" width={f.slvW} height="30" rx="7" fill="#1a2e4a" />
+      <rect x={f.torX} y={f.torY-2} width={f.torW} height={f.torH+2} rx="6" fill="#1a2e4a" />
       <polygon points="50,55 39,68 50,74" fill="#243d5c" />
       <polygon points="50,55 61,68 50,74" fill="#243d5c" />
-      {/* Shirt & tie */}
       <rect x="46" y="55" width="8" height="16" fill="white" />
       <polygon points="48,58 52,58 53,78 50,82 47,78" fill="#c0392b" />
-      {/* Pants */}
-      <rect x="28" y="108" width="18" height="48" rx="3" fill="#111e30" />
-      <rect x="54" y="108" width="18" height="48" rx="3" fill="#111e30" />
+      <rect x={f.legLx} y={f.legY} width={f.legW} height={f.legH} rx="3" fill="#111e30" />
+      <rect x={f.legRx} y={f.legY} width={f.legW} height={f.legH} rx="3" fill="#111e30" />
     </svg>
   );
 }
 
-export function OutfitSchool() {
+export function OutfitSchool({ bodyTypeId }: { bodyTypeId?: string }) {
+  const f = BODY_FIT[bodyTypeId ?? ''] ?? DEFAULT_FIT;
+  const rEdge = f.torX + f.torW;
+  const skirtW = f.legRx + f.legW - f.legLx;
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Sleeves — vertical rounded tubes */}
-      <rect x="10" y="54" width="18" height="30" rx="7" fill="#f5f5f5" />
-      <rect x="72" y="54" width="18" height="30" rx="7" fill="#f5f5f5" />
-      {/* White shirt (overlaps inner sleeve edge) */}
-      <rect x="27" y="55" width="46" height="55" rx="6" fill="#f5f5f5" />
-      {/* Tie */}
+      <rect x={f.slvLx} y="54" width={f.slvW} height="30" rx="7" fill="#f5f5f5" />
+      <rect x={f.slvRx} y="54" width={f.slvW} height="30" rx="7" fill="#f5f5f5" />
+      <rect x={f.torX} y={f.torY-2} width={f.torW} height={f.torH+2} rx="6" fill="#f5f5f5" />
       <polygon points="48,55 52,55 53,76 50,80 47,76" fill="#c0392b" />
       <line x1="49" y1="60" x2="51" y2="60" stroke="#922b21" strokeWidth="1" />
       <line x1="49" y1="65" x2="51" y2="65" stroke="#922b21" strokeWidth="1" />
-      {/* Blazer panels */}
-      <polygon points="27,55 27,110 40,110 40,68" fill="#1a3a5c" opacity="0.85" />
-      <polygon points="73,55 73,110 60,110 60,68" fill="#1a3a5c" opacity="0.85" />
-      {/* Skirt / Pants */}
-      <rect x="27" y="108" width="46" height="48" rx="4" fill="#3a5a8c" />
+      <polygon points={`${f.torX},55 ${f.torX},110 ${f.torX+13},110 ${f.torX+13},68`} fill="#1a3a5c" opacity="0.85" />
+      <polygon points={`${rEdge},55 ${rEdge},110 ${rEdge-13},110 ${rEdge-13},68`} fill="#1a3a5c" opacity="0.85" />
+      <rect x={f.legLx} y={f.legY} width={skirtW} height={f.legH} rx="4" fill="#3a5a8c" />
     </svg>
   );
 }
 
-export function OutfitWinter() {
+export function OutfitWinter({ bodyTypeId }: { bodyTypeId?: string }) {
+  const f = BODY_FIT[bodyTypeId ?? ''] ?? DEFAULT_FIT;
   return (
     <svg viewBox="0 0 100 160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Sleeves — vertical rounded tubes */}
-      <rect x="7" y="52" width="19" height="32" rx="9" fill="#4a90c4" />
-      <rect x="74" y="52" width="19" height="32" rx="9" fill="#4a90c4" />
-      {/* Puffer segment lines on sleeves */}
-      <line x1="7" y1="62" x2="25" y2="62" stroke="#3a7aaa" strokeWidth="2.5" />
-      <line x1="74" y1="62" x2="92" y2="62" stroke="#3a7aaa" strokeWidth="2.5" />
-      {/* Puffer jacket (overlaps inner sleeve edge) */}
-      <rect x="24" y="53" width="52" height="57" rx="10" fill="#4a90c4" />
-      {/* Puffer segments */}
-      <line x1="24" y1="63" x2="76" y2="63" stroke="#3a7aaa" strokeWidth="3" />
-      <line x1="24" y1="73" x2="76" y2="73" stroke="#3a7aaa" strokeWidth="3" />
-      <line x1="24" y1="83" x2="76" y2="83" stroke="#3a7aaa" strokeWidth="3" />
-      {/* Collar */}
-      <path d="M38 53 Q50 45 62 53" fill="#3a7aaa" />
-      {/* Zip */}
-      <line x1="50" y1="53" x2="50" y2="110" stroke="#2d5f87" strokeWidth="2" />
-      {/* Pants */}
-      <rect x="26" y="108" width="18" height="48" rx="4" fill="#1a1a2e" />
-      <rect x="56" y="108" width="18" height="48" rx="4" fill="#1a1a2e" />
+      <rect x={f.slvLx} y="52" width={f.slvW} height="32" rx="9" fill="#4a90c4" />
+      <rect x={f.slvRx} y="52" width={f.slvW} height="32" rx="9" fill="#4a90c4" />
+      <line x1={f.slvLx} y1="62" x2={f.slvLx+f.slvW} y2="62" stroke="#3a7aaa" strokeWidth="2.5" />
+      <line x1={f.slvRx} y1="62" x2={f.slvRx+f.slvW} y2="62" stroke="#3a7aaa" strokeWidth="2.5" />
+      <rect x={f.torX} y={f.torY-4} width={f.torW} height={f.torH+4} rx="10" fill="#4a90c4" />
+      <line x1={f.torX} y1="63" x2={f.torX+f.torW} y2="63" stroke="#3a7aaa" strokeWidth="3" />
+      <line x1={f.torX} y1="73" x2={f.torX+f.torW} y2="73" stroke="#3a7aaa" strokeWidth="3" />
+      <line x1={f.torX} y1="83" x2={f.torX+f.torW} y2="83" stroke="#3a7aaa" strokeWidth="3" />
+      <path d={`M${f.torX+12} ${f.torY-4} Q50 ${f.torY-12} ${f.torX+f.torW-12} ${f.torY-4}`} fill="#3a7aaa" />
+      <line x1="50" y1={f.torY-4} x2="50" y2={f.legY+2} stroke="#2d5f87" strokeWidth="2" />
+      <rect x={f.legLx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#1a1a2e" />
+      <rect x={f.legRx} y={f.legY} width={f.legW} height={f.legH} rx="4" fill="#1a1a2e" />
     </svg>
   );
 }

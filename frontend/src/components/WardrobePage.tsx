@@ -16,6 +16,8 @@ interface Props {
   faceId: string | null;
   bodyTypeId: string | null;
   hairId?: string | null;
+  skinColor?: string | null;
+  hairColor?: string | null;
   equippedOutfitId: number | null;
   equippedPetId: number | null;
   itemAssetMap: Record<number, string>;
@@ -27,6 +29,8 @@ export default function WardrobePage({
   faceId,
   bodyTypeId,
   hairId,
+  skinColor,
+  hairColor,
   equippedOutfitId,
   equippedPetId,
   itemAssetMap,
@@ -103,6 +107,8 @@ export default function WardrobePage({
             faceId={faceId}
             bodyTypeId={bodyTypeId}
             hairId={hairId}
+            skinColor={skinColor}
+            hairColor={hairColor}
             outfitAssetId={localOutfit ? itemAssetMap[localOutfit] : null}
             petAssetId={localPet ? itemAssetMap[localPet] : null}
             size="lg"

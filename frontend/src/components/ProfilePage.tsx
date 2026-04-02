@@ -10,6 +10,8 @@ interface Props {
     faceId?: string | null;
     bodyTypeId?: string | null;
     hairId?: string | null;
+    skinColor?: string | null;
+    hairColor?: string | null;
     equippedOutfitId?: number | null;
     equippedPetId?: number | null;
     itemAssetMap?: Record<number, string>;
@@ -29,7 +31,7 @@ interface UserProfile {
 const COINS_PER_LEVEL = 50;
 const TOTAL_LESSONS = 20;
 
-const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, equippedOutfitId, equippedPetId, itemAssetMap = {}, onUsernameUpdate, onLogout }: Props) => {
+const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skinColor, hairColor, equippedOutfitId, equippedPetId, itemAssetMap = {}, onUsernameUpdate, onLogout }: Props) => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [fetchError, setFetchError] = useState(false);
     const [editingName, setEditingName] = useState(false);
@@ -176,6 +178,8 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, equi
                                 faceId={faceId}
                                 bodyTypeId={bodyTypeId}
                                 hairId={hairId}
+                                skinColor={skinColor}
+                                hairColor={hairColor}
                                 outfitAssetId={equippedOutfitId ? itemAssetMap[equippedOutfitId] : null}
                                 petAssetId={equippedPetId ? itemAssetMap[equippedPetId] : null}
                                 size="md"

@@ -291,6 +291,8 @@ public class UserServiceImpl implements UserService {
         if (request.getFaceId() != null) user.setFaceId(request.getFaceId());
         if (request.getBodyTypeId() != null) user.setBodyTypeId(request.getBodyTypeId());
         if (request.getHairId() != null) user.setHairId(request.getHairId());
+        if (request.getSkinColor() != null) user.setSkinColor(request.getSkinColor());
+        if (request.getHairColor() != null) user.setHairColor(request.getHairColor());
         User savedUser = userRepository.save(user);
 
         // Grant starter items
@@ -361,6 +363,8 @@ public class UserServiceImpl implements UserService {
                 user.getFaceId(),
                 user.getBodyTypeId(),
                 user.getHairId(),
+                user.getSkinColor(),
+                user.getHairColor(),
                 user.getEquippedOutfitId(),
                 user.getEquippedPetId()
         );

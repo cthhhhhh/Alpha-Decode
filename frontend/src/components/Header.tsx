@@ -8,12 +8,14 @@ interface Props {
     profilePic: string | null;
     faceId?: string | null;
     hairId?: string | null;
+    skinColor?: string | null;
+    hairColor?: string | null;
     onLogout: () => void;
     onNavigateHome?: () => void;
     onNavigateProfile?: () => void;
 }
 
-export default function Header({ authToken, authUsername, profilePic, faceId, hairId, onLogout, onNavigateHome, onNavigateProfile }: Props) {
+export default function Header({ authToken, authUsername, profilePic, faceId, hairId, skinColor, hairColor, onLogout, onNavigateHome, onNavigateProfile }: Props) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +65,7 @@ export default function Header({ authToken, authUsername, profilePic, faceId, ha
                             >
                                     <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
                                         {faceId ? (
-                                            <Avatar faceId={faceId} hairId={hairId} faceOnly size="sm" />
+                                            <Avatar faceId={faceId} hairId={hairId} skinColor={skinColor} hairColor={hairColor} faceOnly size="sm" />
                                         ) : profilePic ? (
                                             <img
                                                 src={profilePic.startsWith('http') ? profilePic : `/avatars/${profilePic}`}
