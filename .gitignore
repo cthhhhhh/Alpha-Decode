@@ -56,12 +56,7 @@ replay_pid*
 
 #secrets
 db.properties
-.env
-**/.env
 *.env
-
-# Accidental project snapshot
-bin/
 
 target/*
 
