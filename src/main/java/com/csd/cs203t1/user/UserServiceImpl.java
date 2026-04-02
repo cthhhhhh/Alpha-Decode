@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.csd.cs203t1.achievement.UserAchievementRepository;
 import com.csd.cs203t1.bookmark.UserBookmarkRepository;
+import com.csd.cs203t1.draft.DraftRepository;
 import com.csd.cs203t1.flag.FlagRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ public class UserServiceImpl implements UserService {
     private final FlagRepository flagRepository;
     private final ItemRepository itemRepository;
     private final UserItemRepository userItemRepository;
+    private final DraftRepository draftRepository;
 
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
                            JwtUtil jwtUtil, AchievementService achievementService,
@@ -43,7 +45,8 @@ public class UserServiceImpl implements UserService {
                            UserBookmarkRepository userBookmarkRepository,
                            FlagRepository flagRepository,
                            ItemRepository itemRepository,
-                           UserItemRepository userItemRepository) {
+                           UserItemRepository userItemRepository,
+                           DraftRepository draftRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -53,6 +56,7 @@ public class UserServiceImpl implements UserService {
         this.flagRepository = flagRepository;
         this.itemRepository = itemRepository;
         this.userItemRepository = userItemRepository;
+        this.draftRepository = draftRepository;
     }
 
     @Override
@@ -80,6 +84,25 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         String token = generateToken(savedUser);
         return toAuthResponse(savedUser, token, null);
+    }
+
+    @Override
+    public void registerContributor(UserDTO.RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username is already taken");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.CONTRIBUTOR);
+        user.setEnabled(false);
+
+        userRepository.save(user);
     }
 
     @Override
@@ -118,6 +141,9 @@ public class UserServiceImpl implements UserService {
         }
 
         if (!user.isEnabled()) {
+            if (user.getRole() == Role.CONTRIBUTOR) {
+                throw new IllegalArgumentException("Your contributor account is pending admin approval.");
+            }
             throw new IllegalArgumentException("Account is disabled. Please contact admin.");
         }
 
@@ -235,6 +261,7 @@ public class UserServiceImpl implements UserService {
         userBookmarkRepository.deleteByUser(user);
         flagRepository.deleteByReportedBy(user);
         userItemRepository.deleteByUser(user);
+        draftRepository.deleteByContributorId(id);
 
         userRepository.delete(user);
     }

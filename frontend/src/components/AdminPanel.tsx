@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Users, Activity, ArrowLeft, Flag, BookOpen } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Flag, BookOpen, FileText } from 'lucide-react';
 
 import type { AdminStats, Tab } from './admin/types';
 import { authHeaders } from './admin/utils';
@@ -9,6 +9,7 @@ import { DashboardTab } from './admin/DashboardTab';
 import { UsersTab } from './admin/UsersTab';
 import { ReportsTab } from './admin/ReportsTab';
 import { ContentTab } from './admin/ContentTab';
+import { SubmissionsTab } from './admin/SubmissionsTab';
 
 export default function AdminPanel({ onBack }: { onBack?: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -37,6 +38,7 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
     { key: 'users', label: 'Users', icon: <Users size={16} /> },
     { key: 'reports', label: 'Reports', icon: <Flag size={16} /> },
     { key: 'content', label: 'Content', icon: <BookOpen size={16} /> },
+    { key: 'submissions', label: 'Submissions', icon: <FileText size={16} /> },
   ];
 
   return (
@@ -68,6 +70,7 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
           {activeTab === 'users' && <UsersTab />}
           {activeTab === 'reports' && <ReportsTab />}
           {activeTab === 'content' && <ContentTab />}
+          {activeTab === 'submissions' && <SubmissionsTab />}
         </motion.div>
       </AnimatePresence>
     </div>

@@ -33,6 +33,17 @@ public class UserController {
         }
     }
 
+    @PostMapping("/register-contributor")
+    public ResponseEntity<?> registerContributor(@RequestBody UserDTO.RegisterRequest request) {
+        try {
+            userService.registerContributor(request);
+            return ResponseEntity.ok(java.util.Map.of("message",
+                "Registration successful. Await admin approval before logging in."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDTO.LoginRequest request) {
         try {

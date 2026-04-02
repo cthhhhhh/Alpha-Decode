@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt, PenSquare } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -16,6 +16,7 @@ import Glossary from './components/Glossary';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import AdminPanel from './components/AdminPanel';
+import ContributorPanel from './components/ContributorPanel';
 import Leaderboard from './components/Leaderboard';
 import ProfilePage from './components/ProfilePage';
 import HomePage from './components/HomePage';
@@ -73,9 +74,10 @@ export default function App() {
   const isGlossary = location.pathname.startsWith('/glossary');
   const isProfile = location.pathname.startsWith('/profile');
   const isAdmin = location.pathname.startsWith('/admin');
+  const isContributor = location.pathname.startsWith('/contributor');
   const isShop = location.pathname.startsWith('/shop');
   const isWardrobe = location.pathname.startsWith('/wardrobe');
-  const isLearn = !isLeaderboard && !isGlossary && !isProfile && !isAdmin && !isShop && !isWardrobe;
+  const isLearn = !isLeaderboard && !isGlossary && !isProfile && !isAdmin && !isContributor && !isShop && !isWardrobe;
 
   const [loginDates, setLoginDates] = useState<string[]>(() => {
     const saved = localStorage.getItem('loginDates');
@@ -912,6 +914,18 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* Contributor Tab */}
+          {isContributor && authRole === 'CONTRIBUTOR' && (
+            <motion.div
+              key="contributor"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <ContributorPanel onBack={() => navigate('/home')} />
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </main>
 
@@ -981,6 +995,17 @@ export default function App() {
             >
               <Shield size={24} />
               <span className="text-[10px] font-black uppercase">Admin</span>
+            </motion.button>
+          )}
+          {authRole === 'CONTRIBUTOR' && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/contributor')}
+              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isContributor ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              <PenSquare size={24} />
+              <span className="text-[10px] font-black uppercase">Contribute</span>
             </motion.button>
           )}
         </div>
@@ -1145,6 +1170,10 @@ export default function App() {
       } />
       <Route path="/admin/*" element={
         (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
+      } />
+      <Route path="/contributor/*" element={
+        (!authToken || authRole !== 'CONTRIBUTOR') ? <Navigate to="/home" replace /> :
           (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       <Route path="/shop/*" element={

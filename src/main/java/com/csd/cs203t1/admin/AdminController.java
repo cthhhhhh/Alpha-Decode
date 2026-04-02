@@ -54,12 +54,18 @@ public class AdminController {
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        User currentUser = userService.getCurrentUser();
-        if (currentUser.getId().equals(id)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "You cannot delete yourself"));
+        try {
+            User currentUser = userService.getCurrentUser();
+            if (currentUser.getId().equals(id)) {
+                return ResponseEntity.badRequest().body("You cannot delete yourself");
+            }
+            userService.deleteUserById(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to delete user: " + e.getMessage());
         }
-        userService.deleteUserById(id);
-        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/users/{id}/role")
@@ -94,6 +100,18 @@ public class AdminController {
     public ResponseEntity<?> resetUserProgress(@PathVariable Long id) {
         userService.resetProgress(id);
         return ResponseEntity.ok(Map.of("message", "Progress reset successfully"));
+    }
+
+    @GetMapping("/contributors/pending")
+    public ResponseEntity<?> getPendingContributors() {
+        return ResponseEntity.ok(userRepository.findByRoleAndEnabled(Role.CONTRIBUTOR, false)
+                .stream().map(user -> Map.of(
+                        "id", user.getId(),
+                        "username", user.getUsername(),
+                        "email", user.getEmail(),
+                        "role", user.getRole().name(),
+                        "enabled", (Object) user.isEnabled()
+                )).toList());
     }
 
     @GetMapping("/users/{id}/stats")
