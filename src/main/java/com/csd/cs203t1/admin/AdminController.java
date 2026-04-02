@@ -1,8 +1,6 @@
 package com.csd.cs203t1.admin;
 
 import com.csd.cs203t1.common.Role;
-import com.csd.cs203t1.draft.DraftStatus;
-import com.csd.cs203t1.draft.LessonDraftRepository;
 import com.csd.cs203t1.user.UserRepository;
 import com.csd.cs203t1.user.UserService;
 import com.csd.cs203t1.user.User;
@@ -20,35 +18,24 @@ public class AdminController {
     private final UserRepository userRepository;
     private final SessionTracker sessionTracker;
     private final UserService userService;
-    private final LessonDraftRepository draftRepository;
 
-    public AdminController(UserRepository userRepository, SessionTracker sessionTracker,
-                           UserService userService, LessonDraftRepository draftRepository) {
+    public AdminController(UserRepository userRepository, SessionTracker sessionTracker, UserService userService) {
         this.userRepository = userRepository;
         this.sessionTracker = sessionTracker;
         this.userService = userService;
-        this.draftRepository = draftRepository;
     }
 
     @GetMapping("/stats")
     public ResponseEntity<?> getAdminStats() {
         long totalUsers = userRepository.countByRole(Role.USER);
         long contributors = userRepository.countByRole(Role.CONTRIBUTOR);
-        long pendingDrafts = draftRepository.countByStatus(DraftStatus.SUBMITTED);
         return ResponseEntity.ok(Map.of(
             "totalUsers", totalUsers,
             "contributors", contributors,
             "activeSessions", sessionTracker.getActiveCount(),
-            "pendingDrafts", pendingDrafts,
             "systemHealth", "Excellent",
             "message", "Welcome to the Admin Dashboard!"
         ));
-    }
-
-    @GetMapping("/drafts/count")
-    public ResponseEntity<?> getPendingDraftCount() {
-        long pending = draftRepository.countByStatus(DraftStatus.SUBMITTED);
-        return ResponseEntity.ok(Map.of("pendingDrafts", pending));
     }
 
     @GetMapping("/users")

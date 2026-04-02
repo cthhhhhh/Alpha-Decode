@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Users, Activity, ArrowLeft, Flag, BookOpen, FileCheck } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Flag, BookOpen } from 'lucide-react';
 
 import type { AdminStats, Tab } from './admin/types';
 import { authHeaders } from './admin/utils';
@@ -9,7 +9,6 @@ import { DashboardTab } from './admin/DashboardTab';
 import { UsersTab } from './admin/UsersTab';
 import { ReportsTab } from './admin/ReportsTab';
 import { ContentTab } from './admin/ContentTab';
-import { DraftsTab } from './admin/DraftsTab';
 
 export default function AdminPanel({ onBack }: { onBack?: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -33,14 +32,11 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
     </div>
   );
 
-  const pendingDrafts = (stats as any)?.pendingDrafts ?? 0;
-
   const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <Activity size={16} /> },
     { key: 'users', label: 'Users', icon: <Users size={16} /> },
     { key: 'reports', label: 'Reports', icon: <Flag size={16} /> },
     { key: 'content', label: 'Content', icon: <BookOpen size={16} /> },
-    { key: 'drafts', label: 'Drafts', icon: <FileCheck size={16} /> },
   ];
 
   return (
@@ -60,15 +56,7 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === t.key ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>
-            <span className="relative">
-              {t.icon}
-              {t.key === 'drafts' && pendingDrafts > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center">
-                  {pendingDrafts > 9 ? '9+' : pendingDrafts}
-                </span>
-              )}
-            </span>
-            <span className="hidden sm:inline">{t.label}</span>
+            {t.icon} <span className="hidden sm:inline">{t.label}</span>
           </button>
         ))}
       </div>
@@ -80,7 +68,6 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
           {activeTab === 'users' && <UsersTab />}
           {activeTab === 'reports' && <ReportsTab />}
           {activeTab === 'content' && <ContentTab />}
-          {activeTab === 'drafts' && <DraftsTab />}
         </motion.div>
       </AnimatePresence>
     </div>
