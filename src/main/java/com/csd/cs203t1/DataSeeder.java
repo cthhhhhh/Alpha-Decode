@@ -11,6 +11,7 @@ import com.csd.cs203t1.lesson.LessonDTO;
 import com.csd.cs203t1.lesson.LessonRepository;
 import com.csd.cs203t1.lesson.LessonService;
 import com.csd.cs203t1.question.IntroQuestionDTO;
+import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.SelectQuestion;
 import com.csd.cs203t1.question.SelectQuestionDTO;
 import com.csd.cs203t1.question.TranslateQuestionDTO;
@@ -33,7 +34,12 @@ import com.csd.cs203t1.shop.ItemType;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
@@ -48,6 +54,12 @@ public class DataSeeder implements CommandLineRunner {
 	private final UserRepository userRepository;
 	private final ItemRepository itemRepository;
 	private final SystemMetadataRepository systemMetadataRepository;
+
+	/**
+	 * Used to ensure checkpoint (Revision) questions are entirely new (no overlap with lesson questions).
+	 * We keep this in-memory during seeding only.
+	 */
+	private final Set<String> lessonQuestionSignatures = new HashSet<>();
 
 	public DataSeeder(LessonService lessonService, LessonRepository lessonRepository,
 			TermRepository termRepository, QuizRepository quizRepository,
@@ -114,6 +126,7 @@ public class DataSeeder implements CommandLineRunner {
 	private void seedLessons() {
 		if (lessonRepository.count() >= 20) return;
 		lessonRepository.deleteAll();
+		lessonQuestionSignatures.clear();
 
 		seedCoreLingoLessons();
 		seedLifestyleLessons();
@@ -886,64 +899,134 @@ public class DataSeeder implements CommandLineRunner {
 	// ─── Revision Quiz ──────────────────────────────────────────────────────────
 
 	private void seedRevisionQuiz() {
-		boolean exists = quizRepository.findAll().stream().anyMatch(q -> q instanceof RevisionQuiz);
-		if (exists)
-			return;
+		// Dev-friendly behaviour: keep checkpoint content deterministic by reseeding.
+		quizRepository.findAll().stream()
+				.filter(q -> q instanceof RevisionQuiz)
+				.map(q -> (RevisionQuiz) q)
+				.forEach(quizRepository::delete);
 
-		RevisionQuiz rq = new RevisionQuiz();
-		rq.setAfterLessonIndex(6); // after all 7 current lessons (0-based)
+		// One checkpoint after every 10 lessons. Each checkpoint ONLY covers the 10 lessons immediately
+		// before it (not the whole course). afterLessonIndex is 0-based: 9 = after lesson 10, etc.
+		long lessonCount = lessonRepository.count();
+		for (int afterLessonIndex = 9; afterLessonIndex < lessonCount; afterLessonIndex += 10) {
+			int blockIndex = afterLessonIndex / 10;
+			RevisionQuiz rq = new RevisionQuiz();
+			rq.setAfterLessonIndex(afterLessonIndex);
+			rq.setQuestions(checkpointPoolForLessonBlock(rq, blockIndex));
+			quizRepository.save(rq);
+		}
+	}
 
-		SelectQuestion q1 = SelectQuestion.builder()
-				.title("Which term means having natural charm without trying?")
-				.options(List.of("Sigma", "Rizz", "Mewing", "Delulu"))
-				.correctAnswer(1).explanation("Rizz is short for cha-rizz-ma — natural social charm.")
-				.quiz(rq).build();
+	/**
+	 * Question pools for revision checkpoints, aligned with {@code seedLessons()} order:
+	 * <ul>
+	 * <li>Block 0 — lessons 1–10: Rizz Basics … Bussin</li>
+	 * <li>Block 1 — lessons 11–20: Lowkey … Gyatt</li>
+	 * </ul>
+	 * Add a new case when more lesson blocks are added beyond 20.
+	 */
+	private List<Question> checkpointPoolForLessonBlock(RevisionQuiz rq, int blockIndex) {
+		return switch (blockIndex) {
+			case 0 -> checkpointPoolLessons1to10(rq);
+			case 1 -> checkpointPoolLessons11to20(rq);
+			default -> throw new IllegalStateException(
+					"No checkpoint pool defined for lesson block index " + blockIndex
+							+ ". Add checkpointPoolForLessonBlock case after seeding more lessons.");
+		};
+	}
 
-		SelectQuestion q2 = SelectQuestion.builder()
-				.title("Your friend grabs a handful of your fries without asking. What just happened?")
-				.options(List.of("An Ohio moment", "Fanum Tax", "Sigma move", "Skibidi behaviour"))
-				.correctAnswer(1)
-				.explanation("Fanum Tax = taking someone else's food, popularised by streamer Fanum.")
-				.quiz(rq).build();
+	/** Covers lessons 1–10 only (Rizz Basics through Bussin). */
+	private List<Question> checkpointPoolLessons1to10(RevisionQuiz rq) {
+		return List.of(
+				checkpointQ(rq, "In slang, \"rizz\" is closest to…",
+						List.of("Charisma", "Risk", "Rhythm", "Real"), 0,
+						"Rizz = charisma."),
+				checkpointQ(rq, "\"Fanum Tax\" refers to…",
+						List.of("Taking a bite of someone else's food", "Paying income tax", "A TikTok dance", "A hat"), 0,
+						"Fanum Tax = stealing a bite of a friend’s food."),
+				checkpointQ(rq, "Calling something \"Ohio\" usually means it is…",
+						List.of("Weird or bizarre", "Luxury", "Delicious", "Fast"), 0,
+						"Ohio memes describe strange, surreal things."),
+				checkpointQ(rq, "\"Skibidi\" is often used to mean something is…",
+						List.of("Bad / chaotic / cringe", "Delicious", "Expensive", "Quiet"), 0,
+						"Skibidi is often a negative adjective."),
+				checkpointQ(rq, "\"Mewing\" is mainly associated with…",
+						List.of("Jawline / tongue posture", "Dancing", "Cooking", "Taxes"), 0,
+						"Mewing is tongue posture for jawline definition."),
+				checkpointQ(rq, "A \"sigma\" is best described as…",
+						List.of("A lone wolf", "A follower", "A loud leader", "A lazy person"), 0,
+						"Sigma = independent lone wolf."),
+				checkpointQ(rq, "\"Delulu\" is short for…",
+						List.of("Delusional", "Delighted", "Dedicated", "Deliberate"), 0,
+						"Delulu = delusional."),
+				checkpointQ(rq, "\"No cap\" means…",
+						List.of("For real / not lying", "No hat", "Maybe", "Stop talking"), 0,
+						"No cap = I'm serious / not lying."),
+				checkpointQ(rq, "\"Unspoken rizz\" suggests someone is…",
+						List.of("Charming without needing words", "Very loud", "Rich", "Shy in a bad way"), 0,
+						"Unspoken rizz = charisma without speaking."),
+				checkpointQ(rq, "The phrase \"delulu is the solulu\" is about…",
+						List.of("Ironic delusional positivity as a 'solution'", "Math homework", "Sleeping early", "Paying rent"), 0,
+						"It’s an ironic line: delulu as the solulu."),
+				checkpointQ(rq, "\"Sigma grindset\" emphasizes…",
+						List.of("Silent self-improvement", "Being popular", "Copying trends", "Arguing online"), 0,
+						"Sigma grindset = self-focused improvement."),
+				checkpointQ(rq, "If someone says you \"slayed\", they mean you…",
+						List.of("Did something excellently", "Fell asleep", "Lied", "Left early"), 0,
+						"Slay = did amazingly well."),
+				checkpointQ(rq, "\"Bussin\" is most often used for…",
+						List.of("Food that tastes amazing", "Weather", "Homework", "Sports scores"), 0,
+						"Bussin is usually about food."),
+				checkpointQ(rq, "Which sentence fits \"no cap\" best?",
+						List.of("No cap, that was the best pizza I've had", "No cap the table", "I no cap my shoes", "She is no cap the song"), 0,
+						"No cap emphasizes you’re telling the truth."));
+	}
 
-		SelectQuestion q3 = SelectQuestion.builder()
-				.title("She truly believes her celebrity crush is secretly in love with her. She is...")
-				.options(List.of("Sigma", "Ohio", "Delulu", "Mewing"))
-				.correctAnswer(2)
-				.explanation(
-						"Delulu (delusional) describes someone with wildly unrealistic beliefs, often about relationships.")
-				.quiz(rq).build();
-
-		SelectQuestion q4 = SelectQuestion.builder()
-				.title("A video shows a cat riding a skateboard through a thunderstorm. That's very...")
-				.options(List.of("Rizz", "Sigma", "Ohio", "Mewing"))
-				.correctAnswer(2)
-				.explanation("Ohio = weird, cringey, or abnormal. Classic Ohio behaviour.").quiz(rq)
-				.build();
-
-		SelectQuestion q5 = SelectQuestion.builder()
-				.title("He works in silence, needs no validation, and grinds alone. He has the ____ mindset.")
-				.options(List.of("Fanum", "Skibidi", "Delulu", "Sigma"))
-				.correctAnswer(3)
-				.explanation("The Sigma is the lone wolf — self-sufficient, independent, outside social hierarchies.")
-				.quiz(rq).build();
-
-		SelectQuestion q6 = SelectQuestion.builder()
-				.title("She can't talk right now — she's focused on her tongue posture. She is...")
-				.options(List.of("Mewing", "Ohio", "Rizz", "Skibidi"))
-				.correctAnswer(0)
-				.explanation("Mewing = pressing tongue to roof of mouth to define the jawline. Requires silence.")
-				.quiz(rq).build();
-
-		SelectQuestion q7 = SelectQuestion.builder()
-				.title("The viral YouTube series featuring heads emerging from toilets is called ____ Toilet.")
-				.options(List.of("Ohio", "Sigma", "Skibidi", "Rizz"))
-				.correctAnswer(2)
-				.explanation("Skibidi Toilet is the viral animated series — skibidi now means something bad or cringe.")
-				.quiz(rq).build();
-
-		rq.setQuestions(List.of(q1, q2, q3, q4, q5, q6, q7));
-		quizRepository.save(rq);
+	/** Covers lessons 11–20 only (Lowkey through Gyatt). */
+	private List<Question> checkpointPoolLessons11to20(RevisionQuiz rq) {
+		return List.of(
+				checkpointQ(rq, "\"Lowkey\" means…",
+						List.of("Secretly / subtly", "Very loudly", "Obviously", "Never"), 0,
+						"Lowkey = subtle or quiet enthusiasm."),
+				checkpointQ(rq, "\"Highkey\" is closest to…",
+						List.of("Openly / very much", "Secretly", "Quiet", "Unsure"), 0,
+						"Highkey is the opposite of lowkey."),
+				checkpointQ(rq, "An \"NPC\" in slang is someone who…",
+						List.of("Follows the crowd without thinking", "Is very creative", "Wins every game", "Sleeps early"), 0,
+						"NPC = robotic, unoriginal, background-character energy."),
+				checkpointQ(rq, "\"Main character energy\" means…",
+						List.of("You act like the protagonist", "You avoid attention", "You copy everyone", "You never speak"), 0,
+						"Main character energy = confident, central, dramatic."),
+				checkpointQ(rq, "Calling someone \"based\" usually means they are…",
+						List.of("Unapologetically authentic", "Obviously lying", "Very shy", "A follower"), 0,
+						"Based = authentic confidence."),
+				checkpointQ(rq, "If a thought is \"rent free\" in your head, you…",
+						List.of("Can't stop thinking about it", "Forgot it", "Paid for it", "Never heard it"), 0,
+						"Rent free = stuck in your head."),
+				checkpointQ(rq, "\"It's giving royalty\" means the outfit…",
+						List.of("Has royal vibes / energy", "Was free", "Is too small", "Is boring"), 0,
+						"It's giving X = it has the vibe of X."),
+				checkpointQ(rq, "\"Touch grass\" is usually telling someone to…",
+						List.of("Go outside and disconnect from being too online", "Plant trees", "Win a game", "Touch a pet"), 0,
+						"Touch grass = go outside / reality check."),
+				checkpointQ(rq, "\"Caught in 4K\" stresses that the evidence is…",
+						List.of("Crystal clear and undeniable", "Missing", "Fake", "Low quality"), 0,
+						"4K = ultra-clear proof."),
+				checkpointQ(rq, "A \"vibe check\" is about…",
+						List.of("Someone's mood or energy", "Wi‑Fi speed", "Volume settings", "Homework"), 0,
+						"Vibe check = assess vibes."),
+				checkpointQ(rq, "\"Gyatt\" is best described as…",
+						List.of("An exclamation of admiration", "A food order", "A type of hat", "A math term"), 0,
+						"Gyatt = surprised admiration."),
+				checkpointQ(rq, "Which is most like \"NPC behaviour\"?",
+						List.of("Repeating a trend with no understanding", "Standing up for an unpopular opinion", "Learning alone quietly", "Improvising a speech"), 0,
+						"NPC behaviour = mindless conformity."),
+				checkpointQ(rq, "\"Based take\" means the take is…",
+						List.of("Authentic and unapologetic", "A joke everyone knows", "Secretly wrong", "Too quiet"), 0,
+						"Based take = genuine opinion."),
+				checkpointQ(rq, "If you \"failed the vibe check\", your…",
+						List.of("Energy feels off", "Wi‑Fi broke", "Grade dropped", "Shoes were wrong"), 0,
+						"Failing the vibe check = bad/off vibes."));
 	}
 
 	// ─── Helpers ────────────────────────────────────────────────────────────────
@@ -973,6 +1056,7 @@ public class DataSeeder implements CommandLineRunner {
 		dto.setContent(content);
 		dto.setExplanation(explanation);
 		dto.setQuestion_type("INTRO");
+		lessonQuestionSignatures.add(signature(dto.getQuestion_type(), dto.getTitle(), dto.getContent(), null, null, null));
 		return dto;
 	}
 
@@ -985,6 +1069,7 @@ public class DataSeeder implements CommandLineRunner {
 		dto.setCorrectAnswer(correctAnswer);
 		dto.setExplanation(explanation);
 		dto.setQuestion_type("SELECT");
+		lessonQuestionSignatures.add(signature(dto.getQuestion_type(), dto.getTitle(), dto.getContent(), dto.getOptions(), dto.getCorrectAnswer(), null));
 		return dto;
 	}
 
@@ -997,7 +1082,46 @@ public class DataSeeder implements CommandLineRunner {
 		dto.setTarget(target);
 		dto.setExplanation(explanation);
 		dto.setQuestion_type("TRANSLATE");
+		lessonQuestionSignatures.add(signature(dto.getQuestion_type(), dto.getTitle(), dto.getContent(), null, null, dto.getTarget()));
 		return dto;
+	}
+
+	private SelectQuestion checkpointQ(RevisionQuiz rq, String title, List<String> options, int correctAnswer,
+			String explanation) {
+		// Randomize option order so the correct choice is not always "A" (index 0).
+		ArrayList<String> shuffled = new ArrayList<>(options);
+		int c = correctAnswer;
+		ThreadLocalRandom rnd = ThreadLocalRandom.current();
+		for (int i = shuffled.size() - 1; i > 0; i--) {
+			int j = rnd.nextInt(i + 1);
+			Collections.swap(shuffled, i, j);
+			if (c == i) {
+				c = j;
+			} else if (c == j) {
+				c = i;
+			}
+		}
+		String sig = signature("SELECT", title, null, shuffled, c, null);
+		if (lessonQuestionSignatures.contains(sig)) {
+			throw new IllegalStateException("Checkpoint question overlaps a lesson question: " + title);
+		}
+		return SelectQuestion.builder()
+				.title(title)
+				.options(shuffled)
+				.correctAnswer(c)
+				.explanation(explanation)
+				.quiz(rq).build();
+	}
+
+	private String signature(String type, String title, String content, List<String> options, Integer correctAnswer,
+			String target) {
+		return String.join("|",
+				type == null ? "" : type.trim(),
+				title == null ? "" : title.trim(),
+				content == null ? "" : content.trim(),
+				target == null ? "" : target.trim(),
+				options == null ? "" : options.toString(),
+				correctAnswer == null ? "" : correctAnswer.toString());
 	}
 
 	// ─── Achievements ────────────────────────────────────────────────────────────

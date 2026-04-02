@@ -5,8 +5,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/api/quiz")
@@ -45,10 +47,28 @@ public class QuizController {
                 .filter(q -> q instanceof RevisionQuiz)
                 .map(q -> {
                     RevisionQuiz rq = (RevisionQuiz) q;
+                    // Random-sample a subset each request (checkpoint quiz should feel fresh).
+                    // Keep it bounded to avoid huge payloads if the pool grows.
+                    var questions = rq.getQuestions();
+                    int sampleSize = Math.min(10, questions == null ? 0 : questions.size());
+                    List<?> sampled;
+                    if (questions == null || questions.isEmpty() || sampleSize == questions.size()) {
+                        sampled = questions;
+                    } else {
+                        List<Object> copy = new ArrayList<>(questions);
+                        // Fisher–Yates shuffle for first k positions
+                        for (int i = 0; i < sampleSize; i++) {
+                            int j = ThreadLocalRandom.current().nextInt(i, copy.size());
+                            Object tmp = copy.get(i);
+                            copy.set(i, copy.get(j));
+                            copy.set(j, tmp);
+                        }
+                        sampled = copy.subList(0, sampleSize);
+                    }
                     return Map.of(
                         "id", rq.getId(),
                         "afterLessonIndex", rq.getAfterLessonIndex(),
-                        "questions", rq.getQuestions()
+                        "questions", sampled
                     );
                 })
                 .toList();
