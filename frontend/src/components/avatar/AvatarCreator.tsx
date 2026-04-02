@@ -16,15 +16,15 @@ const HAIR_LABELS = ['Bald', 'Short', 'Long', 'Bob', 'Curly', 'Spiky'];
 
 const SKIN_COLORS = ['#ffe0bd', '#f1c27d', '#d4a574', '#8d6e4c', '#8d5524', '#5c3317'];
 const SKIN_LABELS = ['Light', 'Fair', 'Medium', 'Tan', 'Brown', 'Deep'];
-const HAIR_COLORS = ['#1a1a1a', '#2c1810', '#7b3f00', '#e8c547', '#c0392b', '#888888'];
-const HAIR_COLOR_LABELS = ['Black', 'Dark Brown', 'Brown', 'Blonde', 'Red', 'Gray'];
+const HAIR_COLORS = ['#1a1a1a', '#4a2c17', '#a0522d', '#888888', '#e8c547', '#f4a0b5', '#8b0000'];
+const HAIR_COLOR_LABELS = ['Black', 'Dark Brown', 'Light Brown', 'Grey', 'Blonde', 'Light Pink', 'Dark Red'];
 
 export default function AvatarCreator({ onComplete }: Props) {
   const [selectedFace, setSelectedFace] = useState('face_1');
   const [selectedBody, setSelectedBody] = useState('body_1');
   const [selectedHair, setSelectedHair] = useState('hair_short');
   const [selectedSkin, setSelectedSkin] = useState('#f1c27d');
-  const [selectedHairColor, setSelectedHairColor] = useState('#2c1810');
+  const [selectedHairColor, setSelectedHairColor] = useState('#1a1a1a');
 
   return (
     <div className="fixed inset-0 z-[200] bg-slate-50 flex items-start justify-center p-4 py-8 overflow-auto">

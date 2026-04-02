@@ -75,8 +75,9 @@ export function HairShort({ headOnly = false, color = '#4a2e0a' }: { headOnly?: 
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Short cap — sits above eyes (eyes at cy=22) */}
-      <path d="M 29 16 A 22 22 0 0 1 71 16 Z" fill={color} />
+      {/* Cap arc: from (29,19) over the head top to (71,19) — slightly outside head circle
+          so it meets the back panel seamlessly; closes with straight line above eyes */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 Z" fill={color} />
     </svg>
   );
 }
@@ -97,12 +98,12 @@ export function HairLong({ headOnly = false, color = '#7b3f00' }: { headOnly?: b
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Top cap */}
-      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
-      {/* Left face-framing wisp (thin, in front of face) */}
-      <path d="M 30 18 C 26 23 24 38 25 54 Q 26 59 30 57 C 28 43 28 26 32 19 A 22 22 0 0 0 30 18 Z" fill={color} />
-      {/* Right face-framing wisp */}
-      <path d="M 70 18 C 74 23 76 38 75 54 Q 74 59 70 57 C 72 43 72 26 68 19 A 22 22 0 0 1 70 18 Z" fill={color} />
+      {/* Cap — connects to back panel at same start point (29,19) */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 Z" fill={color} />
+      {/* Left wisp — continues from cap edge (29,19), flows down beside face */}
+      <path d="M 29 19 C 25 24 23 42 24 58 Q 25 62 29 60 C 27 46 27 28 32 19 Z" fill={color} />
+      {/* Right wisp */}
+      <path d="M 71 19 C 75 24 77 42 76 58 Q 75 62 71 60 C 73 46 73 28 68 19 Z" fill={color} />
     </svg>
   );
 }
@@ -112,8 +113,8 @@ export function HairBobBack({ headOnly = false, color = '#7b3f00' }: { headOnly?
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Shoulder-length back panel */}
-      <path d="M 29 19 A 22 22 0 0 1 71 19 L 73 52 Q 71 60 61 58 Q 50 61 39 58 Q 29 60 27 52 Z" fill={color} />
+      {/* Jaw-length back panel — ends just below chin (y=46) */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 L 72 46 Q 70 50 61 48 Q 50 51 39 48 Q 30 50 28 46 Z" fill={color} />
     </svg>
   );
 }
@@ -123,12 +124,12 @@ export function HairBob({ headOnly = false, color = '#7b3f00' }: { headOnly?: bo
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Top cap */}
-      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
-      {/* Left side curtain — simple outward-tapering strip to chin level */}
-      <path d="M 28 17 L 30 18 L 33 52 L 26 52 Z" fill={color} />
-      {/* Right side curtain */}
-      <path d="M 72 17 L 70 18 L 67 52 L 74 52 Z" fill={color} />
+      {/* Cap — same start point as back panel */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 Z" fill={color} />
+      {/* Left curtain — ends at jaw level (y=46) */}
+      <path d="M 29 19 L 26 46 L 32 46 L 32 19 Z" fill={color} />
+      {/* Right curtain */}
+      <path d="M 71 19 L 74 46 L 68 46 L 68 19 Z" fill={color} />
     </svg>
   );
 }
@@ -137,16 +138,16 @@ export function HairCurly({ headOnly = false, color = '#1a1a1a' }: { headOnly?: 
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Base cap */}
-      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
-      {/* Poof clusters — all positioned so cy - r >= 2 (no clipping) */}
-      <circle cx="50" cy="13" r="11" fill={color} />
-      <circle cx="37" cy="12" r="10" fill={color} />
-      <circle cx="63" cy="12" r="10" fill={color} />
-      <circle cx="27" cy="20" r="9"  fill={color} />
-      <circle cx="73" cy="20" r="9"  fill={color} />
-      <circle cx="43" cy="10" r="8"  fill={color} />
-      <circle cx="57" cy="10" r="8"  fill={color} />
+      {/* Cap arc */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 Z" fill={color} />
+      {/* Poof circles — all bottom edges at or above y=18 so eyes stay visible */}
+      <circle cx="50" cy="8"  r="9"  fill={color} />
+      <circle cx="38" cy="8"  r="8"  fill={color} />
+      <circle cx="62" cy="8"  r="8"  fill={color} />
+      <circle cx="32" cy="14" r="7"  fill={color} />
+      <circle cx="68" cy="14" r="7"  fill={color} />
+      <circle cx="44" cy="5"  r="7"  fill={color} />
+      <circle cx="56" cy="5"  r="7"  fill={color} />
     </svg>
   );
 }
@@ -155,14 +156,14 @@ export function HairSpiky({ headOnly = false, color = '#2c1810' }: { headOnly?: 
   const vb = headOnly ? "28 4 44 44" : "0 0 100 160";
   return (
     <svg viewBox={vb} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      {/* Base cap */}
-      <path d="M 30 18 A 22 22 0 0 1 70 18 Z" fill={color} />
-      {/* 5 organic spikes — tips at y=4-6, all within viewBox */}
-      <path d="M 31 18 Q 29 7 35 6 Q 41 7 38 17 Z" fill={color} />
-      <path d="M 39 16 Q 37 5 43 4 Q 49 5 46 15 Z" fill={color} />
-      <path d="M 47 15 Q 46 3 50 3 Q 54 3 53 15 Z" fill={color} />
-      <path d="M 54 15 Q 51 5 57 4 Q 63 5 61 16 Z" fill={color} />
-      <path d="M 62 17 Q 59 7 65 6 Q 71 7 69 18 Z" fill={color} />
+      {/* Cap arc */}
+      <path d="M 29 19 A 22 22 0 0 1 71 19 Z" fill={color} />
+      {/* 5 spikes — bases at cap level (y≈17–19), tips at y=5–8 */}
+      <path d="M 33 19 Q 31 8 37 7 Q 43 8 40 18 Z" fill={color} />
+      <path d="M 41 18 Q 39 7 45 6 Q 51 7 48 17 Z" fill={color} />
+      <path d="M 49 17 Q 48 5 50 5 Q 52 5 51 17 Z" fill={color} />
+      <path d="M 52 17 Q 49 7 55 6 Q 61 7 59 18 Z" fill={color} />
+      <path d="M 60 18 Q 57 8 63 7 Q 69 8 67 19 Z" fill={color} />
     </svg>
   );
 }
