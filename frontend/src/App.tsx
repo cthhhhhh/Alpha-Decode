@@ -33,7 +33,7 @@ interface NewAchievement {
 
 type ToastItem = NewAchievement & { _toastId: string };
 
-const normalizedRole = (role: string | null | undefined): string | null => {
+const normalizeRole = (role: string | null | undefined): string | null => {
   if (!role) return null;
   const cleaned = role.trim().toUpperCase();
   return cleaned.startsWith('ROLE_') ? cleaned.slice(5) : cleaned;
@@ -52,7 +52,7 @@ export default function App() {
 
   // --- Auth State ---
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [authRole, setAuthRole] = useState<string | null>(() => normalizedRole(localStorage.getItem('role')));
+  const [authRole, setAuthRole] = useState<string | null>(() => normalizeRole(localStorage.getItem('role')));
   const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
   const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('profilePic'));
 
@@ -132,9 +132,9 @@ export default function App() {
             localStorage.setItem('username', data.username);
           }
           if (data.role) {
-            const nr = normalizedRole(data.role);
-            setAuthRole(nr);
-            if (nr) localStorage.setItem('role', nr);
+            const normalizedRole = normalizeRole(data.role);
+            setAuthRole(normalizedRole);
+            if (normalizedRole) localStorage.setItem('role', normalizedRole);
           }
           if (data.level !== undefined) {
             setLevel(data.level);
@@ -313,13 +313,12 @@ export default function App() {
   }, []);
 
   const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
-    const nr = normalizedRole(role);
     setAuthToken(token);
-    setAuthRole(nr);
+    setAuthRole(normalizedRole);
     setAuthUsername(username);
     if (profilePic !== undefined) setProfilePic(profilePic);
     localStorage.setItem('token', token);
-    if (nr) localStorage.setItem('role', nr);
+    if (normalizedRole) localStorage.setItem('role', normalizedRole);
     localStorage.setItem('username', username);
     if (level !== undefined) {
       setLevel(level);
@@ -365,7 +364,7 @@ export default function App() {
     setShowOnboarding(!isDoneWithOnboarding);
     if (isDoneWithOnboarding) {
       localStorage.setItem('onboardingFinished', 'true');
-      navigate(nr === 'CONTRIBUTOR' ? '/contributor' : '/home');
+      navigate(normalizedRole === 'CONTRIBUTOR' ? '/contributor' : '/home');
     } else {
       localStorage.removeItem('onboardingFinished');
       navigate('/onboarding');
@@ -645,7 +644,7 @@ export default function App() {
           setAvatarCreationDone(false);
           setShowOnboarding(false);
           localStorage.setItem('onboardingFinished', 'true');
-          const role = normalizedRole(localStorage.getItem('role'));
+          const role = normalizeRole(localStorage.getItem('role'));
           navigate(role === 'CONTRIBUTOR' ? '/contributor' : '/home');
         })
         .catch(err => console.error('Failed to save onboarding:', err));
@@ -653,7 +652,7 @@ export default function App() {
       // Fallback for safety, though we now register first
       setShowOnboarding(false);
       localStorage.setItem('onboardingFinished', 'true');
-      const role = normalizedRole(localStorage.getItem('role'));
+      const role = normalizeRole(localStorage.getItem('role'));
       navigate(role === 'CONTRIBUTOR' ? '/contributor' : '/home');
     }
   };
