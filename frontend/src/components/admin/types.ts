@@ -12,13 +12,13 @@ export interface UserData {
   email: string;
   role: string;
   level: number;
-  xp: number;
+  coins: number;
   enabled: boolean;
   isOnline: boolean;
 }
 
 export interface UserStats {
-  xp: number;
+  coins: number;
   level: number;
   streak: number;
   lessonsCompleted: number;

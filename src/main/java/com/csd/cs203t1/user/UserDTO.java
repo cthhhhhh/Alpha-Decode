@@ -40,7 +40,6 @@ public class UserDTO {
         private Integer coins;
         private Integer maxUnlockedLessonIndex;
         private Integer streak;
-        private String profilePic;
         private String dailyQuizLastDate;
         private Boolean dailyQuizCompletedToday;
         private Boolean onboardingCompleted;
@@ -54,19 +53,15 @@ public class UserDTO {
 
         // Backwards-compatible constructor for endpoints that don't check achievements
         public AuthResponse(String token, String role, String username,
-                            Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String profilePic) {
-            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, null, null, null, null, null, null, null, null, null, null);
-        }
-
-        public AuthResponse(String token, String role, String username,
-                            Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String profilePic, String dailyQuizLastDate) {
-            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, profilePic, dailyQuizLastDate, null, null, null, null, null, null, null, null, null);
-        }
-
-        public AuthResponse(String token, String role, String username,
                             Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak) {
-            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, null, null, null, null, null, null, null, null, null, null, null);
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, null, null, null, null, null, null, null, null, null, null);
         }
+
+        public AuthResponse(String token, String role, String username,
+                            Integer level, Integer coins, Integer maxUnlockedLessonIndex, Integer streak, String dailyQuizLastDate) {
+            this(token, role, username, level, coins, maxUnlockedLessonIndex, streak, dailyQuizLastDate, null, null, null, null, null, null, null, null, null);
+        }
+
     }
 
     @Data
@@ -81,7 +76,7 @@ public class UserDTO {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class XpUpdateRequest {
+    public static class CoinUpdateRequest {
         private int coinsToAdd;
         private Integer maxUnlockedLessonIndex;
         private Integer streakToSet;
@@ -102,7 +97,6 @@ public class UserDTO {
     @NoArgsConstructor
     public static class UpdateProfileRequest {
         private String username;
-        private String profilePic;
     }
 
     @Data

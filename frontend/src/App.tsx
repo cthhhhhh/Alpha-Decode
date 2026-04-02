@@ -86,7 +86,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [xp, setXp] = useState(() => parseInt(localStorage.getItem('xp') || '0'));
+  const [coins, setCoins] = useState(() => parseInt(localStorage.getItem('coins') || '0'));
   const [level, setLevel] = useState(() => parseInt(localStorage.getItem('level') || '1'));
   const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('streak') || '0'));
   const [dailyQuizCompleted, setDailyQuizCompleted] = useState(() => {
@@ -141,8 +141,8 @@ export default function App() {
             localStorage.setItem('level', data.level.toString());
           }
           if (data.coins !== undefined) {
-            setXp(data.coins);
-            localStorage.setItem('xp', data.coins.toString());
+            setCoins(data.coins);
+            localStorage.setItem('coins', data.coins.toString());
           }
           if (data.streak !== undefined) {
             setStreak(data.streak);
@@ -312,8 +312,7 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
-    const normalizedRole = normalizeRole(role);
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
     setAuthToken(token);
     setAuthRole(normalizedRole);
     setAuthUsername(username);
@@ -325,9 +324,9 @@ export default function App() {
       setLevel(level);
       localStorage.setItem('level', level.toString());
     }
-    if (xp !== undefined) {
-      setXp(xp);
-      localStorage.setItem('xp', xp.toString());
+    if (coinsArg !== undefined) {
+      setCoins(coinsArg);
+      localStorage.setItem('coins', coinsArg.toString());
     }
     if (streak !== undefined) {
       setStreak(streak);
@@ -376,7 +375,7 @@ export default function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('username');
-    localStorage.removeItem('xp');
+    localStorage.removeItem('coins');
     localStorage.removeItem('level');
     localStorage.removeItem('streak');
     // NOTE: dailyQuizDate and dailyQuizStartedDate are intentionally kept
@@ -386,7 +385,7 @@ export default function App() {
     setAuthToken(null);
     setAuthRole(null);
     setAuthUsername(null);
-    setXp(0);
+    setCoins(0);
     setLevel(1);
     setStreak(0);
     setFaceId(null);
@@ -404,10 +403,10 @@ export default function App() {
   };
 
   const handleCoinsUpdate = (newCoins: number) => {
-    setXp(newCoins);
+    setCoins(newCoins);
     const newLevel = Math.floor(newCoins / 50) + 1;
     setLevel(newLevel);
-    localStorage.setItem('xp', newCoins.toString());
+    localStorage.setItem('coins', newCoins.toString());
     localStorage.setItem('level', newLevel.toString());
   };
 
@@ -421,14 +420,14 @@ export default function App() {
     setStreak(newStreak);
     localStorage.setItem('streak', newStreak.toString());
     if (isPerfect) {
-      const newXp = xp + 10;
-      setXp(newXp);
-      localStorage.setItem('xp', newXp.toString());
+      const newCoins = coins + 10;
+      setCoins(newCoins);
+      localStorage.setItem('coins', newCoins.toString());
     }
 
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('/api/auth/xp', {
+      fetch('/api/auth/coins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -450,8 +449,8 @@ export default function App() {
             localStorage.setItem('level', data.level.toString());
           }
           if (data.coins !== undefined) {
-            setXp(data.coins);
-            localStorage.setItem('xp', data.coins.toString());
+            setCoins(data.coins);
+            localStorage.setItem('coins', data.coins.toString());
           }
           if (data.dailyQuizCompletedToday === true) {
             setDailyQuizCompleted(true);
@@ -460,7 +459,7 @@ export default function App() {
             }
           }
         })
-        .catch(err => console.error('Failed to save quiz XP:', err));
+        .catch(err => console.error('Failed to save quiz coins:', err));
     }
 
     // Fallback UI close
@@ -470,21 +469,21 @@ export default function App() {
   const handleRevisionQuizComplete = (quizId: string, correct: number) => {
     const alreadyDone = completedRevisionIds.has(quizId);
     if (!alreadyDone && correct > 0) {
-      const rewardXp = 5;
-      const newXp = xp + rewardXp;
-      setXp(newXp);
-      localStorage.setItem('xp', newXp.toString());
+      const rewardCoins = 5;
+      const newCoins = coins + rewardCoins;
+      setCoins(newCoins);
+      localStorage.setItem('coins', newCoins.toString());
       
       const quiz = revisionQuizzes.find(q => q.id === quizId);
       const nextIdx = quiz ? quiz.afterLessonIndex + 1 : -1;
 
       const token = localStorage.getItem('token');
       if (token) {
-        fetch('/api/auth/xp', {
+        fetch('/api/auth/coins', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ 
-            coinsToAdd: rewardXp,
+            coinsToAdd: rewardCoins,
             maxUnlockedLessonIndex: nextIdx,
             completedRevisionQuizId: parseInt(quizId)
           }),
@@ -492,7 +491,7 @@ export default function App() {
           .then(r => r.json())
           .then(data => { 
             if (data.newAchievements) showAchievementToasts(data.newAchievements);
-            if (data.coins !== undefined) { setXp(data.coins); localStorage.setItem('xp', data.coins.toString()); }
+            if (data.coins !== undefined) { setCoins(data.coins); localStorage.setItem('coins', data.coins.toString()); }
             if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
             if (data.maxUnlockedLessonIndex !== undefined) {
               localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
@@ -500,7 +499,7 @@ export default function App() {
               setLessons(prev => prev.map((l, i) => i <= data.maxUnlockedLessonIndex ? { ...l, locked: false } : l));
             }
           })
-          .catch(err => console.error('Failed to save revision XP:', err));
+          .catch(err => console.error('Failed to save revision coins:', err));
       }
     }
     setCompletedRevisionIds(prev => {
@@ -552,36 +551,36 @@ export default function App() {
 
     const token = localStorage.getItem('token');
 
-    const shouldAwardXp = currentLesson && !wasAlreadyCompleted && passed;
+    const shouldAwardCoins = currentLesson && !wasAlreadyCompleted && passed;
 
     if (token) {
         const payloadIndex = nextIdx;
 
-        if (shouldAwardXp) {
-          const rewardXp = 5;
-          const newXp = xp + rewardXp;
-          setXp(newXp);
-          localStorage.setItem('xp', newXp.toString());
-          
-          fetch('/api/auth/xp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              coinsToAdd: rewardXp,
-              maxUnlockedLessonIndex: payloadIndex,
-            }),
-          })
-          .then(r => r.json())
-          .then(data => {
-            if (data.newAchievements) showAchievementToasts(data.newAchievements);
-            if (data.coins !== undefined) { setXp(data.coins); localStorage.setItem('xp', data.coins.toString()); }
-            if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
-            if (data.maxUnlockedLessonIndex !== undefined) {
-              localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
-              setLessons(prev => prev.map((l, i) => ({ ...l, locked: i > data.maxUnlockedLessonIndex, completed: i < data.maxUnlockedLessonIndex })));
-            }
-          })
-          .catch(err => console.error('Failed to save XP:', err));
+          if (shouldAwardCoins) {
+            const rewardCoins = 5;
+            const newCoins = coins + rewardCoins;
+            setCoins(newCoins);
+            localStorage.setItem('coins', newCoins.toString());
+            
+            fetch('/api/auth/coins', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({
+                coinsToAdd: rewardCoins,
+                maxUnlockedLessonIndex: payloadIndex,
+              }),
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (data.newAchievements) showAchievementToasts(data.newAchievements);
+              if (data.coins !== undefined) { setCoins(data.coins); localStorage.setItem('coins', data.coins.toString()); }
+              if (data.level !== undefined) { setLevel(data.level); localStorage.setItem('level', data.level.toString()); }
+              if (data.maxUnlockedLessonIndex !== undefined) {
+                localStorage.setItem('maxUnlockedLessonIndex', data.maxUnlockedLessonIndex.toString());
+                setLessons(prev => prev.map((l, i) => ({ ...l, locked: i > data.maxUnlockedLessonIndex, completed: i < data.maxUnlockedLessonIndex })));
+              }
+            })
+            .catch(err => console.error('Failed to save coins:', err));
         } else if (passed) {
           fetch('/api/auth/lesson-progress', {
             method: 'POST',
@@ -636,7 +635,7 @@ export default function App() {
         .then(r => r.json())
         .then(data => {
           setLevel(data.level);
-          setXp(data.coins);
+          setCoins(data.coins);
           if (data.faceId) setFaceId(data.faceId);
           if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
           if (data.hairId) setHairId(data.hairId);
@@ -787,7 +786,7 @@ export default function App() {
                 <div className="hidden lg:block sticky top-24 self-start">
                   <LearnSidebarLeft
                     level={level}
-                    coins={xp}
+                    coins={coins}
                     lessonsCompleted={lessons.filter(l => l.completed).length}
                     streak={streak}
                     loginDates={loginDates}
@@ -868,7 +867,7 @@ export default function App() {
             >
               <ShopPage
                 authToken={authToken}
-                coins={xp}
+                coins={coins}
                 itemAssetMap={itemAssetMap}
                 onCoinsUpdate={handleCoinsUpdate}
                 onEquip={handleEquipChange}
@@ -1035,7 +1034,7 @@ export default function App() {
             setDailyQuizCompleted(true);
             const token = localStorage.getItem('token');
             if (token) {
-              fetch('/api/auth/xp', {
+              fetch('/api/auth/coins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ coinsToAdd: 0, streakToSet: 0, dailyQuizCountIncrement: true }),

@@ -55,8 +55,6 @@ public class UserServiceImpl implements UserService {
         this.userItemRepository = userItemRepository;
     }
 
-
-
     @Override
     public UserDTO.AuthResponse register(UserDTO.RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -148,7 +146,7 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     @Transactional
-    public UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request) {
+    public UserDTO.AuthResponse updateCoins(UserDTO.CoinUpdateRequest request) {
         User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
         user.setCoins(user.getCoins() + request.getCoinsToAdd());
         user.setWeeklyCoins(user.getWeeklyCoins() + request.getCoinsToAdd());
@@ -210,9 +208,6 @@ public class UserServiceImpl implements UserService {
                 throw new IllegalArgumentException("Username is already taken");
             }
             user.setUsername(request.getUsername());
-        }
-        if (request.getProfilePic() != null) {
-            user.setProfilePic(request.getProfilePic());
         }
         User savedUser = userRepository.save(user);
         String token = generateToken(savedUser);
@@ -359,7 +354,6 @@ public class UserServiceImpl implements UserService {
                 user.getCoins(),
                 user.getMaxUnlockedLessonIndex(),
                 user.getStreak(),
-                user.getProfilePic(),
                 lastDate,
                 completedToday,
                 user.isOnboardingCompleted(),

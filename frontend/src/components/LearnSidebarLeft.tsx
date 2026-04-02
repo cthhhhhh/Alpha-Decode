@@ -10,12 +10,12 @@ interface Props {
   onViewGlossary: () => void;
 }
 
-const XP_PER_LEVEL = 50;
+const COINS_PER_LEVEL = 50;
 
 export default function LearnSidebarLeft({ level, coins, lessonsCompleted, streak, loginDates, onViewGlossary }: Props) {
-  const relXp = coins % XP_PER_LEVEL;
-  const xpLeft = XP_PER_LEVEL - relXp;
-  const progressPct = Math.min((relXp / XP_PER_LEVEL) * 100, 100);
+  const relCoins = coins % COINS_PER_LEVEL;
+  const coinsLeft = COINS_PER_LEVEL - relCoins;
+  const progressPct = Math.min((relCoins / COINS_PER_LEVEL) * 100, 100);
 
   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })(); // Mon=0, Sun=6
@@ -53,7 +53,7 @@ export default function LearnSidebarLeft({ level, coins, lessonsCompleted, strea
           />
         </div>
         <p className="text-[11px] font-bold text-slate-400">
-          {relXp} / {XP_PER_LEVEL} Coins  •  {xpLeft} to Level {level + 1}
+          {relCoins} / {COINS_PER_LEVEL} Coins  •  {coinsLeft} to Level {level + 1}
         </p>
       </motion.div>
 

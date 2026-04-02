@@ -26,7 +26,7 @@ interface UserProfile {
     streak: number;
 }
 
-const XP_PER_LEVEL = 50;
+const COINS_PER_LEVEL = 50;
 const TOTAL_LESSONS = 20;
 
 const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, equippedOutfitId, equippedPetId, itemAssetMap = {}, onUsernameUpdate, onLogout }: Props) => {
@@ -71,9 +71,9 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, equi
     );
 
     const lessonsCompleted = profile.role === 'ADMIN' ? TOTAL_LESSONS : Math.min(profile.maxUnlockedLessonIndex, TOTAL_LESSONS);
-    const xpProgress = profile.coins % XP_PER_LEVEL;
-    const xpForNext = XP_PER_LEVEL;
-    const progressPct = Math.min((xpProgress / xpForNext) * 100, 100);
+    const coinsProgress = profile.coins % COINS_PER_LEVEL;
+    const coinsForNext = COINS_PER_LEVEL;
+    const progressPct = Math.min((coinsProgress / coinsForNext) * 100, 100);
 
     const handleEditSave = async () => {
         if (!newUsername.trim()) { setSaveError('Username cannot be empty'); return; }
@@ -238,7 +238,7 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, equi
                 <div className="mb-6">
                     <div className="flex items-center justify-between text-xs font-black text-slate-500 uppercase tracking-wide mb-2">
                         <span>Coins Progress</span>
-                        <span>{xpProgress}/{xpForNext} to next milestone</span>
+                        <span>{coinsProgress}/{coinsForNext} to next milestone</span>
                     </div>
                     <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                         <motion.div

@@ -8,5 +8,5 @@ import lombok.*;
 @Entity
 @DiscriminatorValue("REVISION")
 public class RevisionQuiz extends Quiz {
-    private int afterLessonIndex; // 0-based index of the last lesson in this group
+    private Integer afterLessonIndex; // 0-based index of the last lesson in this group
 }

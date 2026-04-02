@@ -6,7 +6,7 @@ public interface UserService {
     UserDTO.AuthResponse login(UserDTO.LoginRequest request);
     User getCurrentUser();
     UserDTO.AuthResponse getMe();
-    UserDTO.AuthResponse updateXp(UserDTO.XpUpdateRequest request);
+    UserDTO.AuthResponse updateCoins(UserDTO.CoinUpdateRequest request);
     UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex);
     UserDTO.AuthResponse updateProfile(UserDTO.UpdateProfileRequest request);
     void changePassword(UserDTO.ChangePasswordRequest request);

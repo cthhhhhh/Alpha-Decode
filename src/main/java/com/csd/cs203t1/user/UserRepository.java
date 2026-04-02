@@ -66,7 +66,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.weeklyCoins = 0")
-    void resetAllWeeklyXp();
+    void resetAllWeeklyCoins();
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.onboardingCompleted = true WHERE u.level > 1 OR u.coins > 0 OR u.onboardingCompleted = true")
