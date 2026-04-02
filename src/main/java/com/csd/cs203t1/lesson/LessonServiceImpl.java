@@ -1,13 +1,9 @@
 package com.csd.cs203t1.lesson;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.csd.cs203t1.draft.DraftStatus;
-import com.csd.cs203t1.draft.LessonDraft;
-import com.csd.cs203t1.draft.LessonDraftRepository;
 import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.QuestionDTO;
 import com.csd.cs203t1.question.QuestionMapper;
@@ -22,15 +18,11 @@ public class LessonServiceImpl implements LessonService {
 	final LessonRepository lessons;
 	final QuestionRepository questions;
 	final QuizRepository quizzes;
-	final LessonDraftRepository lessonDraftRepository;
-	private static final int LEGACY_VARCHAR_LIMIT = 255;
 
-	public LessonServiceImpl(LessonRepository lessons, QuestionRepository questions,
-							 QuizRepository quizzes, LessonDraftRepository lessonDraftRepository){
+	public LessonServiceImpl(LessonRepository lessons, QuestionRepository questions, QuizRepository quizzes){
         this.lessons = lessons;
 		this.questions = questions;
 		this.quizzes = quizzes;
-		this.lessonDraftRepository = lessonDraftRepository;
     }
 	@Override
 	public List<Lesson> listLessons(){
@@ -55,27 +47,19 @@ public class LessonServiceImpl implements LessonService {
 	public Lesson updateLesson(Long id, LessonDTO dto) {
 		Lesson lesson = lessons.findById(id)
 			.orElseThrow(() -> new RuntimeException("Lesson not found"));
-		if (dto.getTitle() != null) lesson.setTitle(clampText(dto.getTitle()));
-		if (dto.getColour() != null) lesson.setColour(clampText(dto.getColour()));
-		if (dto.getStory() != null) lesson.setStory(clampText(dto.getStory()));
-		if (dto.getEmoji() != null) lesson.setEmoji(clampText(dto.getEmoji()));
+		if (dto.getTitle() != null) lesson.setTitle(dto.getTitle());
+		if (dto.getColour() != null) lesson.setColour(dto.getColour());
+		if (dto.getStory() != null) lesson.setStory(dto.getStory());
+		if (dto.getEmoji() != null) lesson.setEmoji(dto.getEmoji());
 		return lessons.save(lesson);
 	}
 
 	@Override
-	@Transactional
 	public void deleteLesson(Long id){
 		if(!lessons.existsById(id)){
 			throw new RuntimeException("Lesson not found");
 		}
 		lessons.deleteById(id);
-		// If this lesson was created from a contributor draft, mark that draft as DELETED
-		// so the contributor can see their lesson was removed.
-		lessonDraftRepository.findByLessonId(id).ifPresent(draft -> {
-			draft.setStatus(DraftStatus.DELETED);
-			draft.setUpdatedAt(LocalDateTime.now());
-			lessonDraftRepository.save(draft);
-		});
 	}
 
 	@Override
@@ -83,10 +67,10 @@ public class LessonServiceImpl implements LessonService {
 	public Lesson addLesson(LessonDTO lessonDTO, List<QuestionDTO> questionDTOs){
 		// step 1 get the attributes from lessondto and create lesson object
 		Lesson lesson = Lesson.builder()
-				.colour(clampText(lessonDTO.getColour()))
-				.story(clampText(lessonDTO.getStory()))
-				.title(clampText(lessonDTO.getTitle()))
-				.emoji(clampText(lessonDTO.getEmoji()))
+				.colour(lessonDTO.getColour())
+				.story(lessonDTO.getStory())
+				.title(lessonDTO.getTitle())
+				.emoji(lessonDTO.getEmoji())
 				.build();
 		
 		//step 2 make a quiz, add lesson to it
@@ -104,13 +88,6 @@ public class LessonServiceImpl implements LessonService {
 		return lessons.save(lesson);
 
 
-	}
-
-	private String clampText(String value) {
-		if (value == null) return null;
-		return value.length() > LEGACY_VARCHAR_LIMIT
-				? value.substring(0, LEGACY_VARCHAR_LIMIT)
-				: value;
 	}
 
 }
