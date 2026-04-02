@@ -21,6 +21,7 @@ import lombok.experimental.SuperBuilder;
 public class SelectQuestion extends Question{
 
 	@NonNull
+	@jakarta.persistence.Column(columnDefinition = "TEXT")
 	private List<String> options;
 
 	@NonNull

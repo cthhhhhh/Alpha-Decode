@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft, BookOpen, Pencil } from 'lucide-react';
 
 interface RegisterPageProps {
   onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => void;
@@ -22,6 +22,7 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'USER' | 'CONTRIBUTOR'>('USER');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,10 +34,11 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username, 
-          email, 
-          password
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          role: selectedRole,
         }),
       });
       if (!res.ok) {
@@ -120,6 +122,31 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
               <span>{error}</span>
             </motion.div>
           )}
+
+          {/* Role Selection */}
+          <div className="mb-6">
+            <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 text-left">I want to...</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedRole('USER')}
+                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold text-sm transition-all ${selectedRole === 'USER' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+              >
+                <BookOpen size={24} />
+                <span className="font-black">Learner</span>
+                <span className="text-[10px] text-center leading-tight opacity-70">Learn Gen Alpha slang at your own pace</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRole('CONTRIBUTOR')}
+                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold text-sm transition-all ${selectedRole === 'CONTRIBUTOR' ? 'border-blue-500 bg-blue-500/5 text-blue-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+              >
+                <Pencil size={24} />
+                <span className="font-black">Contributor</span>
+                <span className="text-[10px] text-center leading-tight opacity-70">Create new lesson content for the community</span>
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div>

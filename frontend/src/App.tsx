@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt, Pencil } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -16,6 +16,7 @@ import Glossary from './components/Glossary';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import AdminPanel from './components/AdminPanel';
+import ContributorPanel from './components/ContributorPanel';
 import Leaderboard from './components/Leaderboard';
 import ProfilePage from './components/ProfilePage';
 import HomePage from './components/HomePage';
@@ -32,6 +33,12 @@ interface NewAchievement {
 
 type ToastItem = NewAchievement & { _toastId: string };
 
+const normalizeRole = (role: string | null | undefined): string | null => {
+  if (!role) return null;
+  const cleaned = role.trim().toUpperCase();
+  return cleaned.startsWith('ROLE_') ? cleaned.slice(5) : cleaned;
+};
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,7 +52,7 @@ export default function App() {
 
   // --- Auth State ---
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [authRole, setAuthRole] = useState<string | null>(() => localStorage.getItem('role'));
+  const [authRole, setAuthRole] = useState<string | null>(() => normalizeRole(localStorage.getItem('role')));
   const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
   const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('profilePic'));
 
@@ -69,9 +76,10 @@ export default function App() {
   const isGlossary = location.pathname.startsWith('/glossary');
   const isProfile = location.pathname.startsWith('/profile');
   const isAdmin = location.pathname.startsWith('/admin');
+  const isContributor = location.pathname.startsWith('/contributor');
   const isShop = location.pathname.startsWith('/shop');
   const isWardrobe = location.pathname.startsWith('/wardrobe');
-  const isLearn = !isLeaderboard && !isGlossary && !isProfile && !isAdmin && !isShop && !isWardrobe;
+  const isLearn = !isLeaderboard && !isGlossary && !isProfile && !isAdmin && !isContributor && !isShop && !isWardrobe;
 
   const [loginDates, setLoginDates] = useState<string[]>(() => {
     const saved = localStorage.getItem('loginDates');
@@ -122,6 +130,11 @@ export default function App() {
           if (data.username) {
             setAuthUsername(data.username);
             localStorage.setItem('username', data.username);
+          }
+          if (data.role) {
+            const normalizedRole = normalizeRole(data.role);
+            setAuthRole(normalizedRole);
+            if (normalizedRole) localStorage.setItem('role', normalizedRole);
           }
           if (data.level !== undefined) {
             setLevel(data.level);
@@ -301,11 +314,11 @@ export default function App() {
 
   const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
     setAuthToken(token);
-    setAuthRole(role);
+    setAuthRole(normalizedRole);
     setAuthUsername(username);
     if (profilePic !== undefined) setProfilePic(profilePic);
     localStorage.setItem('token', token);
-    localStorage.setItem('role', role);
+    if (normalizedRole) localStorage.setItem('role', normalizedRole);
     localStorage.setItem('username', username);
     if (level !== undefined) {
       setLevel(level);
@@ -351,7 +364,7 @@ export default function App() {
     setShowOnboarding(!isDoneWithOnboarding);
     if (isDoneWithOnboarding) {
       localStorage.setItem('onboardingFinished', 'true');
-      navigate('/home');
+      navigate(normalizedRole === 'CONTRIBUTOR' ? '/contributor' : '/home');
     } else {
       localStorage.removeItem('onboardingFinished');
       navigate('/onboarding');
@@ -631,14 +644,16 @@ export default function App() {
           setAvatarCreationDone(false);
           setShowOnboarding(false);
           localStorage.setItem('onboardingFinished', 'true');
-          navigate('/home');
+          const role = normalizeRole(localStorage.getItem('role'));
+          navigate(role === 'CONTRIBUTOR' ? '/contributor' : '/home');
         })
         .catch(err => console.error('Failed to save onboarding:', err));
     } else {
       // Fallback for safety, though we now register first
       setShowOnboarding(false);
       localStorage.setItem('onboardingFinished', 'true');
-      navigate('/home');
+      const role = normalizeRole(localStorage.getItem('role'));
+      navigate(role === 'CONTRIBUTOR' ? '/contributor' : '/home');
     }
   };
 
@@ -894,6 +909,18 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* Contributor Tab */}
+          {isContributor && authRole === 'CONTRIBUTOR' && (
+            <motion.div
+              key="contributor"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <ContributorPanel onBack={() => navigate('/home')} />
+            </motion.div>
+          )}
+
         </AnimatePresence>
       </main>
 
@@ -963,6 +990,17 @@ export default function App() {
             >
               <Shield size={24} />
               <span className="text-[10px] font-black uppercase">Admin</span>
+            </motion.button>
+          )}
+          {authRole === 'CONTRIBUTOR' && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate('/contributor')}
+              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${location.pathname.startsWith('/contributor') ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+            >
+              <Pencil size={24} />
+              <span className="text-[10px] font-black uppercase">Create</span>
             </motion.button>
           )}
         </div>
@@ -1127,6 +1165,10 @@ export default function App() {
       } />
       <Route path="/admin/*" element={
         (!authToken || authRole !== 'ADMIN') ? <Navigate to="/home" replace /> :
+          (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
+      } />
+      <Route path="/contributor/*" element={
+        (!authToken || authRole !== 'CONTRIBUTOR') ? <Navigate to="/home" replace /> :
           (!showOnboarding) ? mainApp : <Navigate to="/onboarding" replace />
       } />
       <Route path="/shop/*" element={
