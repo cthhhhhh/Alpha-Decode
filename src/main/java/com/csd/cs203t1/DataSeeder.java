@@ -816,37 +816,318 @@ public class DataSeeder implements CommandLineRunner {
 		DailyQuiz dq = new DailyQuiz();
 		dq.setDate(LocalDate.now());
 
-		SelectQuestion q1 = SelectQuestion.builder()
-				.title("Which of these correctly uses \"mewing\" in a sentence?")
-				.options(List.of("I mewed the exam", "He stays quiet because he's mewing",
-						"She mewed to the party",
-						"They mewed all the fries"))
-				.correctAnswer(1)
-				.explanation(
-						"Mewing requires silence — pressing the tongue to the roof of the mouth. \"He stays quiet because he's mewing\" is the correct usage.")
-				.quiz(dq).build();
+		List<Question> bank = new ArrayList<>();
 
-		SelectQuestion q2 = SelectQuestion.builder()
-				.title("\"The delulu is the solulu\" means...")
-				.options(List.of("Being realistic always wins",
-						"Delusional positivity is somehow the answer",
-						"You should face the truth", "Delulu people never succeed"))
+		bank.add(SelectQuestion.builder()
+				.title("Which sentence best uses \"skibidi\" in Gen Alpha slang?")
+				.options(List.of(
+						"That homework was so skibidi, I actually enjoyed it",
+						"That group chat is skibidi, everything there is chaos",
+						"I skibidi my shoes every morning",
+						"Can you skibidi this document?"))
 				.correctAnswer(1)
-				.explanation(
-						"This ironic phrase means sometimes delusional confidence is what gets you through — it's used humorously in Gen Z culture.")
-				.quiz(dq).build();
+				.explanation("Skibidi is usually negative — chaotic / cringe. Calling a chaotic group chat skibidi fits the meme usage.")
+				.quiz(dq).build());
 
-		SelectQuestion q3 = SelectQuestion.builder()
-				.title("A true Sigma would most likely...")
-				.options(List.of("Lead a group project loudly", "Follow the most popular person",
-						"Work alone without seeking approval",
-						"Post on social media every day"))
+		bank.add(SelectQuestion.builder()
+				.title("If someone says \"no cap, that boba was bussin\", what do they mean?")
+				.options(List.of(
+						"They hated the boba and are lying",
+						"They are joking about being hungry",
+						"They're serious that the boba was really good",
+						"They paid extra tax on the food"))
 				.correctAnswer(2)
-				.explanation(
-						"A Sigma is a lone wolf who operates outside social hierarchies — self-sufficient, silent, and independent.")
-				.quiz(dq).build();
+				.explanation("\"No cap\" = I'm not lying. \"Bussin\" = extremely tasty food. Together they mean the food was honestly amazing.")
+				.quiz(dq).build());
 
-		dq.setQuestions(List.of(q1, q2, q3));
+		bank.add(SelectQuestion.builder()
+				.title("Which situation shows \"unspoken rizz\"?")
+				.options(List.of(
+						"Someone loudly bragging about themselves",
+						"Someone quietly entering the room and instantly getting attention",
+						"Someone spamming messages for a reply",
+						"Someone refusing to talk to anyone ever"))
+				.correctAnswer(1)
+				.explanation("Unspoken rizz is effortless charisma — people are drawn to you without you trying hard or talking much.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Your friend says \"dont be delulu about how much time you have for revision\". What do they mean?")
+				.options(List.of(
+						"Copy what everyone else is doing and hope for the best",
+						"Make sure you have enough time to study",
+						"Post your notes on social media",
+						"Just wing it"))
+				.correctAnswer(1)
+				.explanation("Delulu is about being delusional, to be delulu about how much time you have for revision is to be unrealistic about how much time you have to revise.")
+				.quiz(dq).build());
+		bank.add(SelectQuestion.builder()
+				.title("Calling a video \"Ohio\" most likely means it is...")
+				.options(List.of(
+						"Very educational",
+						"Super normal and boring",
+						"Strange, cursed, or surreal",
+						"Sponsored by a famous brand"))
+				.correctAnswer(2)
+				.explanation("Ohio memes label things as weird, cursed, or 'only in Ohio' strange.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Your friend posts \"GYATT\" under a picture. What are they expressing?")
+				.options(List.of(
+						"Shock or admiration at how someone looks",
+						"Confusion about homework",
+						"Anger about a game",
+						"Fear of public speaking"))
+				.correctAnswer(0)
+				.explanation("\"Gyatt\" (from \"goddamn\") is usually a joking reaction to someone's appearance.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which behaviour is most \"NPC\"?")
+				.options(List.of(
+						"Always starting new creative projects",
+						"Blindly copying everything a TikTok trend says",
+						"Organising a unique school event",
+						"Asking deep questions in class"))
+				.correctAnswer(1)
+				.explanation("NPC behaviour is robotic and unoriginal — just following scripts and trends without thinking.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("If something is \"lowkey fun\", what does that suggest?")
+				.options(List.of(
+						"It is secretly or surprisingly fun",
+						"It is publicly announced as fun",
+						"It is extremely boring",
+						"It is banned and dangerous"))
+				.correctAnswer(0)
+				.explanation("Lowkey means subtle or secretly — lowkey fun = more fun than you expected, but you don't hype it loudly.")
+				.quiz(dq).build());
+
+		// Extra daily quiz bank questions
+		bank.add(SelectQuestion.builder()
+				.title("What does it mean if a teacher's reaction is \"mid\" to your project?")
+				.options(List.of(
+						"They thought it was absolutely perfect",
+						"They thought it was average, nothing special",
+						"They were extremely angry",
+						"They didn’t see it at all"))
+				.correctAnswer(1)
+				.explanation("Calling something mid means it's just okay — not terrible, but not impressive either.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which sentence best fits \"bussin\"?")
+				.options(List.of(
+						"That history essay was bussin",
+						"That cafeteria chicken today was bussin",
+						"My alarm clock is bussin",
+						"The math exam was bussin"))
+				.correctAnswer(1)
+				.explanation("Bussin is almost always used for food that tastes really good.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("If someone says \"lowkey tired but highkey excited\", what do they mean?")
+				.options(List.of(
+						"They are secretly excited and loudly tired",
+						"They are a little tired but very, openly excited",
+						"They are not tired or excited",
+						"They are pretending to be excited"))
+				.correctAnswer(1)
+				.explanation("Lowkey = a bit / secretly; highkey = strongly / openly. So they are slightly tired but very excited.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which reaction feels the most \"Ohio\"?")
+				.options(List.of(
+						"A regular dog walking in the park",
+						"A three‑headed dog floating in the sky in a TikTok",
+						"A neat row of textbooks",
+						"A clean whiteboard"))
+				.correctAnswer(1)
+				.explanation("Ohio memes are used for cursed, bizarre, or surreal scenes — like a three‑headed floating dog.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("What is \"fanum tax\" in a school canteen context?")
+				.options(List.of(
+						"The service charge on your meal",
+						"The bite your friend \"taxes\" from your fries",
+						"A fine for being late to lunch",
+						"A discount for regular customers"))
+				.correctAnswer(1)
+				.explanation("Fanum tax is the playful 'tax' of stealing a bite of someone else's food.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which example best shows \"main character energy\"?")
+				.options(List.of(
+						"Sitting quietly in the corner hoping nobody notices you",
+						"Walking into class with confidence, acting like the day is your movie",
+						"Copying whatever your friends decide",
+						"Never posting or speaking to anyone"))
+				.correctAnswer(1)
+				.explanation("Main character energy is acting like you are the star of the story with confident presence.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Your friend says your outfit today is \"actually slay\". What do they mean?")
+				.options(List.of(
+						"It looks terrible",
+						"It looks amazing",
+						"It is confusing",
+						"It is very casual and boring"))
+				.correctAnswer(1)
+				.explanation("Slay means you look or performed amazingly — it's a big compliment.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which text from a friend sounds the most \"delulu\"?")
+				.options(List.of(
+					"They said hi once, so we're obviously soulmates",
+					"We studied together last week, it was nice",
+					"They didn't reply, maybe they're busy",
+					"I don't really know them yet"
+				))
+				.correctAnswer(0)
+				.explanation("Delulu is about being delusional, to be delulu about someone saying hi once is to be overreacting to a tiny signal.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("In a group project, who is acting the most like a \"sigma\"?")
+				.options(List.of(
+						"Someone quietly finishing their part early without bragging",
+						"Someone loudly reminding everyone they are the leader",
+						"Someone copying whatever others are doing",
+						"Someone refusing to work at all"))
+				.correctAnswer(0)
+				.explanation("Sigma energy is independent and self‑driven, not loud or attention‑seeking.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which sentence uses \"no cap\" correctly?")
+				.options(List.of(
+						"No cap, that was the best recess ever",
+						"Please no cap your bottle",
+						"I will no cap my homework",
+						"She is no cap the story"))
+				.correctAnswer(0)
+				.explanation("No cap means 'for real' / 'I'm not lying' — it fits naturally before a true statement.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("If someone is \"built like an NPC\" in conversation, what does that imply?")
+				.options(List.of(
+						"They always say unique, unexpected things",
+						"They repeat the same basic lines and reactions",
+						"They are extremely athletic",
+						"They are great at debating"))
+				.correctAnswer(1)
+				.explanation("NPC‑like behaviour is repetitive and scripted, like background game characters.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("What does \"touching grass\" usually mean online?")
+				.options(List.of(
+						"Going outside and taking a break from the internet",
+						"Starting a gardening club",
+						"Failing a test",
+						"Losing at a video game"))
+				.correctAnswer(0)
+				.explanation("Telling someone to touch grass means they should log off and experience real life for a bit.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("If a TikTok is called \"peak\", what does that mean?")
+				.options(List.of(
+						"It is the worst possible content",
+						"It is top‑tier / the best version of something",
+						"It is very average",
+						"It is too long to watch"))
+				.correctAnswer(1)
+				.explanation("Peak is slang for the highest quality or best example of something.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which sentence uses \"gyatt\" in the expected way?")
+				.options(List.of(
+						"Gyatt, that plot twist was insane",
+						"Remember to gyatt your homework",
+						"Please gyatt the door",
+						"Gyatt this equation for me"))
+				.correctAnswer(0)
+				.explanation("Gyatt is an exclamation of shock, often about appearance or something wild happening.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Someone says, \"Be so fr right now.\" What are they asking for?")
+				.options(List.of(
+						"More jokes",
+						"More emojis",
+						"Honesty and seriousness",
+						"A longer message"))
+				.correctAnswer(2)
+				.explanation("So fr = so for real — they want you to be honest and serious.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("What does it mean if a meme is \"unironically fire\"?")
+				.options(List.of(
+						"It is bad but people pretend to like it",
+						"It is genuinely very good, not just as a joke",
+						"It is about real fire safety",
+						"It is old and boring"))
+				.correctAnswer(1)
+				.explanation("Unironically fire means it's actually great, not just funny because it's cringe.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("Which behaviour is the most \"rizzless\"?")
+				.options(List.of(
+						"Listening and responding kindly in a conversation",
+						"Insulting someone repeatedly to impress them",
+						"Asking questions and showing interest",
+						"Using humour to make someone comfortable"))
+				.correctAnswer(1)
+				.explanation("Being rude and trying too hard usually kills rizz instead of building it.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("If your friend says their exam results were \"L after L\", what do they mean?")
+				.options(List.of(
+						"They got multiple wins",
+						"They kept taking losses / bad results",
+						"They only took one small loss",
+						"They skipped the exam"))
+				.correctAnswer(1)
+				.explanation("L stands for loss — L after L means repeated failures or setbacks.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("A teacher unexpectedly cancels homework and the class says \"W teacher\". What does that show?")
+				.options(List.of(
+						"They think the teacher is a loser",
+						"They think the teacher is doing a good job",
+						"They are confused",
+						"They are angry at the teacher"))
+				.correctAnswer(1)
+				.explanation("W stands for win — calling someone a W means they are cool/they're doing a good job.")
+				.quiz(dq).build());
+
+		bank.add(SelectQuestion.builder()
+				.title("If someone is \"chronically online\", what is being teased?")
+				.options(List.of(
+						"They never use the internet",
+						"They only play outdoor sports",
+						"They spend way too much time on the internet",
+						"They dislike social media completely"))
+				.correctAnswer(2)
+				.explanation("Chronically online jokes about people who live so much on the internet that their view of real life is warped by memes.")
+				.quiz(dq).build());
+
+		dq.setQuestions(bank);
 		quizRepository.save(dq);
 	}
 

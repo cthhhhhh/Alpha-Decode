@@ -73,3 +73,4 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
     </div>
   );
 }
+

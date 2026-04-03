@@ -248,12 +248,12 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
 
     const total = questions.length;
     const question = questions[qIndex];
-    const isCorrect = selected !== null && selected === question.correct;
-    const isPerfect = correctCount === total;
+    const isCorrect = !!question && selected !== null && selected === question.correct;
+    const isPerfect = total > 0 && correctCount === total;
     const isShowingConfetti = finished && isPerfect;
 
     const handleCheck = () => {
-        if (selected === null) return;
+        if (!question || selected === null) return;
         const correct = selected === question.correct;
         if (correct) setCorrectCount(c => c + 1);
         setAnswerLog(prev => [...prev, correct]);
@@ -271,6 +271,15 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
         setQIndex(0); setSelected(null); setIsChecked(false);
         setCorrectCount(0); setAnswerLog([]); setFinished(false);
     };
+
+    // If something tries to open the modal without loaded questions, close immediately
+    // (prevents rendering with an undefined `question`).
+    useEffect(() => {
+        if (show && (!questions || questions.length === 0 || !question)) {
+            onClose();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [show, questions.length, qIndex]);
 
     return (
         <AnimatePresence onExitComplete={handleReset}>
@@ -296,11 +305,22 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
                     <div className="flex-1 overflow-y-auto">
                         <div className="max-w-3xl mx-auto px-4 py-4">
                             <AnimatePresence mode="wait">
-                                {finished
-                                    ? <ResultScreen correctCount={correctCount} total={total} answerLog={answerLog} onClose={handleFinishClose} />
-                                    : <QuestionView question={question} qIndex={qIndex} total={total} selected={selected} isChecked={isChecked} isCorrect={isCorrect} onSelect={setSelected} onCheck={handleCheck} onNext={handleNext}
-                                onFlag={(id) => { setFlagId(id); setShowFlag(true); }} />
-                                }
+                                {finished ? (
+                                    <ResultScreen correctCount={correctCount} total={total} answerLog={answerLog} onClose={handleFinishClose} />
+                                ) : question ? (
+                                    <QuestionView
+                                        question={question}
+                                        qIndex={qIndex}
+                                        total={total}
+                                        selected={selected}
+                                        isChecked={isChecked}
+                                        isCorrect={isCorrect}
+                                        onSelect={setSelected}
+                                        onCheck={handleCheck}
+                                        onNext={handleNext}
+                                        onFlag={(id) => { setFlagId(id); setShowFlag(true); }}
+                                    />
+                                ) : null}
                             </AnimatePresence>
                         </div>
                     </div>
@@ -309,7 +329,7 @@ const DailyQuizModal = ({ show, onClose, onComplete, questions }: Props) => {
                         show={showFlag}
                         contentType="QUESTION"
                         contentId={flagId}
-                        context={`Daily Quiz - "${question.q}"`}
+                        context={question ? `Daily Quiz - "${question.q}"` : 'Daily Quiz'}
                         onClose={() => setShowFlag(false)}
                     />
                 </motion.div>
