@@ -1113,23 +1113,9 @@ export default function App() {
       <DailyQuizModal
         show={showDailyQuiz}
         onClose={() => {
-          // If the user closes the quiz before finishing, treat it as a failed attempt:
-          // reset streak to 0 and record the attempt in the DB so the quiz won't
-          // reappear today and the streak correctly goes back to 0.
-          if (dailyQuizStatus === 'loaded' && dailyQuizStarted && !dailyQuizCompleted) {
-            setStreak(0);
-            localStorage.setItem('streak', '0');
-            localStorage.setItem('dailyQuizDate', new Date().toISOString().slice(0, 10));
-            setDailyQuizCompleted(true);
-            const token = localStorage.getItem('token');
-            if (token) {
-              fetch('/api/auth/coins', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ coinsToAdd: 0, streakToSet: 0, dailyQuizCountIncrement: true }),
-              }).catch(() => { });
-            }
-          }
+          // Exit without finishing: do not record completion on the server (no dailyQuizLastDate),
+          // so the user can open the Daily Quiz again the same day. Progress is not persisted
+          // across refresh (modal state resets).
           setShowDailyQuiz(false);
         }}
         onComplete={handleDailyQuizComplete}
