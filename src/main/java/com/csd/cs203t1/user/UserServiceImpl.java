@@ -161,6 +161,9 @@ public class UserServiceImpl implements UserService {
             user.setStreak(streakToSet);
         }
         if (request.isDailyQuizCountIncrement()) {
+            if (user.getDailyQuizLastDate() != null && user.getDailyQuizLastDate().equals(LocalDate.now())) {
+                throw new IllegalArgumentException("Daily quiz already completed today");
+            }
             user.setDailyQuizCount(user.getDailyQuizCount() + 1);
             user.setDailyQuizLastDate(LocalDate.now());
         }

@@ -5,29 +5,64 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+
+import com.csd.cs203t1.question.Question;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserService;
 
 @RestController
 @RequestMapping("/api/quiz")
 public class QuizController {
 
     private final QuizRepository quizRepository;
+    private final UserService userService;
 
-    public QuizController(QuizRepository quizRepository) {
+    public QuizController(QuizRepository quizRepository, UserService userService) {
         this.quizRepository = quizRepository;
+        this.userService = userService;
     }
 
-    /** Returns the single DailyQuiz with all its questions */
+    /**
+     * Returns 3 questions for today's daily quiz.
+     * They are drawn from the DailyQuiz question bank, and rotated deterministically
+     * by calendar day so the set changes every day but remains stable within the day.
+     */
     @GetMapping("/daily")
     public ResponseEntity<?> getDailyQuiz() {
-        return quizRepository.findAll().stream()
+        try {
+            User user = userService.getCurrentUser();
+            if (user.getDailyQuizLastDate() != null && user.getDailyQuizLastDate().equals(LocalDate.now())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Daily quiz already completed today");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        }
+
+        List<Question> bank = quizRepository.findAll().stream()
                 .filter(q -> q instanceof DailyQuiz)
                 .findFirst()
-                .<ResponseEntity<?>>map(q -> ResponseEntity.ok(q.getQuestions()))
-                .orElse(ResponseEntity.notFound().build());
+                .map(Quiz::getQuestions)
+                .orElse(null);
+        if (bank == null || bank.size() < 3) {
+            return ResponseEntity.notFound().build();
+        }
+        List<Question> copy = new ArrayList<>(bank);
+        long seed = LocalDate.now().toEpochDay();
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        // Deterministic shuffle-by-day: simple seeded swap for first k positions.
+        int k = Math.min(3, copy.size());
+        for (int i = 0; i < k; i++) {
+            int j = (int) ((seed + i * 31) % copy.size());
+            Question tmp = copy.get(i);
+            copy.set(i, copy.get(j));
+            copy.set(j, tmp);
+        }
+        return ResponseEntity.ok(copy.subList(0, 3));
     }
 
     /** Returns the OnboardingQuiz questions */
