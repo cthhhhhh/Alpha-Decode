@@ -63,6 +63,26 @@ interface Props {
 }
 
 const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practiceMode = false }: Props) => {
+    const CORRECT_MESSAGES = [
+        'Excellent!',
+        'Good job!',
+        "That's so fire!",
+        'You ate that!',
+    ];
+
+    const INCORRECT_MESSAGES = [
+        'Oops!',
+        "That\'s not...",
+        'Not quite...',
+        'You thought you ate but...',
+    ];
+
+    const getRandomCorrectMessage = () =>
+        CORRECT_MESSAGES[Math.floor(Math.random() * CORRECT_MESSAGES.length)];
+
+    const getRandomIncorrectMessage = () =>
+        INCORRECT_MESSAGES[Math.floor(Math.random() * INCORRECT_MESSAGES.length)];
+
     const [steps, setSteps] = useState<Step[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -75,6 +95,8 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
     const [isFinished, setIsFinished] = useState(false);
     const [showFlag, setShowFlag] = useState(false);
     const [lessonTitle, setLessonTitle] = useState('');
+    const [correctMessage, setCorrectMessage] = useState('Excellent!');
+    const [incorrectMessage, setIncorrectMessage] = useState('Correct solution:');
 
     useEffect(() => {
         let isMounted = true;
@@ -114,6 +136,11 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
         } else if (step.question_type === 'TRANSLATE') {
             correct = wordBankSelection.join(' ') === step.target;
             if (correct) setCorrectCount(c => c + 1);
+        }
+        if (correct) {
+            setCorrectMessage(getRandomCorrectMessage());
+        } else if (step.question_type !== 'INTRO') {
+            setIncorrectMessage(getRandomIncorrectMessage());
         }
         setIsCorrect(correct);
         setIsChecked(true);
@@ -383,7 +410,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                 </div>
                                 <div>
                                     <p className={`font-black text-xl ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
-                                        {isCorrect ? 'Excellent!' : 'Correct solution:'}
+                                        {isCorrect ? correctMessage : incorrectMessage}
                                     </p>
                                     {!isCorrect && (
                                         <p className="text-red-700 font-bold">
