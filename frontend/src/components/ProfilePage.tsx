@@ -140,10 +140,12 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
         setDeletingAccount(true);
         setDeleteError('');
         try {
+            const token = localStorage.getItem('token');
             const res = await fetch('/api/auth/me', {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${authToken}`,
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
             });
             if (res.ok) {

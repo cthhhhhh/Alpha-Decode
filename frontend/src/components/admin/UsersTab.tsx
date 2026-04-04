@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, SlidersHorizontal, UserCheck, Ban, CheckCircle, RotateCcw, Trash2, ChevronDown, ChevronUp, Coins, Zap, Trophy, Clock, BookOpen, ShieldCheck } from 'lucide-react';
 import type { UserData, UserStats } from './types';
@@ -201,8 +201,8 @@ export function UsersTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(user => (
-                <>
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                <Fragment key={user.id}>
+                  <tr className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-5">
                       <div className="relative pl-5">
                         <span className="absolute left-0 top-1/2 -translate-y-1/2">
@@ -320,7 +320,7 @@ export function UsersTab() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
               {filtered.length === 0 && (
                 <tr><td colSpan={5} className="px-5 py-12 text-center text-slate-400 font-bold">No users found.</td></tr>

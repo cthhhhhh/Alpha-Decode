@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PenSquare, Clock, CheckCircle, XCircle, Plus } from 'lucide-react';
+import { PenSquare, Clock, CheckCircle, XCircle, Plus, LayoutGrid } from 'lucide-react';
 
 import type { ContribTab, Draft } from './contributor/types';
 import { authHeaders } from './admin/utils';
@@ -11,15 +11,15 @@ import { ApprovedTab } from './contributor/ApprovedTab';
 import { RejectedTab } from './contributor/RejectedTab';
 
 export default function ContributorPanel({ onBack: _onBack }: { onBack?: () => void }) {
-  const [activeTab, setActiveTab] = useState<ContribTab>('create');
+  const [activeTab, setActiveTab] = useState<ContribTab>('dashboard');
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDrafts = useCallback(() => {
     setLoading(true);
     fetch('/api/drafts/mine', { headers: authHeaders() })
-      .then(r => r.json())
-      .then(setDrafts)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => setDrafts(Array.isArray(data) ? data : []))
       .catch(() => setDrafts([]))
       .finally(() => setLoading(false));
   }, []);
@@ -29,8 +29,10 @@ export default function ContributorPanel({ onBack: _onBack }: { onBack?: () => v
   const pendingCount = drafts.filter(d => d.status === 'PENDING').length;
   const approvedCount = drafts.filter(d => d.status === 'APPROVED').length;
   const rejectedCount = drafts.filter(d => d.status === 'REJECTED' || d.status === 'DELETED').length;
+  const draftCount = drafts.filter(d => d.status === 'DRAFT').length;
 
   const TABS: { key: ContribTab; label: string; icon: React.ReactNode; count?: number }[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: <LayoutGrid size={16} /> },
     { key: 'create', label: 'Create', icon: <Plus size={16} /> },
     { key: 'pending', label: 'Pending', icon: <Clock size={16} />, count: pendingCount },
     { key: 'approved', label: 'Approved', icon: <CheckCircle size={16} />, count: approvedCount },
@@ -73,6 +75,43 @@ export default function ContributorPanel({ onBack: _onBack }: { onBack?: () => v
       ) : (
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.15 }}>
+            {/* Dashboard Tab */}
+            {activeTab === 'dashboard' && (
+              <div className="space-y-6">
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-2xl border-2 border-slate-100 p-4 text-center">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide mb-1">Drafts</p>
+                    <p className="text-3xl font-black text-slate-800">{draftCount}</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border-2 border-amber-100 p-4 text-center">
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-wide mb-1">Pending</p>
+                    <p className="text-3xl font-black text-amber-600">{pendingCount}</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border-2 border-green-100 p-4 text-center">
+                    <p className="text-[10px] font-black text-green-600 uppercase tracking-wide mb-1">Approved</p>
+                    <p className="text-3xl font-black text-green-600">{approvedCount}</p>
+                  </div>
+                  <div className="bg-white rounded-2xl border-2 border-red-100 p-4 text-center">
+                    <p className="text-[10px] font-black text-red-600 uppercase tracking-wide mb-1">Rejected</p>
+                    <p className="text-3xl font-black text-red-600">{rejectedCount}</p>
+                  </div>
+                </div>
+
+                {/* Quick Action */}
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl p-8 text-white shadow-lg text-center">
+                  <h3 className="text-2xl font-black mb-2">Ready to contribute?</h3>
+                  <p className="font-bold opacity-90 mb-4">Create a new lesson draft and submit it for review</p>
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-xl font-black text-base hover:bg-slate-50 transition-colors active:scale-95"
+                  >
+                    <Plus size={18} />
+                    Create Draft
+                  </button>
+                </div>
+              </div>
+            )}
             {activeTab === 'create' && <CreateDraftTab drafts={drafts} onDraftsChange={fetchDrafts} />}
             {activeTab === 'pending' && <PendingTab drafts={drafts} />}
             {activeTab === 'approved' && <ApprovedTab drafts={drafts} />}

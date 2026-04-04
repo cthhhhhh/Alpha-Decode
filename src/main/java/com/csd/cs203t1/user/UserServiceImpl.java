@@ -244,6 +244,7 @@ public class UserServiceImpl implements UserService {
     public void deleteCurrentUser() {
         User user = getCurrentUser();
         // Clean up related data
+        draftRepository.deleteByContributorId(user.getId());
         userAchievementRepository.deleteByUser(user);
         userBookmarkRepository.deleteByUser(user);
         flagRepository.deleteByReportedBy(user);
@@ -257,11 +258,11 @@ public class UserServiceImpl implements UserService {
     public void deleteUserById(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
         // Clean up related data
+        draftRepository.deleteByContributorId(id);
         userAchievementRepository.deleteByUser(user);
         userBookmarkRepository.deleteByUser(user);
         flagRepository.deleteByReportedBy(user);
         userItemRepository.deleteByUser(user);
-        draftRepository.deleteByContributorId(id);
 
         userRepository.delete(user);
     }

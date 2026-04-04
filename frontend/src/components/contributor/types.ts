@@ -14,4 +14,4 @@ export interface Draft {
   updatedAt: string;
 }
 
-export type ContribTab = 'create' | 'pending' | 'approved' | 'rejected';
+export type ContribTab = 'dashboard' | 'create' | 'pending' | 'approved' | 'rejected';

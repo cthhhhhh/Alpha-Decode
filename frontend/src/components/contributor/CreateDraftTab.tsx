@@ -4,11 +4,6 @@ import { Plus, Trash2, Edit2, Send, Save, X } from 'lucide-react';
 import type { Draft } from './types';
 import { authHeaders } from '../admin/utils';
 
-const COLOUR_SWATCHES = [
-  '#46a302', '#1cb0f6', '#ff4b4b', '#ff9600', '#ce82ff', '#2b70c9',
-  '#ff6b6b', '#ffd43b', '#51cf66', '#339af0', '#cc5de8', '#ff922b',
-];
-
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   INTRO:     { label: 'Intro',     color: 'bg-blue-100 text-blue-700' },
   SELECT:    { label: 'Select',    color: 'bg-purple-100 text-purple-700' },
@@ -113,7 +108,7 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
   const savedDrafts = drafts.filter(d => d.status === 'DRAFT');
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ title: '', story: '', emoji: '', colour: '#46a302' });
+  const [form, setForm] = useState({ title: '', story: '', emoji: '📄', colour: '#46a302' });
   const [questions, setQuestions] = useState<QForm[]>([]);
   const [showQForm, setShowQForm] = useState(false);
   const [qForm, setQForm] = useState<QForm>({ ...EMPTY_Q_FORM });
@@ -125,7 +120,7 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
   const [deleting, setDeleting] = useState<number | null>(null);
 
   const resetForm = () => {
-    setForm({ title: '', story: '', emoji: '', colour: '#46a302' });
+    setForm({ title: '', story: '', emoji: '📄', colour: '#46a302' });
     setQuestions([]);
     setEditingId(null);
     setShowQForm(false);
@@ -171,8 +166,8 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
   };
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.story.trim() || !form.emoji.trim()) {
-      setError('Title, story, and emoji are required.');
+    if (!form.title.trim() || !form.story.trim()) {
+      setError('Title and story are required.');
       return;
     }
     setSaving(true);
@@ -273,6 +268,7 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
                         className="px-4 pb-3 flex gap-2"
                       >
                         <button
@@ -327,34 +323,13 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
           )}
 
           {/* Lesson fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="space-y-4">
+            <div>
               <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">Lesson Title</label>
-              <input className={inp} placeholder="e.g. Introduction to Hiragana" value={form.title}
+              <input className={inp} placeholder="e.g. Rizz Basics" value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
             </div>
             <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">Emoji</label>
-              <input className={inp} placeholder="e.g. 🌸" value={form.emoji}
-                onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))} />
-            </div>
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">Colour</label>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {COLOUR_SWATCHES.map(c => (
-                  <button
-                    key={c} type="button"
-                    onClick={() => setForm(f => ({ ...f, colour: c }))}
-                    className={`w-6 h-6 rounded-full border-2 transition-all ${form.colour === c ? 'border-slate-700 scale-125' : 'border-transparent hover:scale-110'}`}
-                    style={{ background: c }}
-                    title={c}
-                  />
-                ))}
-              </div>
-              <input className={inp} placeholder="#46a302" value={form.colour}
-                onChange={e => setForm(f => ({ ...f, colour: e.target.value }))} />
-            </div>
-            <div className="col-span-2">
               <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">Story / Description</label>
               <textarea className={`${inp} resize-none`} rows={3} placeholder="Describe what students will learn..."
                 value={form.story} onChange={e => setForm(f => ({ ...f, story: e.target.value }))} />
