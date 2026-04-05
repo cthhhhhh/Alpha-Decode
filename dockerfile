@@ -5,7 +5,7 @@ COPY pom.xml ./
 COPY src ./src
 COPY frontend ./frontend
 RUN mvn clean package -DskipTests
-
+RUN ls -R target/classes/static
 # ---- Run stage ----
 FROM eclipse-temurin:21-jre
 WORKDIR /app
