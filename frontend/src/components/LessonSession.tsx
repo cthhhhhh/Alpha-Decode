@@ -97,6 +97,10 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
     const [lessonTitle, setLessonTitle] = useState('');
     const [correctMessage, setCorrectMessage] = useState('Excellent!');
     const [incorrectMessage, setIncorrectMessage] = useState('Correct solution:');
+    
+    // AI Feedback State
+    const [aiFeedback, setAiFeedback] = useState<{ feedback: string; example: string } | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -112,6 +116,36 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
             .catch(() => { if (isMounted) setLoading(false); });
         return () => { isMounted = false; };
     }, [lessonId]);
+
+    // Fetch AI Feedback when finished
+    useEffect(() => {
+        if (isFinished && !practiceMode) {
+            setAiLoading(true);
+            const token = localStorage.getItem('token');
+            const totalGraded = steps.filter(s => s.question_type !== 'INTRO').length;
+            const accuracy = totalGraded === 0 ? 100 : Math.round((correctCount / totalGraded) * 100);
+            
+            fetch('/api/ai/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({
+                    lessonTitle: lessonTitle,
+                    score: accuracy
+                })
+            })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) {
+                    setAiFeedback(data);
+                }
+                setAiLoading(false);
+            })
+            .catch(() => setAiLoading(false));
+        }
+    }, [isFinished, practiceMode, correctCount, lessonTitle, steps]);
 
     if (loading) return (
         <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
@@ -385,6 +419,43 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                         </div>
                                     )}
                                 </div>
+
+                                {/* AI Feedback Section */}
+                                {!practiceMode && (
+                                    <div className="w-full max-w-sm mt-4">
+                                        {aiLoading ? (
+                                            <div className="bg-brand-primary/5 p-6 rounded-3xl border-2 border-brand-primary/20 animate-pulse">
+                                                <div className="h-4 bg-brand-primary/20 rounded w-1/3 mx-auto mb-4"></div>
+                                                <div className="space-y-2">
+                                                    <div className="h-3 bg-brand-primary/10 rounded w-3/4 mx-auto"></div>
+                                                    <div className="h-3 bg-brand-primary/10 rounded w-1/2 mx-auto"></div>
+                                                </div>
+                                            </div>
+                                        ) : aiFeedback ? (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="bg-brand-primary/5 p-6 rounded-3xl border-2 border-brand-primary/20 text-left space-y-4"
+                                            >
+                                                <div>
+                                                    <p className="text-xs font-black text-brand-primary tracking-widest uppercase mb-1">AI Teacher says:</p>
+                                                    <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                                                        {aiFeedback.feedback}
+                                                    </p>
+                                                </div>
+                                                {aiFeedback.example && (
+                                                    <div className="bg-white p-4 rounded-2xl border border-brand-primary/10">
+                                                        <p className="text-xs font-black text-slate-400 tracking-widest uppercase mb-1">Bonus Example:</p>
+                                                        <p className="text-sm font-bold text-slate-800 italic">
+                                                            {aiFeedback.example}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        ) : null}
+                                    </div>
+                                )}
+
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
