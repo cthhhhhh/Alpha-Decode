@@ -78,4 +78,4 @@ export interface RevisionQuiz {
   questions: Question[];
 }
 
-export type Tab = 'dashboard' | 'users' | 'reports' | 'content';
+export type Tab = 'dashboard' | 'users' | 'reports' | 'content' | 'submissions';

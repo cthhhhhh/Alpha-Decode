@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft, CheckCircle, Info } from 'lucide-react';
 
 interface RegisterPageProps {
   onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => void;
@@ -24,38 +24,85 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'USER' | 'CONTRIBUTOR'>('USER');
+  const [contributorSuccess, setContributorSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username, 
-          email, 
-          password
-        }),
-      });
-      if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || 'Registration failed');
+      if (selectedRole === 'CONTRIBUTOR') {
+        const res = await fetch('/api/auth/register-contributor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password }),
+        });
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || 'Registration failed');
+        }
+        setContributorSuccess(true);
+      } else {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password }),
+        });
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || 'Registration failed');
+        }
+        const data = await res.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('username', data.username);
+        localStorage.removeItem('initialLevel');
+        localStorage.removeItem('initialXp');
+        onRegisterSuccess(data.token, data.role, data.username, data.level, data.coins, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
       }
-      const data = await res.json();
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('username', data.username);
-      localStorage.removeItem('initialLevel');
-      localStorage.removeItem('initialXp');
-      onRegisterSuccess(data.token, data.role, data.username, data.level, data.coins, data.maxUnlockedLessonIndex, data.streak, data.profilePic, data.dailyQuizLastDate, data.dailyQuizCompletedToday, data.onboardingCompleted);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (contributorSuccess) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <BackgroundBubble color="bg-blue-500" size="60vw" top="-10%" left="-20%" delay={0} />
+          <BackgroundBubble color="bg-brand-secondary" size="50vw" bottom="-10%" right="-10%" delay={2} />
+        </div>
+        <div className="flex-1 flex items-center justify-center px-4 relative z-10 w-full">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md bg-white/80 backdrop-blur-xl border-4 border-white rounded-[2.5rem] p-8 sm:p-12 shadow-[0_32px_80px_rgba(0,0,0,0.1)] text-center"
+          >
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                <CheckCircle size={40} className="text-blue-500" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-black text-slate-800 mb-4 uppercase tracking-tight">Account Created!</h2>
+            <p className="text-slate-500 font-bold mb-2">Your contributor account has been submitted for review.</p>
+            <p className="text-slate-400 text-sm font-semibold mb-8">An admin will review your request. You'll be able to log in once approved.</p>
+            <motion.button
+              whileHover={{ scale: 1.02, translateY: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onGoToLogin}
+              className="w-full bg-blue-500 text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#2563eb] transition-all"
+            >
+              GO TO LOGIN
+            </motion.button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
@@ -164,15 +211,58 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
                 </button>
               </div>
             </div>
-            
-            <div className="pt-4">
+
+            {/* Role Toggle */}
+            <div>
+              <label className="block text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Account Type</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('USER')}
+                  className={`py-3 px-4 rounded-2xl border-2 font-black text-sm transition-all ${
+                    selectedRole === 'USER'
+                      ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+                      : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  🎓 Learner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('CONTRIBUTOR')}
+                  className={`py-3 px-4 rounded-2xl border-2 font-black text-sm transition-all ${
+                    selectedRole === 'CONTRIBUTOR'
+                      ? 'border-blue-500 bg-blue-50 text-blue-600'
+                      : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  ✍️ Contributor
+                </button>
+              </div>
+              {selectedRole === 'CONTRIBUTOR' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="flex items-start gap-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-2xl px-4 py-3 mt-3 text-xs font-bold"
+                >
+                  <Info size={14} className="shrink-0 mt-0.5" />
+                  <span>Contributor accounts require admin approval before you can log in. You'll be notified once approved.</span>
+                </motion.div>
+              )}
+            </div>
+
+            <div className="pt-2">
               <motion.button
                 id="register-submit"
                 type="submit"
                 disabled={loading}
                 whileHover={{ scale: 1.02, translateY: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full bg-brand-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_#46a302] hover:shadow-[0_8px_15px_rgba(88,204,2,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed group"
+                className={`w-full text-white py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed group ${
+                  selectedRole === 'CONTRIBUTOR'
+                    ? 'bg-blue-500 shadow-[0_6px_0_#2563eb] hover:shadow-[0_8px_15px_rgba(59,130,246,0.3)]'
+                    : 'bg-brand-primary shadow-[0_6px_0_#46a302] hover:shadow-[0_8px_15px_rgba(88,204,2,0.3)]'
+                }`}
               >
                 {loading ? 'CREATING...' : 'CREATE ACCOUNT'}
                 {!loading && <UserPlus size={20} className="group-hover:scale-110 transition-transform" />}
