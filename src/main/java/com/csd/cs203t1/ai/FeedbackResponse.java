@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class FeedbackResponse {
     private String feedback;
     private String example;
+    private String wrongAnswersFeedback;
 }

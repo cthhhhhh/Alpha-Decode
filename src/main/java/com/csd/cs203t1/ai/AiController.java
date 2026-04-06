@@ -17,7 +17,7 @@ public class AiController {
 
     @PostMapping("/feedback")
     public ResponseEntity<FeedbackResponse> getFeedback(@RequestBody FeedbackRequest request) {
-        FeedbackResponse response = aiService.getLessonFeedback(request.getLessonTitle(), request.getScore());
+        FeedbackResponse response = aiService.getLessonFeedback(request.getLessonTitle(), request.getScore(), request.getWrongQuestions());
         return ResponseEntity.ok(response);
     }
 }

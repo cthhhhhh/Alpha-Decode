@@ -99,8 +99,12 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
     const [incorrectMessage, setIncorrectMessage] = useState('Correct solution:');
     
     // AI Feedback State
-    const [aiFeedback, setAiFeedback] = useState<{ feedback: string; example: string } | null>(null);
+    const [aiFeedback, setAiFeedback] = useState<{ feedback: string; example: string; wrongAnswersFeedback?: string } | null>(null);
     const [aiLoading, setAiLoading] = useState(false);
+    
+    // Tracking wrong questions
+    interface WrongQuestion { questionNumber: number; questionText: string; userAnswer: string; correctAnswer: string; }
+    const [wrongQuestions, setWrongQuestions] = useState<WrongQuestion[]>([]);
 
     useEffect(() => {
         let isMounted = true;
@@ -133,7 +137,8 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                 },
                 body: JSON.stringify({
                     lessonTitle: lessonTitle,
-                    score: accuracy
+                    score: accuracy,
+                    wrongQuestions: wrongQuestions
                 })
             })
             .then(res => res.ok ? res.json() : null)
@@ -175,6 +180,15 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
             setCorrectMessage(getRandomCorrectMessage());
         } else if (step.question_type !== 'INTRO') {
             setIncorrectMessage(getRandomIncorrectMessage());
+            
+            // Log wrong question for AI
+            const qText = step.title + (step.content ? " " + step.content : "");
+            const userAns = step.question_type === 'SELECT' ? (selectedOption !== null && step.options ? step.options[selectedOption] : "No Answer") : wordBankSelection.join(' ');
+            const correctAns = step.question_type === 'SELECT' ? (step.correctAnswer !== undefined && step.options ? step.options[step.correctAnswer] : "Unknown") : (step.target ?? "Unknown");
+            
+            if (!wrongQuestions.some(wq => wq.questionText === qText)) {
+                 setWrongQuestions(prev => [...prev, { questionNumber: currentGradedIdx, questionText: qText, userAnswer: userAns, correctAnswer: correctAns }]);
+            }
         }
         setIsCorrect(correct);
         setIsChecked(true);
@@ -448,6 +462,14 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                                                         <p className="text-xs font-black text-slate-400 tracking-widest uppercase mb-1">Bonus Example:</p>
                                                         <p className="text-sm font-bold text-slate-800 italic">
                                                             {aiFeedback.example}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {aiFeedback.wrongAnswersFeedback && (
+                                                    <div className="bg-red-50 p-4 rounded-2xl border border-red-200">
+                                                        <p className="text-xs font-black text-red-500 tracking-widest uppercase mb-1">Mistakes Feedback:</p>
+                                                        <p className="text-sm font-medium text-red-800 leading-relaxed whitespace-pre-wrap">
+                                                            {aiFeedback.wrongAnswersFeedback}
                                                         </p>
                                                     </div>
                                                 )}
