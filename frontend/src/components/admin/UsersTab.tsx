@@ -181,7 +181,7 @@ export function UsersTab() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-hidden">
           <table className="w-full text-left">
             <colgroup>
               <col className="w-[35%]" />
