@@ -14,6 +14,7 @@ export default function ContributorPanel({ onBack: _onBack }: { onBack?: () => v
   const [activeTab, setActiveTab] = useState<ContribTab>('dashboard');
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviseId, setReviseId] = useState<number | null>(null);
 
   const fetchDrafts = useCallback(() => {
     setLoading(true);
@@ -112,10 +113,10 @@ export default function ContributorPanel({ onBack: _onBack }: { onBack?: () => v
                 </div>
               </div>
             )}
-            {activeTab === 'create' && <CreateDraftTab drafts={drafts} onDraftsChange={fetchDrafts} />}
-            {activeTab === 'pending' && <PendingTab drafts={drafts} />}
-            {activeTab === 'approved' && <ApprovedTab drafts={drafts} />}
-            {activeTab === 'rejected' && <RejectedTab drafts={drafts} onDraftsChange={fetchDrafts} />}
+            {activeTab === 'create' && <CreateDraftTab drafts={drafts} onDraftsChange={fetchDrafts} initialEditId={reviseId} />}
+            {activeTab === 'pending' && <PendingTab drafts={drafts} onDraftsChange={fetchDrafts} />}
+            {activeTab === 'approved' && <ApprovedTab drafts={drafts} onDraftsChange={fetchDrafts} />}
+            {activeTab === 'rejected' && <RejectedTab drafts={drafts} onDraftsChange={fetchDrafts} onReviseSuccess={(newId) => { setReviseId(newId); fetchDrafts(); setActiveTab('create'); }} />}
           </motion.div>
         </AnimatePresence>
       )}

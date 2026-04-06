@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Edit2, Send, Save, X } from 'lucide-react';
 import type { Draft } from './types';
 import { authHeaders } from '../admin/utils';
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  INTRO:     { label: 'Intro',     color: 'bg-blue-100 text-blue-700' },
-  SELECT:    { label: 'Select',    color: 'bg-purple-100 text-purple-700' },
+  INTRO: { label: 'Intro', color: 'bg-blue-100 text-blue-700' },
+  SELECT: { label: 'Select', color: 'bg-purple-100 text-purple-700' },
   TRANSLATE: { label: 'Translate', color: 'bg-orange-100 text-orange-700' },
 };
 
@@ -102,12 +102,24 @@ function QuestionFormFields({ form, setForm }: { form: QForm; setForm: React.Dis
 interface CreateDraftTabProps {
   drafts: Draft[];
   onDraftsChange: () => void;
+  initialEditId?: number | null;
 }
 
-export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) {
+export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: CreateDraftTabProps) {
   const savedDrafts = drafts.filter(d => d.status === 'DRAFT');
 
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Auto-select draft on initial navigation (e.g. from "Revise")
+  useEffect(() => {
+    if (initialEditId) {
+      const draft = savedDrafts.find(d => d.id === initialEditId);
+      if (draft && editingId !== initialEditId) {
+        loadDraft(draft);
+      }
+    }
+  }, [initialEditId, drafts]); // Run when initialEditId changes or drafts list updates
+
   const [form, setForm] = useState({ title: '', story: '', emoji: '📄', colour: '#46a302' });
   const [questions, setQuestions] = useState<QForm[]>([]);
   const [showQForm, setShowQForm] = useState(false);
@@ -188,8 +200,21 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
     }
   };
 
+  const isDirty = () => {
+    if (!editingId) return true;
+    const original = drafts.find(d => d.id === editingId);
+    if (!original) return true;
+    if (original.title !== form.title) return true;
+    if (original.story !== form.story) return true;
+    if (original.emoji !== form.emoji) return true;
+    if (original.colour !== form.colour) return true;
+    if (original.questionsJson !== buildQuestionsJson()) return true;
+    return false;
+  };
+
   const handleSubmit = async () => {
     if (!editingId) { setError('Save the draft first before submitting.'); return; }
+    if (isDirty()) { setError('Please save your changes before submitting.'); return; }
     setSubmitting(true);
     setError('');
     try {
@@ -388,9 +413,8 @@ export function CreateDraftTab({ drafts, onDraftsChange }: CreateDraftTabProps) 
                       <button
                         key={t} type="button"
                         onClick={() => setQForm(f => ({ ...f, question_type: t }))}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                          qForm.question_type === t ? TYPE_LABELS[t].color + ' ring-2 ring-offset-1 ring-current' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'
-                        }`}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${qForm.question_type === t ? TYPE_LABELS[t].color + ' ring-2 ring-offset-1 ring-current' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'
+                          }`}
                       >
                         {TYPE_LABELS[t].label}
                       </button>

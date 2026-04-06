@@ -125,7 +125,7 @@ export function UsersTab() {
       <AnimatePresence>
         {modal && (
           <ConfirmModal
-          isOpen={!!modal}
+            isOpen={!!modal}
             title={modal.title}
             message={modal.message}
             confirmLabel={modal.confirmLabel}
@@ -192,11 +192,11 @@ export function UsersTab() {
             </colgroup>
             <thead>
               <tr className="text-xs uppercase tracking-wider font-black text-slate-400 border-b-2 border-slate-100">
-                <th className="px-5 py-5 text-left">User</th>
-                <th className="px-4 py-5 text-left">Role</th>
-                <th className="px-4 py-5 text-left">Statistics</th>
-                <th className="px-4 py-5 text-left">Status</th>
-                <th className="px-4 py-5 text-right">Actions</th>
+                <th className="px-5 pl-10 py-5 text-left">User</th>
+                <th className="px-4 pl-5 text-left">Role</th>
+                <th className="px-4 pl-5 text-left">Statistics</th>
+                <th className="px-4 pl-5 text-left">Status</th>
+                <th className="px-4 pl-35 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -277,15 +277,15 @@ export function UsersTab() {
                             {user.enabled ? <Ban size={17} /> : <CheckCircle size={17} />}
                           </button>
                         )}
-                        <button onClick={() => handleReset(user)} title="Reset progress" 
+                        <button onClick={() => handleReset(user)} title="Reset progress"
                           className="p-2 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm">
                           <RotateCcw size={17} />
                         </button>
-                        <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN' || user.username === currentUser} 
+                        <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN' || user.username === currentUser}
                           className={`p-2 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200' : 'text-red-500 bg-red-50/30 hover:bg-red-50 hover:border-red-100'}`}>
                           <Trash2 size={17} />
                         </button>
-                        <button onClick={() => toggleExpand(user.id)} 
+                        <button onClick={() => toggleExpand(user.id)}
                           className={`p-2 rounded-xl transition-all shadow-sm ${expandedId === user.id ? 'bg-slate-200 text-slate-800' : 'text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600'}`}>
                           {expandedId === user.id ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
                         </button>

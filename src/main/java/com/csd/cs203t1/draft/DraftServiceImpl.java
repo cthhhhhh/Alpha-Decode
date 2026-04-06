@@ -82,9 +82,6 @@ public class DraftServiceImpl implements DraftService {
         if (!draft.getContributorId().equals(contributorId)) {
             throw new IllegalArgumentException("You do not own this draft");
         }
-        if (draft.getStatus() != DraftStatus.DRAFT) {
-            throw new IllegalArgumentException("Only drafts with DRAFT status can be deleted");
-        }
         draftRepository.delete(draft);
     }
 

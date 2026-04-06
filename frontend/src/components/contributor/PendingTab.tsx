@@ -1,12 +1,26 @@
-import { Clock, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, FileText, X } from 'lucide-react';
 import type { Draft } from './types';
+import { authHeaders } from '../admin/utils';
 
 interface PendingTabProps {
   drafts: Draft[];
+  onDraftsChange: () => void;
 }
 
-export function PendingTab({ drafts }: PendingTabProps) {
+export function PendingTab({ drafts, onDraftsChange }: PendingTabProps) {
   const pending = drafts.filter(d => d.status === 'PENDING');
+  const [deleting, setDeleting] = useState<number | null>(null);
+
+  const dismiss = async (id: number) => {
+    setDeleting(id);
+    try {
+      await fetch(`/api/drafts/${id}`, { method: 'DELETE', headers: authHeaders() });
+      onDraftsChange();
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   if (pending.length === 0) {
     return (
@@ -41,10 +55,20 @@ export function PendingTab({ drafts }: PendingTabProps) {
                   <p className="text-sm text-slate-500 font-semibold line-clamp-2">{draft.story}</p>
                 </div>
               </div>
-              <div
-                className="w-5 h-5 rounded-full shrink-0 mt-1 border-2 border-white shadow-sm"
-                style={{ background: draft.colour }}
-              />
+              <div className="flex items-center gap-2 shrink-0">
+                <div
+                  className="w-5 h-5 rounded-full border-2 border-white shadow-sm shrink-0 mt-1"
+                  style={{ background: draft.colour }}
+                />
+                <button
+                  onClick={() => dismiss(draft.id)}
+                  disabled={deleting === draft.id}
+                  title="Recall / Delete Draft"
+                  className="p-1 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
               <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400">

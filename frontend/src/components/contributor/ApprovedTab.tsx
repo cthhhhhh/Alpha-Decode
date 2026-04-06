@@ -1,12 +1,33 @@
-import { CheckCircle, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle, FileText, Trash2, X } from 'lucide-react';
 import type { Draft } from './types';
+import { authHeaders } from '../admin/utils';
 
 interface ApprovedTabProps {
   drafts: Draft[];
+  onDraftsChange: () => void;
 }
 
-export function ApprovedTab({ drafts }: ApprovedTabProps) {
+export function ApprovedTab({ drafts, onDraftsChange }: ApprovedTabProps) {
   const approved = drafts.filter(d => d.status === 'APPROVED');
+  const [deleting, setDeleting] = useState<number | null>(null);
+
+  const dismiss = async (id: number) => {
+    setDeleting(id);
+    try {
+      await fetch(`/api/drafts/${id}`, { method: 'DELETE', headers: authHeaders() });
+      onDraftsChange();
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const clearAll = async () => {
+    for (const draft of approved) {
+      await fetch(`/api/drafts/${draft.id}`, { method: 'DELETE', headers: authHeaders() });
+    }
+    onDraftsChange();
+  };
 
   if (approved.length === 0) {
     return (
@@ -22,7 +43,16 @@ export function ApprovedTab({ drafts }: ApprovedTabProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm font-black text-slate-500 uppercase tracking-wide">{approved.length} Approved</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-black text-slate-500 uppercase tracking-wide">{approved.length} Approved</p>
+        <button
+          onClick={clearAll}
+          className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
+        >
+          <Trash2 size={13} /> Clear All
+        </button>
+      </div>
+
       {approved.map(draft => {
         let questionCount = 0;
         try { questionCount = JSON.parse(draft.questionsJson).length; } catch { /* empty */ }
@@ -41,10 +71,20 @@ export function ApprovedTab({ drafts }: ApprovedTabProps) {
                   <p className="text-sm text-slate-500 font-semibold line-clamp-2">{draft.story}</p>
                 </div>
               </div>
-              <div
-                className="w-5 h-5 rounded-full shrink-0 mt-1 border-2 border-white shadow-sm"
-                style={{ background: draft.colour }}
-              />
+              <div className="flex items-center gap-2 shrink-0">
+                <div
+                  className="w-5 h-5 rounded-full border-2 border-white shadow-sm"
+                  style={{ background: draft.colour }}
+                />
+                <button
+                  onClick={() => dismiss(draft.id)}
+                  disabled={deleting === draft.id}
+                  title="Delete record"
+                  className="p-1 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-100">
               <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400">

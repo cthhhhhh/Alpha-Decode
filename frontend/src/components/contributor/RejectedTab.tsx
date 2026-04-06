@@ -1,16 +1,53 @@
 import { useState } from 'react';
-import { XCircle, Trash2, AlertCircle, FileText, RotateCcw } from 'lucide-react';
+import { XCircle, Trash2, AlertCircle, FileText, RotateCcw, X, CheckCircle } from 'lucide-react';
 import { authHeaders } from '../admin/utils';
 import type { Draft } from './types';
 
 interface RejectedTabProps {
   drafts: Draft[];
   onDraftsChange: () => void;
+  onReviseSuccess?: (newId: number) => void;
 }
 
-export function RejectedTab({ drafts, onDraftsChange }: RejectedTabProps) {
+export function RejectedTab({ drafts, onDraftsChange, onReviseSuccess }: RejectedTabProps) {
   const rejected = drafts.filter(d => d.status === 'REJECTED' || d.status === 'DELETED');
   const [revising, setRevising] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
+  const [revisedIds, setRevisedIds] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem('revised_draft_ids') || '[]'); }
+    catch { return []; }
+  });
+
+  const markAsRevised = (id: number) => {
+    try {
+      const prev = JSON.parse(localStorage.getItem('revised_draft_ids') || '[]');
+      if (!prev.includes(id)) {
+        const next = [...prev, id];
+        localStorage.setItem('revised_draft_ids', JSON.stringify(next));
+        setRevisedIds(next);
+      }
+    } catch {
+      localStorage.setItem('revised_draft_ids', JSON.stringify([id]));
+      setRevisedIds([id]);
+    }
+  };
+
+  const dismiss = async (id: number) => {
+    setDeleting(id);
+    try {
+      await fetch(`/api/drafts/${id}`, { method: 'DELETE', headers: authHeaders() });
+      onDraftsChange();
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const clearAll = async () => {
+    for (const draft of rejected) {
+      await fetch(`/api/drafts/${draft.id}`, { method: 'DELETE', headers: authHeaders() });
+    }
+    onDraftsChange();
+  };
 
   const handleRevise = async (draft: Draft) => {
     setRevising(draft.id);
@@ -22,8 +59,14 @@ export function RejectedTab({ drafts, onDraftsChange }: RejectedTabProps) {
         colour: draft.colour,
         questionsJson: draft.questionsJson,
       };
-      await fetch('/api/drafts', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
-      onDraftsChange();
+      const res = await fetch('/api/drafts', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+      const newDraft = await res.json();
+      markAsRevised(draft.id);
+      if (onReviseSuccess) {
+        onReviseSuccess(newDraft.id);
+      } else {
+        onDraftsChange();
+      }
     } finally {
       setRevising(null);
     }
@@ -43,7 +86,15 @@ export function RejectedTab({ drafts, onDraftsChange }: RejectedTabProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm font-black text-slate-500 uppercase tracking-wide">{rejected.length} Rejected / Deleted</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-black text-slate-500 uppercase tracking-wide">{rejected.length} Rejected / Deleted</p>
+        <button
+          onClick={clearAll}
+          className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
+        >
+          <Trash2 size={13} /> Clear All
+        </button>
+      </div>
       {rejected.map(draft => {
         let questionCount = 0;
         try { questionCount = JSON.parse(draft.questionsJson).length; } catch { /* empty */ }
@@ -69,10 +120,19 @@ export function RejectedTab({ drafts, onDraftsChange }: RejectedTabProps) {
                   <p className="text-sm text-slate-500 font-semibold line-clamp-2">{draft.story}</p>
                 </div>
               </div>
-              <div
-                className="w-5 h-5 rounded-full shrink-0 mt-1 border-2 border-white shadow-sm"
-                style={{ background: draft.colour }}
-              />
+              <div className="flex items-center gap-2 shrink-0">
+                <div
+                  className="w-5 h-5 rounded-full border-2 border-white shadow-sm bg-red-500"
+                />
+                <button
+                  onClick={() => dismiss(draft.id)}
+                  disabled={deleting === draft.id}
+                  title="Delete record"
+                  className="p-1 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
 
             {/* Reason block */}
@@ -103,11 +163,20 @@ export function RejectedTab({ drafts, onDraftsChange }: RejectedTabProps) {
               {!isDeleted && (
                 <button
                   onClick={() => handleRevise(draft)}
-                  disabled={revising === draft.id}
-                  className="flex items-center gap-1.5 text-xs font-black text-blue-500 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors disabled:opacity-50"
+                  disabled={revising === draft.id || revisedIds.includes(draft.id)}
+                  className={`flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-xl transition-colors ${revisedIds.includes(draft.id) ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-100' : 'text-blue-500 bg-blue-50 hover:bg-blue-100 disabled:opacity-50'}`}
                 >
-                  <RotateCcw size={11} />
-                  {revising === draft.id ? 'Creating...' : 'Revise'}
+                  {revisedIds.includes(draft.id) ? (
+                    <>
+                      <CheckCircle size={11} />
+                      Revised
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw size={11} />
+                      {revising === draft.id ? 'Creating...' : 'Revise'}
+                    </>
+                  )}
                 </button>
               )}
             </div>

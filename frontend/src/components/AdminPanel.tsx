@@ -16,6 +16,8 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pendingReports, setPendingReports] = useState(0);
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
 
   useEffect(() => {
     fetch('/api/admin/stats', { headers: authHeaders() })
@@ -25,6 +27,17 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    fetch('/api/flags', { headers: authHeaders() })
+      .then(r => r.json())
+      .then(data => setPendingReports((data as any[]).filter(r => r.status === 'PENDING').length))
+      .catch(() => {});
+    fetch('/api/drafts/pending', { headers: authHeaders() })
+      .then(r => r.json())
+      .then(data => setPendingSubmissions((data as any[]).length))
+      .catch(() => {});
+  }, [activeTab]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold animate-pulse">Loading Admin Dashboard...</div>;
   if (error) return (
     <div className="min-h-screen flex flex-col items-center p-8">
@@ -33,12 +46,12 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
     </div>
   );
 
-  const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  const TABS: { key: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <Activity size={16} /> },
     { key: 'users', label: 'Users', icon: <Users size={16} /> },
-    { key: 'reports', label: 'Reports', icon: <Flag size={16} /> },
+    { key: 'reports', label: 'Reports', icon: <Flag size={16} />, count: pendingReports },
     { key: 'content', label: 'Content', icon: <BookOpen size={16} /> },
-    { key: 'submissions', label: 'Submissions', icon: <FileText size={16} /> },
+    { key: 'submissions', label: 'Submissions', icon: <FileText size={16} />, count: pendingSubmissions },
   ];
 
   return (
@@ -53,12 +66,16 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
         </div>
       </div>
 
-      {/* Tab Nav */}
       <div className="flex gap-2 mb-6 bg-slate-100 p-1.5 rounded-2xl select-none">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === t.key ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-black transition-all relative ${activeTab === t.key ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}>
             {t.icon} <span className="hidden sm:inline">{t.label}</span>
+            {t.count !== undefined && t.count > 0 && (
+              <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center text-white ${t.key === 'reports' ? 'bg-red-500' : 'bg-amber-500'}`}>
+                {t.count}
+              </span>
+            )}
           </button>
         ))}
       </div>

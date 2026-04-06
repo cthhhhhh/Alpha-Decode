@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, ChevronDown, ChevronUp, Check, X, AlertCircle, Inbox } from 'lucide-react';
+import { FileText, ChevronDown, ChevronUp, Check, X, AlertCircle, CheckCircle, Trash2, RefreshCcw } from 'lucide-react';
 import type { Draft } from '../contributor/types';
 import { authHeaders } from './utils';
 
@@ -10,6 +10,16 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   TRANSLATE: { label: 'Translate', color: 'bg-orange-100 text-orange-700' },
 };
 
+type RecentEntry = { id: number; title: string; contributorUsername: string; emoji: string; action: 'approved' | 'rejected' };
+
+const LS_KEY = 'admin_recently_resolved';
+function loadRecent(): RecentEntry[] {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+}
+function saveRecent(entries: RecentEntry[]) {
+  localStorage.setItem(LS_KEY, JSON.stringify(entries));
+}
+
 export function SubmissionsTab() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,14 +28,26 @@ export function SubmissionsTab() {
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [recentlyResolved, setRecentlyResolved] = useState<RecentEntry[]>(loadRecent);
 
-  useEffect(() => {
+  const pushRecent = (entry: RecentEntry) => {
+    setRecentlyResolved(prev => {
+      const next = [entry, ...prev].slice(0, 10);
+      saveRecent(next);
+      return next;
+    });
+  };
+
+  const fetchDrafts = () => {
+    setLoading(true);
     fetch('/api/drafts/pending', { headers: authHeaders() })
       .then(r => r.json())
       .then(setDrafts)
       .catch(() => setDrafts([]))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchDrafts(); }, []);
 
   const handleApprove = async (id: number) => {
     setActionLoading(id);
@@ -33,6 +55,10 @@ export function SubmissionsTab() {
     try {
       const res = await fetch(`/api/drafts/${id}/approve`, { method: 'POST', headers: authHeaders() });
       if (!res.ok) throw new Error(await res.text());
+      const draft = drafts.find(d => d.id === id);
+      if (draft) {
+        pushRecent({ id, title: draft.title, contributorUsername: draft.contributorUsername, emoji: draft.emoji, action: 'approved' as const });
+      }
       setDrafts(prev => prev.filter(d => d.id !== id));
       if (expandedId === id) setExpandedId(null);
     } catch (e) {
@@ -53,6 +79,10 @@ export function SubmissionsTab() {
         body: JSON.stringify({ rejectionReason: rejectReason }),
       });
       if (!res.ok) throw new Error(await res.text());
+      const draft = drafts.find(d => d.id === id);
+      if (draft) {
+        pushRecent({ id, title: draft.title, contributorUsername: draft.contributorUsername, emoji: draft.emoji, action: 'rejected' as const });
+      }
       setDrafts(prev => prev.filter(d => d.id !== id));
       setRejectingId(null);
       setRejectReason('');
@@ -64,10 +94,18 @@ export function SubmissionsTab() {
     }
   };
 
+  const removeRecent = (id: number) => setRecentlyResolved(prev => { const next = prev.filter(r => r.id !== id); saveRecent(next); return next; });
+  const clearRecent = () => { setRecentlyResolved([]); localStorage.removeItem(LS_KEY); };
+
   if (loading) return <div className="flex items-center justify-center py-20 text-slate-400 font-bold animate-pulse">Loading submissions...</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-black text-slate-800 flex items-center gap-2"><FileText className="text-blue-500" size={20} /> Pending ({drafts.length})</h2>
+        <button onClick={fetchDrafts} className="p-2 text-slate-400 hover:text-brand-primary transition-colors hover:bg-slate-100 rounded-full"><RefreshCcw size={18} /></button>
+      </div>
+
       {error && (
         <div className="flex items-center gap-2 bg-red-50 text-red-500 border border-red-200 rounded-2xl px-4 py-3 text-sm font-bold">
           <AlertCircle size={16} className="shrink-0" /> {error}
@@ -75,12 +113,10 @@ export function SubmissionsTab() {
       )}
 
       {drafts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-            <Inbox size={28} className="text-slate-400" />
-          </div>
-          <h3 className="font-black text-slate-700 text-lg mb-1">No Pending Submissions</h3>
-          <p className="text-slate-400 font-bold text-sm">Contributor draft submissions will appear here.</p>
+        <div className="bg-green-50 rounded-2xl p-10 text-center border-2 border-green-100">
+          <CheckCircle size={36} className="text-green-500 mx-auto mb-3" />
+          <h3 className="text-lg font-black text-green-700">All clear!</h3>
+          <p className="text-green-600/80 font-bold text-sm">No pending submissions.</p>
         </div>
       ) : (
         <>
@@ -210,6 +246,51 @@ export function SubmissionsTab() {
             );
           })}
         </>
+      )}
+
+      {/* Recently Resolved */}
+      {recentlyResolved.length > 0 && (
+        <div className="pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Recently Resolved</h3>
+            <button
+              onClick={clearRecent}
+              className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
+            >
+              <Trash2 size={14} /> Clear All
+            </button>
+          </div>
+          <div className="space-y-2">
+            {recentlyResolved.map(r => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 opacity-60 hover:opacity-100 transition-opacity group"
+              >
+                <span className="text-sm font-bold text-slate-500">
+                  {r.emoji} {r.title} · <span className="text-slate-400">by {r.contributorUsername}</span>
+                </span>
+                <div className="flex items-center gap-3">
+                  {r.action === 'approved' ? (
+                    <span className="text-xs font-black text-green-500 flex items-center gap-1.5">
+                      <CheckCircle size={14} /> Approved
+                    </span>
+                  ) : (
+                    <span className="text-xs font-black text-red-400 flex items-center gap-1.5">
+                      <X size={14} /> Rejected
+                    </span>
+                  )}
+                  <button
+                    onClick={() => removeRecent(r.id)}
+                    className="p-1.5 text-red-300 hover:text-red-500 hover:bg-white rounded-lg transition-all"
+                    title="Remove from history"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
