@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Edit2, Send, Save, X } from 'lucide-react';
 import type { Draft } from './types';
 import { authHeaders } from '../admin/utils';
+import { ConfirmModal } from '../admin/ConfirmModal';
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   INTRO: { label: 'Intro', color: 'bg-blue-100 text-blue-700' },
@@ -130,6 +131,22 @@ export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: Create
   const [error, setError] = useState('');
   const [expandedDraftId, setExpandedDraftId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
+  
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info' | 'warning' | 'success';
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    confirmLabel: 'Confirm',
+    onConfirm: () => { }
+  });
 
   const resetForm = () => {
     setForm({ title: '', story: '', emoji: '📄', colour: '#46a302' });
@@ -240,6 +257,30 @@ export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: Create
     }
   };
 
+  const handleSubmitClick = () => {
+    if (!editingId) { setError('Save the draft first before submitting.'); return; }
+    if (isDirty()) { setError('Please save your changes before submitting.'); return; }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Submit Draft?',
+      message: 'Are you ready to submit this draft for admin review? It will be moved to the Pending tab.',
+      type: 'success',
+      confirmLabel: 'Submit',
+      onConfirm: handleSubmit,
+    });
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Draft?',
+      message: 'Are you sure you want to permanently delete this draft? This cannot be undone.',
+      type: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: () => handleDelete(id),
+    });
+  };
+
   const addOrUpdateQuestion = () => {
     if (!qForm.title.trim()) return;
     if (editQIdx !== null) {
@@ -303,7 +344,7 @@ export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: Create
                           <Edit2 size={10} /> Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(d.id)}
+                          onClick={() => handleDeleteClick(d.id)}
                           disabled={deleting === d.id}
                           className="flex-1 text-xs font-black text-red-500 bg-red-50 hover:bg-red-100 rounded-lg py-1.5 flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                         >
@@ -452,7 +493,7 @@ export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: Create
               {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Save Draft')}
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleSubmitClick}
               disabled={submitting || !editingId}
               className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-black text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               title={!editingId ? 'Save the draft first' : 'Submit for admin review'}
@@ -463,6 +504,10 @@ export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: Create
           </div>
         </div>
       </div>
+      <ConfirmModal
+        {...confirmConfig}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+      />
     </div>
   );
 }

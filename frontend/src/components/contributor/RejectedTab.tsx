@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { XCircle, Trash2, AlertCircle, FileText, RotateCcw, X, CheckCircle } from 'lucide-react';
 import { authHeaders } from '../admin/utils';
 import type { Draft } from './types';
+import { ConfirmModal } from '../admin/ConfirmModal';
 
 interface RejectedTabProps {
   drafts: Draft[];
@@ -16,6 +17,22 @@ export function RejectedTab({ drafts, onDraftsChange, onReviseSuccess }: Rejecte
   const [revisedIds, setRevisedIds] = useState<number[]>(() => {
     try { return JSON.parse(localStorage.getItem('revised_draft_ids') || '[]'); }
     catch { return []; }
+  });
+
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info' | 'warning' | 'success';
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    confirmLabel: 'Confirm',
+    onConfirm: () => { }
   });
 
   const markAsRevised = (id: number) => {
@@ -47,6 +64,28 @@ export function RejectedTab({ drafts, onDraftsChange, onReviseSuccess }: Rejecte
       await fetch(`/api/drafts/${draft.id}`, { method: 'DELETE', headers: authHeaders() });
     }
     onDraftsChange();
+  };
+
+  const handleDismissClick = (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove Record?',
+      message: 'Remove this rejected/deleted record from your dashboard history?',
+      type: 'warning',
+      confirmLabel: 'Remove',
+      onConfirm: () => dismiss(id),
+    });
+  };
+
+  const handleClearAllClick = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Clear History?',
+      message: 'Clear your history of all rejected and deleted drafts from the dashboard?',
+      type: 'danger',
+      confirmLabel: 'Clear All',
+      onConfirm: clearAll,
+    });
   };
 
   const handleRevise = async (draft: Draft) => {
@@ -89,7 +128,7 @@ export function RejectedTab({ drafts, onDraftsChange, onReviseSuccess }: Rejecte
       <div className="flex items-center justify-between">
         <p className="text-sm font-black text-slate-500 uppercase tracking-wide">{rejected.length} Rejected / Deleted</p>
         <button
-          onClick={clearAll}
+          onClick={handleClearAllClick}
           className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
         >
           <Trash2 size={13} /> Clear All
@@ -125,7 +164,7 @@ export function RejectedTab({ drafts, onDraftsChange, onReviseSuccess }: Rejecte
                   className="w-5 h-5 rounded-full border-2 border-white shadow-sm bg-red-500"
                 />
                 <button
-                  onClick={() => dismiss(draft.id)}
+                  onClick={() => handleDismissClick(draft.id)}
                   disabled={deleting === draft.id}
                   title="Delete record"
                   className="p-1 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
@@ -183,6 +222,10 @@ export function RejectedTab({ drafts, onDraftsChange, onReviseSuccess }: Rejecte
           </div>
         );
       })}
+      <ConfirmModal
+        {...confirmConfig}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+      />
     </div>
   );
 }

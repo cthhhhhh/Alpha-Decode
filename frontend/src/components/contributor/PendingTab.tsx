@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Clock, FileText, X } from 'lucide-react';
 import type { Draft } from './types';
 import { authHeaders } from '../admin/utils';
+import { ConfirmModal } from '../admin/ConfirmModal';
 
 interface PendingTabProps {
   drafts: Draft[];
@@ -12,6 +13,22 @@ export function PendingTab({ drafts, onDraftsChange }: PendingTabProps) {
   const pending = drafts.filter(d => d.status === 'PENDING');
   const [deleting, setDeleting] = useState<number | null>(null);
 
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info' | 'warning' | 'success';
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    confirmLabel: 'Confirm',
+    onConfirm: () => { }
+  });
+
   const dismiss = async (id: number) => {
     setDeleting(id);
     try {
@@ -20,6 +37,17 @@ export function PendingTab({ drafts, onDraftsChange }: PendingTabProps) {
     } finally {
       setDeleting(null);
     }
+  };
+
+  const handleDismissClick = (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Recall Draft?',
+      message: 'Are you sure you want to recall and delete this pending draft?',
+      type: 'warning',
+      confirmLabel: 'Recall',
+      onConfirm: () => dismiss(id),
+    });
   };
 
   if (pending.length === 0) {
@@ -61,7 +89,7 @@ export function PendingTab({ drafts, onDraftsChange }: PendingTabProps) {
                   style={{ background: draft.colour }}
                 />
                 <button
-                  onClick={() => dismiss(draft.id)}
+                  onClick={() => handleDismissClick(draft.id)}
                   disabled={deleting === draft.id}
                   title="Recall / Delete Draft"
                   className="p-1 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
@@ -81,6 +109,10 @@ export function PendingTab({ drafts, onDraftsChange }: PendingTabProps) {
           </div>
         );
       })}
+      <ConfirmModal
+        {...confirmConfig}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+      />
     </div>
   );
 }

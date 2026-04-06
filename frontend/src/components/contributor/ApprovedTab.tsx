@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, FileText, Trash2, X } from 'lucide-react';
 import type { Draft } from './types';
 import { authHeaders } from '../admin/utils';
+import { ConfirmModal } from '../admin/ConfirmModal';
 
 interface ApprovedTabProps {
   drafts: Draft[];
@@ -11,6 +12,22 @@ interface ApprovedTabProps {
 export function ApprovedTab({ drafts, onDraftsChange }: ApprovedTabProps) {
   const approved = drafts.filter(d => d.status === 'APPROVED');
   const [deleting, setDeleting] = useState<number | null>(null);
+
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info' | 'warning' | 'success';
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    confirmLabel: 'Confirm',
+    onConfirm: () => { }
+  });
 
   const dismiss = async (id: number) => {
     setDeleting(id);
@@ -27,6 +44,28 @@ export function ApprovedTab({ drafts, onDraftsChange }: ApprovedTabProps) {
       await fetch(`/api/drafts/${draft.id}`, { method: 'DELETE', headers: authHeaders() });
     }
     onDraftsChange();
+  };
+
+  const handleDismissClick = (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove Record?',
+      message: 'Remove this approval record from your dashboard? The live lesson will not be affected.',
+      type: 'warning',
+      confirmLabel: 'Remove',
+      onConfirm: () => dismiss(id),
+    });
+  };
+
+  const handleClearAllClick = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Clear Approved History?',
+      message: 'Clear your history of all approved drafts from the dashboard? Live lessons will not be affected.',
+      type: 'danger',
+      confirmLabel: 'Clear All',
+      onConfirm: clearAll,
+    });
   };
 
   if (approved.length === 0) {
@@ -46,7 +85,7 @@ export function ApprovedTab({ drafts, onDraftsChange }: ApprovedTabProps) {
       <div className="flex items-center justify-between">
         <p className="text-sm font-black text-slate-500 uppercase tracking-wide">{approved.length} Approved</p>
         <button
-          onClick={clearAll}
+          onClick={handleClearAllClick}
           className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
         >
           <Trash2 size={13} /> Clear All
@@ -77,7 +116,7 @@ export function ApprovedTab({ drafts, onDraftsChange }: ApprovedTabProps) {
                   style={{ background: draft.colour }}
                 />
                 <button
-                  onClick={() => dismiss(draft.id)}
+                  onClick={() => handleDismissClick(draft.id)}
                   disabled={deleting === draft.id}
                   title="Delete record"
                   className="p-1 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-40"
@@ -102,6 +141,10 @@ export function ApprovedTab({ drafts, onDraftsChange }: ApprovedTabProps) {
           </div>
         );
       })}
+      <ConfirmModal
+        {...confirmConfig}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+      />
     </div>
   );
 }
