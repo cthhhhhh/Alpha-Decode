@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { FileText, ChevronDown, ChevronUp, Check, X, AlertCircle, CheckCircle, Trash2, RefreshCcw } from 'lucide-react';
 import type { Draft } from '../contributor/types';
 import { authHeaders } from './utils';
+import { ConfirmModal } from './ConfirmModal';
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   INTRO:     { label: 'Intro',     color: 'bg-blue-100 text-blue-700' },
@@ -29,6 +30,21 @@ export function SubmissionsTab() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [recentlyResolved, setRecentlyResolved] = useState<RecentEntry[]>(loadRecent);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'danger' | 'info' | 'warning' | 'success';
+    confirmLabel: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    confirmLabel: 'Confirm',
+    onConfirm: () => { }
+  });
 
   const pushRecent = (entry: RecentEntry) => {
     setRecentlyResolved(prev => {
@@ -96,6 +112,39 @@ export function SubmissionsTab() {
 
   const removeRecent = (id: number) => setRecentlyResolved(prev => { const next = prev.filter(r => r.id !== id); saveRecent(next); return next; });
   const clearRecent = () => { setRecentlyResolved([]); localStorage.removeItem(LS_KEY); };
+
+  const handleApproveClick = (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Approve Submission?',
+      message: 'Are you sure you want to approve this submission? It will become a live lesson immediately.',
+      type: 'success',
+      confirmLabel: 'Approve',
+      onConfirm: () => handleApprove(id),
+    });
+  };
+
+  const handleClearRecentClick = () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Clear History?',
+      message: 'Are you sure you want to clear your recently resolved history? This action cannot be undone.',
+      type: 'danger',
+      confirmLabel: 'Clear All',
+      onConfirm: clearRecent,
+    });
+  };
+
+  const handleRemoveRecentClick = (id: number) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Remove from History?',
+      message: 'Are you sure you want to permanently remove this item from your resolved history?',
+      type: 'danger',
+      confirmLabel: 'Remove',
+      onConfirm: () => removeRecent(id),
+    });
+  };
 
   if (loading) return <div className="flex items-center justify-center py-20 text-slate-400 font-bold animate-pulse">Loading submissions...</div>;
 
@@ -226,7 +275,7 @@ export function SubmissionsTab() {
                   ) : (
                     <div className="flex gap-3">
                       <button
-                        onClick={() => handleApprove(draft.id)}
+                        onClick={() => handleApproveClick(draft.id)}
                         disabled={actionLoading === draft.id}
                         className="flex-1 py-3 bg-green-500 text-white rounded-xl font-black text-sm shadow-[0_4px_0_#16a34a] hover:shadow-[0_6px_12px_rgba(34,197,94,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -254,7 +303,7 @@ export function SubmissionsTab() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Recently Resolved</h3>
             <button
-              onClick={clearRecent}
+              onClick={handleClearRecentClick}
               className="flex items-center gap-1.5 text-[10px] font-black text-red-400 hover:text-red-500 transition-colors uppercase tracking-wider bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-100"
             >
               <Trash2 size={14} /> Clear All
@@ -280,7 +329,7 @@ export function SubmissionsTab() {
                     </span>
                   )}
                   <button
-                    onClick={() => removeRecent(r.id)}
+                    onClick={() => handleRemoveRecentClick(r.id)}
                     className="p-1.5 text-red-300 hover:text-red-500 hover:bg-white rounded-lg transition-all"
                     title="Remove from history"
                   >
@@ -292,6 +341,10 @@ export function SubmissionsTab() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        {...confirmConfig}
+        onClose={() => setConfirmConfig(c => ({ ...c, isOpen: false }))}
+      />
     </div>
   );
 }
