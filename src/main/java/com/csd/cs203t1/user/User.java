@@ -1,20 +1,25 @@
 package com.csd.cs203t1.user;
 
+import java.time.LocalDate;
+
 import com.csd.cs203t1.common.Role;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-
-import java.time.LocalDate;
-
-
-import jakarta.persistence.EnumType;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 
 @Entity
@@ -74,6 +79,9 @@ public class User {
 
 	@Column(nullable = false, columnDefinition = "boolean default true")
 	private boolean enabled = true;
+
+	@Column(nullable = false, columnDefinition = "boolean default false")
+	private boolean pendingApproval = false;
 
 	@Column(nullable = false, columnDefinition = "boolean default false")
 	private boolean onboardingCompleted = false;
