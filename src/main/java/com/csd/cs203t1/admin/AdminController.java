@@ -1,14 +1,22 @@
 package com.csd.cs203t1.admin;
 
-import com.csd.cs203t1.common.Role;
-import com.csd.cs203t1.user.UserRepository;
-import com.csd.cs203t1.user.UserService;
-import com.csd.cs203t1.user.User;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.csd.cs203t1.common.Role;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserRepository;
+import com.csd.cs203t1.user.UserService;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -48,6 +56,7 @@ public class AdminController {
             "level", user.getLevel(),
             "coins", user.getCoins(),
             "enabled", (Object) user.isEnabled(),
+            "pendingApproval", (Object) user.isPendingApproval(),
             "isOnline", (Object) sessionTracker.isOnline(user.getUsername())
         )).toList());
     }
@@ -75,6 +84,9 @@ public class AdminController {
         String newRoleStr = payload.get("role");
         if (newRoleStr != null) {
             user.setRole(Role.valueOf(newRoleStr.toUpperCase()));
+            if (user.getRole() != Role.CONTRIBUTOR) {
+                user.setPendingApproval(false);
+            }
             userRepository.save(user);
         }
         return ResponseEntity.ok().build();
@@ -104,13 +116,14 @@ public class AdminController {
 
     @GetMapping("/contributors/pending")
     public ResponseEntity<?> getPendingContributors() {
-        return ResponseEntity.ok(userRepository.findByRoleAndEnabled(Role.CONTRIBUTOR, false)
+        return ResponseEntity.ok(userRepository.findByRoleAndPendingApprovalTrue(Role.CONTRIBUTOR)
                 .stream().map(user -> Map.of(
                         "id", user.getId(),
                         "username", user.getUsername(),
                         "email", user.getEmail(),
                         "role", user.getRole().name(),
-                        "enabled", (Object) user.isEnabled()
+                "enabled", (Object) user.isEnabled(),
+                "pendingApproval", (Object) user.isPendingApproval()
                 )).toList());
     }
 

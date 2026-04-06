@@ -14,6 +14,7 @@ export interface UserData {
   level: number;
   coins: number;
   enabled: boolean;
+  pendingApproval: boolean;
   isOnline: boolean;
 }
 

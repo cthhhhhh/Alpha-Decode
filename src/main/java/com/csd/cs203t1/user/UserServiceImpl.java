@@ -1,29 +1,28 @@
 package com.csd.cs203t1.user;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.csd.cs203t1.achievement.Achievement;
 import com.csd.cs203t1.achievement.AchievementService;
+import com.csd.cs203t1.achievement.UserAchievementRepository;
+import com.csd.cs203t1.bookmark.UserBookmarkRepository;
 import com.csd.cs203t1.common.Role;
+import com.csd.cs203t1.draft.DraftRepository;
+import com.csd.cs203t1.flag.FlagRepository;
 import com.csd.cs203t1.security.JwtUtil;
 import com.csd.cs203t1.shop.Item;
 import com.csd.cs203t1.shop.ItemRepository;
 import com.csd.cs203t1.shop.UserItem;
 import com.csd.cs203t1.shop.UserItemRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import com.csd.cs203t1.achievement.UserAchievementRepository;
-import com.csd.cs203t1.bookmark.UserBookmarkRepository;
-import com.csd.cs203t1.draft.DraftRepository;
-import com.csd.cs203t1.flag.FlagRepository;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -101,6 +100,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.CONTRIBUTOR);
         user.setEnabled(false);
+        user.setPendingApproval(true);
 
         userRepository.save(user);
     }
@@ -427,6 +427,7 @@ public class UserServiceImpl implements UserService {
         java.util.Objects.requireNonNull(id, "ID must not be null");
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setEnabled(enabled);
+        user.setPendingApproval(false);
         userRepository.save(user);
     }
 }

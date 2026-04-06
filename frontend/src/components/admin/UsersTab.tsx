@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, Fragment } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Search, SlidersHorizontal, UserCheck, Ban, CheckCircle, RotateCcw, Trash2, ChevronDown, ChevronUp, Coins, Zap, Trophy, Clock, BookOpen, ShieldCheck } from 'lucide-react';
-import type { UserData, UserStats } from './types';
-import { authHeaders, ROLE_COLOR } from './utils';
+import { Ban, BookOpen, CheckCircle, ChevronDown, ChevronUp, Clock, Coins, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Trash2, Trophy, UserCheck, Zap } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
 import { RolePickerModal } from './RolePickerModal';
+import type { UserData, UserStats } from './types';
+import { authHeaders, ROLE_COLOR } from './utils';
 
 export function UsersTab() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -95,7 +95,7 @@ export function UsersTab() {
       async () => {
         closeModal();
         const res = await fetch(`/api/admin/users/${user.id}/${isBanning ? 'ban' : 'unban'}`, { method: 'POST', headers: authHeaders() });
-        if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: !x.enabled } : x));
+        if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: !x.enabled, pendingApproval: false } : x));
       }
     );
   };
@@ -239,7 +239,7 @@ export function UsersTab() {
                       </div>
                     </td>
                     <td className="px-5 py-5">
-                      {!user.enabled && user.role === 'CONTRIBUTOR' ? (
+                      {user.role === 'CONTRIBUTOR' && user.pendingApproval ? (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider bg-amber-50/50 border-amber-100 text-amber-600">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           Pending Approval
@@ -253,12 +253,16 @@ export function UsersTab() {
                     </td>
                     <td className="px-5 py-5">
                       <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                        {!user.enabled && user.role === 'CONTRIBUTOR' && (
+                        <button onClick={() => openRolePicker(user)} title="Change role"
+                          className="p-2.5 rounded-xl text-indigo-500 bg-indigo-50/30 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all active:scale-95 shadow-sm">
+                          <UserCheck size={18} />
+                        </button>
+                        {user.role === 'CONTRIBUTOR' && user.pendingApproval && (
                           <button
                             onClick={() => showConfirm('Approve Contributor', `Approve ${user.username} as a contributor? They will be able to log in immediately.`, 'Approve', 'success', async () => {
                               closeModal();
                               const res = await fetch(`/api/admin/users/${user.id}/unban`, { method: 'POST', headers: authHeaders() });
-                              if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: true } : x));
+                              if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: true, pendingApproval: false } : x));
                             })}
                             title="Approve contributor"
                             className="p-2.5 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm"
@@ -266,15 +270,13 @@ export function UsersTab() {
                             <ShieldCheck size={18} />
                           </button>
                         )}
-                        <button onClick={() => openRolePicker(user)} title="Change role"
-                          className="p-2.5 rounded-xl text-indigo-500 bg-indigo-50/30 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all active:scale-95 shadow-sm">
-                          <UserCheck size={18} />
-                        </button>
-                        <button onClick={() => handleBanToggle(user)} 
-                          disabled={user.username === currentUser}
-                          className={`p-2.5 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.username === currentUser ? 'text-slate-200' : (user.enabled ? 'text-orange-500 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-100' : 'text-green-600 bg-green-50/30 hover:bg-green-50 hover:border-green-100')}`}>
-                          {user.enabled ? <Ban size={18} /> : <CheckCircle size={18} />}
-                        </button>
+                        {!(user.role === 'CONTRIBUTOR' && user.pendingApproval) && (
+                          <button onClick={() => handleBanToggle(user)} 
+                            disabled={user.username === currentUser}
+                            className={`p-2.5 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.username === currentUser ? 'text-slate-200' : (user.enabled ? 'text-orange-500 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-100' : 'text-green-600 bg-green-50/30 hover:bg-green-50 hover:border-green-100')}`}>
+                            {user.enabled ? <Ban size={18} /> : <CheckCircle size={18} />}
+                          </button>
+                        )}
                         <button onClick={() => handleReset(user)} title="Reset progress" 
                           className="p-2.5 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm">
                           <RotateCcw size={18} />
