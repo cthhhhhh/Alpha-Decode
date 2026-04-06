@@ -108,6 +108,30 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "User unbanned successfully"));
     }
 
+    @PostMapping("/users/{id}/approve-contributor")
+    public ResponseEntity<?> approveContributor(@PathVariable Long id) {
+        User user = userRepository.findById(id).orElseThrow();
+        if (!user.isPendingApproval()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "User is not pending approval"));
+        }
+        user.setRole(Role.CONTRIBUTOR);
+        user.setPendingApproval(false);
+        user.setEnabled(true);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "User approved as contributor"));
+    }
+
+    @PostMapping("/users/{id}/reject-contributor")
+    public ResponseEntity<?> rejectContributor(@PathVariable Long id) {
+        User user = userRepository.findById(id).orElseThrow();
+        if (!user.isPendingApproval()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "User is not pending approval"));
+        }
+        user.setPendingApproval(false);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Contributor request rejected"));
+    }
+
     @PostMapping("/users/{id}/reset")
     public ResponseEntity<?> resetUserProgress(@PathVariable Long id) {
         userService.resetProgress(id);

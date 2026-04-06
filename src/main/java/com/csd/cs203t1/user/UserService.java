@@ -18,4 +18,5 @@ public interface UserService {
     void resetProgress(Long id);
     void setUserEnabled(Long id, boolean enabled);
     UserDTO.AuthResponse completeOnboarding(UserDTO.OnboardingRequest request);
+    UserDTO.AuthResponse requestContributorStatus();
 }

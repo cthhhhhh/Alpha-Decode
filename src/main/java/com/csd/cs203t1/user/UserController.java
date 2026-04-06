@@ -64,6 +64,18 @@ public class UserController {
         }
     }
 
+    @PostMapping("/request-contributor")
+    public ResponseEntity<?> requestContributor() {
+        try {
+            UserDTO.AuthResponse response = userService.requestContributorStatus();
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+    }
+
     @PostMapping("/coins")
     public ResponseEntity<?> addCoins(@RequestBody UserDTO.CoinUpdateRequest request) {
         try {

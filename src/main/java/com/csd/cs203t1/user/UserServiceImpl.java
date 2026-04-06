@@ -351,6 +351,19 @@ public class UserServiceImpl implements UserService {
         return toAuthResponse(savedUser, null, null);
     }
     
+    @Override
+    @Transactional
+    public UserDTO.AuthResponse requestContributorStatus() {
+        User user = getCurrentUser();
+        // Prevent re-requesting if already pending or if they are already elevated
+        if (user.isPendingApproval() || user.getRole() == com.csd.cs203t1.common.Role.CONTRIBUTOR || user.getRole() == com.csd.cs203t1.common.Role.ADMIN) {
+            throw new IllegalArgumentException("Invalid state for contributor request.");
+        }
+        user.setPendingApproval(true);
+        User savedUser = userRepository.save(user);
+        return toAuthResponse(savedUser, generateToken(savedUser), null);
+    }
+
     private void checkStreakLapse(User user) {
         if (user.getDailyQuizLastDate() == null) {
             return;
@@ -397,7 +410,8 @@ public class UserServiceImpl implements UserService {
                 user.getSkinColor(),
                 user.getHairColor(),
                 user.getEquippedOutfitId(),
-                user.getEquippedPetId()
+                user.getEquippedPetId(),
+                user.isPendingApproval()
         );
     }
 

@@ -26,6 +26,7 @@ interface UserProfile {
     coins: number;
     maxUnlockedLessonIndex: number;
     streak: number;
+    pendingApproval: boolean;
 }
 
 const COINS_PER_LEVEL = 50;
@@ -42,6 +43,9 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deletingAccount, setDeletingAccount] = useState(false);
     const [deleteError, setDeleteError] = useState('');
+
+    const [applying, setApplying] = useState(false);
+    const [applyError, setApplyError] = useState('');
 
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
@@ -161,6 +165,26 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
             setDeleteError('Network error');
         } finally {
             setDeletingAccount(false);
+        }
+    };
+
+    const handleApplyContributor = async () => {
+        setApplying(true);
+        setApplyError('');
+        try {
+            const res = await fetch('/api/auth/request-contributor', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` },
+            });
+            if (res.ok) {
+                setProfile(prev => prev ? { ...prev, pendingApproval: true } : prev);
+            } else {
+                setApplyError(await res.text());
+            }
+        } catch {
+            setApplyError('Network error');
+        } finally {
+            setApplying(false);
         }
     };
 
@@ -371,6 +395,46 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
                     </button>
                 </div>
             </motion.div>
+
+            {/* Contributor Application Module */}
+            {profile.role === 'USER' && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 }}
+                    className={`rounded-3xl border-2 p-6 overflow-hidden ${profile.pendingApproval ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-200'}`}
+                >
+                    <div className="flex items-start justify-between gap-4">
+                         <div className="flex items-center gap-4">
+                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${profile.pendingApproval ? 'bg-amber-100 text-amber-500' : 'bg-white text-slate-400 border border-slate-200 shadow-sm'}`}>
+                                 {profile.pendingApproval ? <AlertCircle size={24} /> : <Edit3 size={24} />}
+                             </div>
+                             <div>
+                                 <h3 className={`font-black ${profile.pendingApproval ? 'text-amber-900' : 'text-slate-900'}`}>
+                                     {profile.pendingApproval ? 'Application Pending Review' : 'Become a Contributor'}
+                                 </h3>
+                                 <p className={`text-xs font-bold leading-relaxed mt-0.5 ${profile.pendingApproval ? 'text-amber-700/80' : 'text-slate-500'}`}>
+                                     {profile.pendingApproval 
+                                         ? 'Your request to join the creator team is currently awaiting admin approval. Please check back later!'
+                                         : 'Love learning? Start creating! Request elevated permissions to build your own lessons, write stories, and verify community submissions.'}
+                                 </p>
+                                 {applyError && !profile.pendingApproval && (
+                                     <p className="text-xs font-black text-red-500 mt-2 flex items-center gap-1"><AlertCircle size={14}/> {applyError}</p>
+                                 )}
+                             </div>
+                         </div>
+                         {!profile.pendingApproval && (
+                             <button
+                                 onClick={handleApplyContributor}
+                                 disabled={applying}
+                                 className="shrink-0 px-5 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-brand-primary active:scale-95 transition-all disabled:opacity-50"
+                             >
+                                 {applying ? 'Applying...' : 'Apply Now'}
+                             </button>
+                         )}
+                    </div>
+                </motion.div>
+            )}
 
             {/* Achievements */}
             <motion.div
