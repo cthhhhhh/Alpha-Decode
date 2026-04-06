@@ -49,6 +49,7 @@ export default function App() {
   const [authRole, setAuthRole] = useState<string | null>(() => localStorage.getItem('role'));
   const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
   const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('profilePic'));
+  const [pendingContributorApprovals, setPendingContributorApprovals] = useState(0);
 
   // --- Avatar State ---
   const [faceId, setFaceId] = useState<string | null>(null);
@@ -191,6 +192,23 @@ export default function App() {
       return () => clearInterval(pingInterval);
     }
   }, [authToken]);
+
+  // Fetch pending contributor approvals count for the nav bubble
+  useEffect(() => {
+    if (authRole !== 'CONTRIBUTOR' || !authToken) {
+      setPendingContributorApprovals(0);
+      return;
+    }
+    const fetchPending = () => {
+      fetch('/api/drafts/mine', { headers: { 'Authorization': `Bearer ${authToken}` } })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then((data: any[]) => setPendingContributorApprovals(data.filter(d => d.status === 'PENDING').length))
+        .catch(() => {});
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 60_000);
+    return () => clearInterval(interval);
+  }, [authToken, authRole]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1002,9 +1020,16 @@ export default function App() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate('/contributor')}
-              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isContributor ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all relative ${isContributor ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
             >
-              <PenSquare size={24} />
+              <div className="relative">
+                <PenSquare size={24} />
+                {pendingContributorApprovals > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 bg-amber-500 rounded-full text-[9px] font-black flex items-center justify-center text-white">
+                    {pendingContributorApprovals > 9 ? '9+' : pendingContributorApprovals}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-black uppercase">Contribute</span>
             </motion.button>
           )}
