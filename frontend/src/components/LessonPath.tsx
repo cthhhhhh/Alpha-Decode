@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
 import {
     BookOpen,
-    LayoutGrid,
-    Zap,
-    Star,
-    Flame,
-    Trophy,
-    Info,
-    Shield,
     Flag,
+    Flame,
+    Info,
+    LayoutGrid,
     Lock,
+    Shield,
+    Star,
+    Trophy,
+    Zap,
     type LucideIcon,
 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Lesson, RevisionQuiz } from '../types';
 import FlagModal from './FlagModal';
 import Avatar from './avatar/Avatar';
@@ -54,6 +54,12 @@ type PathNode =
 const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision, faceId, bodyTypeId, hairId, equippedOutfitId, equippedPetId, itemAssetMap = {} }: Props) => {
     const [flagTarget, setFlagTarget] = useState<{ id: number; type: 'LESSON' | 'QUIZ'; context: string } | null>(null);
     const [isWalking, setIsWalking] = useState(false);
+
+    // Refs and measured points for accurate SVG path alignment
+    const svgRef = useRef<SVGSVGElement | null>(null);
+    const nodeRefs = useRef<Array<HTMLElement | null>>([]);
+    const [measuredPoints, setMeasuredPoints] = useState<{ x: number; y: number }[]>([]);
+    const prevMeasuredRef = useRef<{ x: number; y: number }[] | null>(null);
 
     const buildNodes = (): PathNode[] => {
         const nodes: PathNode[] = [];
@@ -108,13 +114,99 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
     const NODE_STEP = 160;
     const svgHeight = Math.max(600, nodes.length * NODE_STEP + 200);
 
-    // Calculate dynamic SVG path
+    // Measure node DOM positions and update `measuredPoints` so the SVG path
+    // follows the actual rendered centers of the node elements.
+    useLayoutEffect(() => {
+        const EPS = 0.5; // px threshold to avoid tiny fluctuations
+        const measure = () => {
+            const svgEl = svgRef.current;
+            if (!svgEl) return;
+
+            // Prefer converting screen coordinates to SVG viewBox coordinates
+            // using getScreenCTM + createSVGPoint for robust mapping across
+            // CSS transforms and scaling.
+            const ctm = svgEl.getScreenCTM && svgEl.getScreenCTM();
+            const inv = ctm ? ctm.inverse() : null;
+
+            const pts = nodes.map((node, idx) => {
+                const el = nodeRefs.current[idx];
+                if (!el || !inv) {
+                    // Fallback per-node deterministic layout to preserve order.
+                    return {
+                        x: 200 + (node.kind === 'lesson' ? (node.lesson.x ?? 0) : 0),
+                        y: 80 + idx * NODE_STEP,
+                    };
+                }
+
+                const r = el.getBoundingClientRect();
+                const cx = r.left + r.width / 2;
+                const cy = r.top + r.height / 2;
+
+                // createSVGPoint maps client coords into SVG coordinate space
+                const pt = (svgEl.createSVGPoint && svgEl.createSVGPoint()) || { x: 0, y: 0, matrixTransform: (_: any) => ({ x: 0, y: 0 }) } as any;
+                pt.x = cx;
+                pt.y = cy;
+                const svgP = pt.matrixTransform(inv);
+                return { x: svgP.x, y: svgP.y };
+            }) as { x: number; y: number }[];
+
+            if (!pts.length) return;
+
+            const prev = prevMeasuredRef.current;
+            let same = false;
+            if (prev && prev.length === pts.length) {
+                same = true;
+                for (let i = 0; i < pts.length; i++) {
+                    if (!Number.isFinite(pts[i].x) || !Number.isFinite(pts[i].y) || Math.abs(prev[i].x - pts[i].x) > EPS || Math.abs(prev[i].y - pts[i].y) > EPS) {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!same) {
+                prevMeasuredRef.current = pts;
+                setMeasuredPoints(pts);
+            }
+        };
+
+        measure();
+        window.addEventListener('resize', measure);
+        return () => window.removeEventListener('resize', measure);
+    // Intentionally depend on node count and svgHeight only to avoid re-running on
+    // shallow node array identity changes; DOM refs and measurements are sufficient.
+    }, [nodes.length, svgHeight]);
+
+    // Calculate dynamic SVG path using measured points when available.
     const generatePath = () => {
         if (nodes.length === 0) return "";
-        const points = nodes.map((node, i) => ({
-            x: 200 + (node.kind === 'lesson' ? (node.lesson.x || 0) : 0),
-            y: 80 + i * NODE_STEP,
-        }));
+        let points = measuredPoints.length === nodes.length
+            ? measuredPoints.slice()
+            : nodes.map((node, i) => ({
+                x: 200 + (node.kind === 'lesson' ? (node.lesson.x ?? 0) : 0),
+                y: 80 + i * NODE_STEP,
+            }));
+
+        // If any measured point is invalid, fall back to deterministic layout
+        const allFinite = points.every(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+        if (!allFinite) {
+            points = nodes.map((node, i) => ({
+                x: 200 + (node.kind === 'lesson' ? (node.lesson.x ?? 0) : 0),
+                y: 80 + i * NODE_STEP,
+            }));
+        }
+
+        // Ensure Y coordinates are strictly non-decreasing down the path.
+        // This prevents accidental upward vertical segments when measurements
+        // are noisy or indices are mismatched (which produced the stray line).
+        for (let i = 1; i < points.length; i++) {
+            const prevY = points[i - 1].y;
+            // enforce at least 1px lower than previous to keep path monotonic
+            const minY = prevY + 1;
+            if (!Number.isFinite(points[i].y) || points[i].y < minY) {
+                points[i].y = minY;
+            }
+        }
 
         let d = `M ${points[0].x} 0 L ${points[0].x} ${points[0].y}`;
 
@@ -130,7 +222,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
         }
 
         const last = points[points.length - 1];
-        d += ` L ${last.x} ${svgHeight}`;
+        d += ` L ${last.x} ${last.y + 100}`;
 
         return d;
     };
@@ -145,6 +237,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
             {/* Background dashed path */}
             <div className="absolute inset-0 pointer-events-none flex justify-center overflow-visible">
                 <svg
+                    ref={svgRef}
                     width="400"
                     height={svgHeight}
                     viewBox={`0 0 400 ${svgHeight}`}
@@ -166,7 +259,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
             {nodes.map((node, i) => {
                 if (node.kind === 'lesson') {
                     const { lesson, visibleIndex, isLocked } = node;
-                    const meta = LEVEL_META[visibleIndex] ?? LEVEL_META[0];
+                    const meta = LEVEL_META[visibleIndex % LEVEL_META.length];
                     const { Icon } = meta;
                     const isCompleted = lesson.completed;
                     const isCurrent = !isCompleted && !isLocked;
@@ -179,7 +272,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
 
                     return (
                         <div
-                            key={lesson.id}
+                            key={`lesson-${lesson.id}`}
                             className="flex flex-col items-center mt-16 first:mt-0"
                             style={{ transform: `translateX(${lesson.x}px)` }}
                         >
@@ -213,6 +306,7 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                 </motion.div>
                             )}
                             <motion.button
+                                ref={el => { nodeRefs.current[i] = el as HTMLElement | null; }}
                                 whileHover={isLocked ? {} : { scale: 1.1, rotate: 5 }}
                                 whileTap={isLocked ? {} : { scale: 0.9 }}
                                 onClick={isLocked ? undefined : () => onStart(lesson.id)}
@@ -264,8 +358,9 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                 // Checkpoint node
                 const { quiz, isCompleted, isLocked: checkpointLocked } = node;
                 return (
-                    <div key={`checkpoint-${quiz.id}-${i}`} className="relative flex flex-col items-center mt-16" style={{ transform: 'translateX(0px)' }}>
+                    <div key={`checkpoint-${quiz.id}`} className="relative flex flex-col items-center mt-16" style={{ transform: 'translateX(0px)' }}>
                         <motion.button
+                            ref={el => { nodeRefs.current[i] = el as HTMLElement | null; }}
                             whileHover={checkpointLocked ? {} : { scale: 1.1, rotate: -5 }}
                             whileTap={checkpointLocked ? {} : { scale: 0.9 }}
                             onClick={checkpointLocked ? undefined : () => onStartRevision(quiz)}
