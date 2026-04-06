@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt, Pencil } from 'lucide-react';
+import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt, PenSquare } from 'lucide-react';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
 import Header from './components/Header';
@@ -33,12 +33,6 @@ interface NewAchievement {
 
 type ToastItem = NewAchievement & { _toastId: string };
 
-const normalizeRole = (role: string | null | undefined): string | null => {
-  if (!role) return null;
-  const cleaned = role.trim().toUpperCase();
-  return cleaned.startsWith('ROLE_') ? cleaned.slice(5) : cleaned;
-};
-
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,7 +46,7 @@ export default function App() {
 
   // --- Auth State ---
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [authRole, setAuthRole] = useState<string | null>(() => normalizeRole(localStorage.getItem('role')));
+  const [authRole, setAuthRole] = useState<string | null>(() => localStorage.getItem('role'));
   const [authUsername, setAuthUsername] = useState<string | null>(() => localStorage.getItem('username'));
   const [profilePic, setProfilePic] = useState<string | null>(() => localStorage.getItem('profilePic'));
 
@@ -60,6 +54,8 @@ export default function App() {
   const [faceId, setFaceId] = useState<string | null>(null);
   const [bodyTypeId, setBodyTypeId] = useState<string | null>(null);
   const [hairId, setHairId] = useState<string | null>(null);
+  const [skinColor, setSkinColor] = useState<string | null>(null);
+  const [hairColor, setHairColor] = useState<string | null>(null);
   const [equippedOutfitId, setEquippedOutfitId] = useState<number | null>(null);
   const [equippedPetId, setEquippedPetId] = useState<number | null>(null);
 
@@ -67,6 +63,8 @@ export default function App() {
   const [pendingFaceId, setPendingFaceId] = useState('face_1');
   const [pendingBodyTypeId, setPendingBodyTypeId] = useState('body_1');
   const [pendingHairId, setPendingHairId] = useState('hair_short');
+  const [pendingSkinColor, setPendingSkinColor] = useState('#f1c27d');
+  const [pendingHairColor, setPendingHairColor] = useState('#2c1810');
   const [avatarCreationDone, setAvatarCreationDone] = useState(false);
 
   const itemAssetMap = useItemAssetMap(authToken);
@@ -131,11 +129,6 @@ export default function App() {
             setAuthUsername(data.username);
             localStorage.setItem('username', data.username);
           }
-          if (data.role) {
-            const normalizedRole = normalizeRole(data.role);
-            setAuthRole(normalizedRole);
-            if (normalizedRole) localStorage.setItem('role', normalizedRole);
-          }
           if (data.level !== undefined) {
             setLevel(data.level);
             localStorage.setItem('level', data.level.toString());
@@ -189,6 +182,8 @@ export default function App() {
           if (data.faceId) setFaceId(data.faceId);
           if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
           if (data.hairId) setHairId(data.hairId);
+          if (data.skinColor) setSkinColor(data.skinColor);
+          if (data.hairColor) setHairColor(data.hairColor);
           setEquippedOutfitId(data.equippedOutfitId ?? null);
           setEquippedPetId(data.equippedPetId ?? null);
         }).catch(() => { });
@@ -226,46 +221,8 @@ export default function App() {
   type QuizQ = { id: number; q: string; options: string[]; correct: number; explanation: string };
   type OnbQ = { q: string; options: string[]; correct: number };
   const [dailyQuizQuestions, setDailyQuizQuestions] = useState<QuizQ[]>([]);
-  const [dailyQuizStatus, setDailyQuizStatus] = useState<'idle' | 'loading' | 'loaded' | 'locked'>('idle');
   const [onboardingQuestions, setOnboardingQuestions] = useState<OnbQ[]>([]);
   const [lessonIdToPosition, setLessonIdToPosition] = useState<Record<string, number>>({});
-
-  // Daily quiz lock toast + countdown (to next local midnight)
-  const [dailyQuizToast, setDailyQuizToast] = useState<string | null>(null);
-  const [dailyQuizToastShowCountdown, setDailyQuizToastShowCountdown] = useState(false);
-  const [dailyQuizRefreshInMs, setDailyQuizRefreshInMs] = useState<number>(0);
-
-  useEffect(() => {
-    if (!dailyQuizCompleted) return;
-    const tick = () => {
-      const now = new Date();
-      const nextMidnight = new Date(now);
-      nextMidnight.setHours(24, 0, 0, 0);
-      setDailyQuizRefreshInMs(Math.max(0, nextMidnight.getTime() - now.getTime()));
-    };
-    tick();
-    const id = window.setInterval(tick, 1000);
-    return () => window.clearInterval(id);
-  }, [dailyQuizCompleted]);
-
-  const formatCountdown = (ms: number) => {
-    const total = Math.floor(ms / 1000);
-    const h = Math.floor(total / 3600);
-    const m = Math.floor((total % 3600) / 60);
-    const s = total % 60;
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
-  };
-
-  // Safety: if the quiz becomes "completed", force-close modal.
-  useEffect(() => {
-    if (dailyQuizCompleted) setShowDailyQuiz(false);
-  }, [dailyQuizCompleted]);
-
-  // Safety: never show the modal unless questions are loaded.
-  useEffect(() => {
-    if (showDailyQuiz && dailyQuizStatus !== 'loaded') setShowDailyQuiz(false);
-  }, [showDailyQuiz, dailyQuizStatus]);
 
   // Achievement toasts
   const [achievementToasts, setAchievementToasts] = useState<ToastItem[]>([]);
@@ -334,37 +291,12 @@ export default function App() {
 
   // Fetch daily quiz questions
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    setDailyQuizStatus('loading');
-    fetch('/api/quiz/daily', {
-      headers: { 'Authorization': `Bearer ${token}` },
-    })
-      .then(async r => {
-        if (r.status === 409) {
-          // Already completed today: lock it in UI.
-          // IMPORTANT: don't show any popup/toast here — only show UI feedback when the user
-          // presses the Daily Quiz button.
-          const today = new Date().toISOString().slice(0, 10);
-          localStorage.setItem('dailyQuizDate', today);
-          localStorage.setItem('dailyQuizStartedDate', today);
-          setDailyQuizCompleted(true);
-          setDailyQuizStarted(true);
-          setDailyQuizStatus('locked');
-          setDailyQuizQuestions([]);
-          return null;
-        }
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data: { id: number; title: string; options: string[]; correctAnswer: number; explanation: string }[] | null) => {
-        if (!data) return;
-        setDailyQuizQuestions(data.map(q => ({ id: q.id, q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })));
-        setDailyQuizStatus('loaded');
-      })
-      .catch(() => { });
-  }, [authToken]);
+    fetch('/api/quiz/daily')
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((data: { id: number; title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
+        setDailyQuizQuestions(data.map(q => ({ id: q.id, q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
+      ).catch(() => { });
+  }, []);
 
   // Fetch onboarding questions
   useEffect(() => {
@@ -375,14 +307,13 @@ export default function App() {
       ).catch(() => { });
   }, []);
 
-  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null) => {
-    const normalized = normalizeRole(role);
+  const handleAuthSuccess = (token: string, role: string, username: string, level?: number, coinsArg?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean, faceIdArg?: string | null, bodyTypeIdArg?: string | null, equippedOutfitIdArg?: number | null, equippedPetIdArg?: number | null, hairIdArg?: string | null, skinColorArg?: string | null, hairColorArg?: string | null) => {
     setAuthToken(token);
-    setAuthRole(normalized);
+    setAuthRole(role);
     setAuthUsername(username);
     if (profilePic !== undefined) setProfilePic(profilePic);
     localStorage.setItem('token', token);
-    if (normalized) localStorage.setItem('role', normalized);
+    localStorage.setItem('role', role);
     localStorage.setItem('username', username);
     if (level !== undefined) {
       setLevel(level);
@@ -421,6 +352,8 @@ export default function App() {
     if (faceIdArg) setFaceId(faceIdArg);
     if (bodyTypeIdArg) setBodyTypeId(bodyTypeIdArg);
     if (hairIdArg) setHairId(hairIdArg);
+    if (skinColorArg) setSkinColor(skinColorArg);
+    if (hairColorArg) setHairColor(hairColorArg);
     if (equippedOutfitIdArg !== undefined) setEquippedOutfitId(equippedOutfitIdArg ?? null);
     if (equippedPetIdArg !== undefined) setEquippedPetId(equippedPetIdArg ?? null);
 
@@ -428,7 +361,7 @@ export default function App() {
     setShowOnboarding(!isDoneWithOnboarding);
     if (isDoneWithOnboarding) {
       localStorage.setItem('onboardingFinished', 'true');
-      navigate(normalized === 'CONTRIBUTOR' ? '/contributor' : '/home');
+      navigate('/home');
     } else {
       localStorage.removeItem('onboardingFinished');
       navigate('/onboarding');
@@ -694,6 +627,8 @@ export default function App() {
           faceId: pendingFaceId,
           bodyTypeId: pendingBodyTypeId,
           hairId: pendingHairId,
+          skinColor: pendingSkinColor,
+          hairColor: pendingHairColor,
         })
       })
         .then(r => r.json())
@@ -703,21 +638,21 @@ export default function App() {
           if (data.faceId) setFaceId(data.faceId);
           if (data.bodyTypeId) setBodyTypeId(data.bodyTypeId);
           if (data.hairId) setHairId(data.hairId);
+          if (data.skinColor) setSkinColor(data.skinColor);
+          if (data.hairColor) setHairColor(data.hairColor);
           setEquippedOutfitId(data.equippedOutfitId ?? null);
           setEquippedPetId(data.equippedPetId ?? null);
           setAvatarCreationDone(false);
           setShowOnboarding(false);
           localStorage.setItem('onboardingFinished', 'true');
-          const role = normalizeRole(localStorage.getItem('role'));
-          navigate(role === 'CONTRIBUTOR' ? '/contributor' : '/home');
+          navigate('/home');
         })
         .catch(err => console.error('Failed to save onboarding:', err));
     } else {
       // Fallback for safety, though we now register first
       setShowOnboarding(false);
       localStorage.setItem('onboardingFinished', 'true');
-      const role = normalizeRole(localStorage.getItem('role'));
-      navigate(role === 'CONTRIBUTOR' ? '/contributor' : '/home');
+      navigate('/home');
     }
   };
 
@@ -730,6 +665,8 @@ export default function App() {
         profilePic={profilePic}
         faceId={faceId}
         hairId={hairId}
+        skinColor={skinColor}
+        hairColor={hairColor}
         onLogout={handleLogout}
         onNavigateHome={() => navigate('/home')}
         onNavigateProfile={() => navigate('/profile')}
@@ -749,7 +686,7 @@ export default function App() {
               <DailyWord onLearnMore={() => navigate('/glossary')} />
 
               {/* Daily Quiz CTA */}
-              {(authRole === 'ADMIN' || !!authToken) && (
+              {(authRole === 'ADMIN' || (!dailyQuizCompleted && !dailyQuizStarted)) && (
                 <div className="relative rounded-3xl p-6 mb-8 overflow-hidden bg-brand-secondary shadow-xl shadow-brand-secondary/30">
                   {/* Decorative blobs */}
                   <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
@@ -764,13 +701,7 @@ export default function App() {
                         </div>
                         <h3 className="text-2xl font-black text-white tracking-tight">Daily Quiz</h3>
                       </div>
-                      <p className="text-white/70 font-medium text-sm mb-3">
-                        {dailyQuizCompleted && authRole !== 'ADMIN'
-                          ? `Completed today. Refreshes in ${formatCountdown(dailyQuizRefreshInMs)}`
-                          : dailyQuizStarted
-                            ? 'In progress — finish it to lock in your streak!'
-                            : `Test your knowledge up to Level ${level}!`}
-                      </p>
+                      <p className="text-white/70 font-medium text-sm mb-3">Test your knowledge up to Level {level}!</p>
 
                       {/* Reward chips */}
                       <div className="flex items-center gap-2 flex-wrap">
@@ -791,32 +722,13 @@ export default function App() {
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
-                        // If the quiz is completed/locked for today, show the lock toast on button press.
-                        // (Do not auto-toast on refresh.)
-                        if (dailyQuizCompleted) {
-                          setDailyQuizToast(`You already completed today’s Daily Quiz.`);
-                          setDailyQuizToastShowCountdown(true);
-                          setTimeout(() => setDailyQuizToast(null), 2500);
-                          return;
-                        }
-                        // Only allow opening the modal when questions are actually loaded.
-                        if (dailyQuizStatus !== 'loaded') {
-                          setDailyQuizToast(
-                            dailyQuizStatus === 'loading'
-                              ? `Daily Quiz not ready. Loading…`
-                              : `Daily Quiz locked. Refreshes in ${formatCountdown(dailyQuizRefreshInMs)}.`
-                          );
-                          setDailyQuizToastShowCountdown(dailyQuizStatus !== 'loading');
-                          setTimeout(() => setDailyQuizToast(null), 2500);
-                          return;
-                        }
                         localStorage.setItem('dailyQuizStartedDate', new Date().toISOString().slice(0, 10));
                         setDailyQuizStarted(true);
                         setShowDailyQuiz(true);
                       }}
-                      className={`shrink-0 bg-white text-brand-secondary px-7 py-3.5 rounded-2xl font-black text-base shadow-[0_4px_0_rgba(0,0,0,0.25)] active:translate-y-1 active:shadow-none transition-all ${authRole !== 'ADMIN' && dailyQuizCompleted ? 'opacity-80 cursor-not-allowed' : ''}`}
+                      className="shrink-0 bg-white text-brand-secondary px-7 py-3.5 rounded-2xl font-black text-base shadow-[0_4px_0_rgba(0,0,0,0.25)] active:translate-y-1 active:shadow-none transition-all"
                     >
-                      {dailyQuizStarted && !dailyQuizCompleted ? 'Resume Quiz →' : 'Start Quiz →'}
+                      Start Quiz →
                     </motion.button>
                   </div>
                 </div>
@@ -932,6 +844,8 @@ export default function App() {
                 faceId={faceId}
                 bodyTypeId={bodyTypeId}
                 hairId={hairId}
+                skinColor={skinColor}
+                hairColor={hairColor}
                 equippedOutfitId={equippedOutfitId}
                 equippedPetId={equippedPetId}
                 itemAssetMap={itemAssetMap}
@@ -978,6 +892,8 @@ export default function App() {
                 faceId={faceId}
                 bodyTypeId={bodyTypeId}
                 hairId={hairId}
+                skinColor={skinColor}
+                hairColor={hairColor}
                 equippedOutfitId={equippedOutfitId}
                 equippedPetId={equippedPetId}
                 itemAssetMap={itemAssetMap}
@@ -1086,10 +1002,10 @@ export default function App() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate('/contributor')}
-              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${location.pathname.startsWith('/contributor') ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isContributor ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:bg-slate-50'}`}
             >
-              <Pencil size={24} />
-              <span className="text-[10px] font-black uppercase">Create</span>
+              <PenSquare size={24} />
+              <span className="text-[10px] font-black uppercase">Contribute</span>
             </motion.button>
           )}
         </div>
@@ -1116,7 +1032,7 @@ export default function App() {
           // If the user closes the quiz before finishing, treat it as a failed attempt:
           // reset streak to 0 and record the attempt in the DB so the quiz won't
           // reappear today and the streak correctly goes back to 0.
-          if (dailyQuizStatus === 'loaded' && dailyQuizStarted && !dailyQuizCompleted) {
+          if (!dailyQuizCompleted) {
             setStreak(0);
             localStorage.setItem('streak', '0');
             localStorage.setItem('dailyQuizDate', new Date().toISOString().slice(0, 10));
@@ -1191,30 +1107,6 @@ export default function App() {
           ))}
         </AnimatePresence>
       </div>
-
-      {/* Daily Quiz Lock Toast */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[310] pointer-events-none">
-        <AnimatePresence>
-          {dailyQuizToast && (
-            <motion.div
-              key="daily-quiz-toast"
-              initial={{ opacity: 0, y: -12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-              className="bg-slate-900/90 text-white px-4 py-3 rounded-2xl shadow-xl border border-white/10 max-w-[90vw]"
-            >
-              <p className="text-sm font-black">Daily Quiz locked</p>
-              <p className="text-xs text-white/80 font-bold">{dailyQuizToast}</p>
-              {dailyQuizToastShowCountdown && (
-                <p className="text-[11px] text-white/70 font-black mt-1">
-                  Refreshes in {formatCountdown(dailyQuizRefreshInMs)}
-                </p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
     </div>
   );
 
@@ -1240,7 +1132,7 @@ export default function App() {
       <Route path="/onboarding" element={
         <div className="min-h-screen bg-slate-50 flex flex-col">
           {!avatarCreationDone ? (
-            <AvatarCreator onComplete={(f, b, h) => { setPendingFaceId(f); setPendingBodyTypeId(b); setPendingHairId(h); setAvatarCreationDone(true); }} />
+            <AvatarCreator onComplete={(f, b, h, sk, hc) => { setPendingFaceId(f); setPendingBodyTypeId(b); setPendingHairId(h); setPendingSkinColor(sk); setPendingHairColor(hc); setAvatarCreationDone(true); }} />
           ) : (
             <OnboardingModal
               show={true}

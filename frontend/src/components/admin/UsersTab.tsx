@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, SlidersHorizontal, UserCheck, Ban, CheckCircle, RotateCcw, Trash2, ChevronDown, ChevronUp, Coins, Zap, Trophy, Clock, BookOpen } from 'lucide-react';
+import { Search, SlidersHorizontal, UserCheck, Ban, CheckCircle, RotateCcw, Trash2, ChevronDown, ChevronUp, Coins, Zap, Trophy, Clock, BookOpen, ShieldCheck } from 'lucide-react';
 import type { UserData, UserStats } from './types';
 import { authHeaders, ROLE_COLOR } from './utils';
 import { ConfirmModal } from './ConfirmModal';
@@ -20,6 +20,7 @@ export function UsersTab() {
     title: string; message: string; confirmLabel: string; type: 'danger' | 'info' | 'warning' | 'success'; onConfirm: () => void;
   } | null>(null);
   const [rolePicker, setRolePicker] = useState<UserData | null>(null);
+  const [deleteError, setDeleteError] = useState('');
   const currentUser = localStorage.getItem('username');
 
   const showConfirm = (title: string, message: string, confirmLabel: string, type: 'danger' | 'info' | 'warning' | 'success', onConfirm: () => void) =>
@@ -59,10 +60,20 @@ export function UsersTab() {
   };
 
   const handleDelete = (id: number) => {
+    setDeleteError('');
     showConfirm('Delete User', 'Permanently delete this account and all its data? This cannot be undone.', 'Delete', 'danger', async () => {
       closeModal();
-      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: authHeaders() });
-      if (res.ok) setUsers(u => u.filter(x => x.id !== id));
+      try {
+        const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: authHeaders() });
+        if (res.ok) {
+          setUsers(u => u.filter(x => x.id !== id));
+        } else {
+          const msg = await res.text();
+          setDeleteError(msg || `Failed to delete user (status ${res.status})`);
+        }
+      } catch {
+        setDeleteError('Network error — could not delete user.');
+      }
     });
   };
 
@@ -105,6 +116,12 @@ export function UsersTab() {
 
   return (
     <>
+      {deleteError && (
+        <div className="mb-4 flex items-center justify-between gap-3 bg-red-50 border border-red-200 text-red-600 rounded-2xl px-5 py-3 text-sm font-bold">
+          <span>⚠️ {deleteError}</span>
+          <button onClick={() => setDeleteError('')} className="text-red-400 hover:text-red-600 font-black text-lg leading-none">×</button>
+        </div>
+      )}
       <AnimatePresence>
         {modal && (
           <ConfirmModal
@@ -184,8 +201,8 @@ export function UsersTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map(user => (
-                <>
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                <Fragment key={user.id}>
+                  <tr className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-5">
                       <div className="relative pl-5">
                         <span className="absolute left-0 top-1/2 -translate-y-1/2">
@@ -222,13 +239,33 @@ export function UsersTab() {
                       </div>
                     </td>
                     <td className="px-5 py-5">
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider ${user.enabled ? 'bg-green-50/50 border-green-100 text-green-600' : 'bg-red-50/50 border-red-100 text-red-600'}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
-                        {user.enabled ? 'Verified' : 'Banned'}
-                      </div>
+                      {!user.enabled && user.role === 'CONTRIBUTOR' ? (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider bg-amber-50/50 border-amber-100 text-amber-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Pending Approval
+                        </div>
+                      ) : (
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider ${user.enabled ? 'bg-green-50/50 border-green-100 text-green-600' : 'bg-red-50/50 border-red-100 text-red-600'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                          {user.enabled ? 'Verified' : 'Banned'}
+                        </div>
+                      )}
                     </td>
                     <td className="px-5 py-5">
                       <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                        {!user.enabled && user.role === 'CONTRIBUTOR' && (
+                          <button
+                            onClick={() => showConfirm('Approve Contributor', `Approve ${user.username} as a contributor? They will be able to log in immediately.`, 'Approve', 'success', async () => {
+                              closeModal();
+                              const res = await fetch(`/api/admin/users/${user.id}/unban`, { method: 'POST', headers: authHeaders() });
+                              if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: true } : x));
+                            })}
+                            title="Approve contributor"
+                            className="p-2.5 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm"
+                          >
+                            <ShieldCheck size={18} />
+                          </button>
+                        )}
                         <button onClick={() => openRolePicker(user)} title="Change role"
                           className="p-2.5 rounded-xl text-indigo-500 bg-indigo-50/30 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all active:scale-95 shadow-sm">
                           <UserCheck size={18} />
@@ -283,7 +320,7 @@ export function UsersTab() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
               {filtered.length === 0 && (
                 <tr><td colSpan={5} className="px-5 py-12 text-center text-slate-400 font-bold">No users found.</td></tr>
