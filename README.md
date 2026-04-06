@@ -13,7 +13,7 @@ Alpha Decode is a gamified web application designed to help users master "Gen Al
 * **AI Integration:** AI-powered definitions and real-world usage examples and explanation.
 * **Admin Dashboard:** Built-in tools for user management and content moderation.
 * **Contributor Dashboard:** Built-in tools for sending lesson contributions.
-* 
+  
 ## Tech Stack
 
 ### Backend
