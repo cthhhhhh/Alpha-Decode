@@ -1,25 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Trophy, Search, Gamepad2, Coins, Flame, Shield, ChevronUp, User, ShoppingBag, Shirt, PenSquare } from 'lucide-react';
+import { BookOpen, ChevronUp, Coins, Flame, Gamepad2, PenSquare, Search, Shield, Shirt, ShoppingBag, Trophy, User } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import type { Lesson, RevisionQuiz, RevisionQuizQuestion } from './types';
 
-import Header from './components/Header';
-import DailyWord from './components/DailyWord';
-import LessonPath from './components/LessonPath';
-import LearnSidebarLeft from './components/LearnSidebarLeft';
-import LessonSession from './components/LessonSession';
-import OnboardingModal from './components/OnboardingModal';
-import DailyQuizModal from './components/DailyQuizModal';
-import RevisionQuizModal from './components/RevisionQuizModal';
-import Glossary from './components/Glossary';
-import LoginPage from './components/LoginPage';
-import RegisterPage from './components/RegisterPage';
 import AdminPanel from './components/AdminPanel';
 import ContributorPanel from './components/ContributorPanel';
-import Leaderboard from './components/Leaderboard';
-import ProfilePage from './components/ProfilePage';
+import DailyQuizModal from './components/DailyQuizModal';
+import DailyWord from './components/DailyWord';
+import Glossary from './components/Glossary';
+import Header from './components/Header';
 import HomePage from './components/HomePage';
+import Leaderboard from './components/Leaderboard';
+import LearnSidebarLeft from './components/LearnSidebarLeft';
+import LessonPath from './components/LessonPath';
+import LessonSession from './components/LessonSession';
+import LoginPage from './components/LoginPage';
+import OnboardingModal from './components/OnboardingModal';
+import ProfilePage from './components/ProfilePage';
+import RegisterPage from './components/RegisterPage';
+import RevisionQuizModal from './components/RevisionQuizModal';
 import ShopPage from './components/ShopPage';
 import WardrobePage from './components/WardrobePage';
 import AvatarCreator from './components/avatar/AvatarCreator';
@@ -270,7 +270,7 @@ export default function App() {
         const lessonsData: { id: number; title: string }[] = await lessonsRes.json();
         const revisionData: { id: number; afterLessonIndex: number; questions: RevisionQuizQuestion[] }[] = await revisionRes.json();
 
-        const xOffsets = [0, 40, -40, 0, 40, -40, 0];
+        const xOffsets = [0, 36, -36, 72, 0, -72, 36, -36, 36, 0];
         const pos: Record<string, number> = {};
         lessonsData.forEach((l, i) => { pos[String(l.id)] = i + 1; });
         setLessonIdToPosition(pos);
@@ -285,6 +285,7 @@ export default function App() {
           completed: isAdmin ? true : i < unlockedIndex,
           x: xOffsets[i % xOffsets.length],
         }));
+        console.debug('[App] mappedLessons', mappedLessons);
         setLessons(mappedLessons);
 
         setRevisionQuizzes(revisionData.map(rq => {
