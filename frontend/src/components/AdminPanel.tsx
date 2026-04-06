@@ -18,6 +18,7 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
   const [error, setError] = useState('');
   const [pendingReports, setPendingReports] = useState(0);
   const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  const [pendingUsers, setPendingUsers] = useState(0);
 
   useEffect(() => {
     fetch('/api/admin/stats', { headers: authHeaders() })
@@ -36,6 +37,10 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
       .then(r => r.json())
       .then(data => setPendingSubmissions((data as any[]).length))
       .catch(() => {});
+    fetch('/api/admin/users', { headers: authHeaders() })
+      .then(r => r.json())
+      .then(data => setPendingUsers((data as any[]).filter(u => u.pendingApproval).length))
+      .catch(() => {});
   }, [activeTab]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold animate-pulse">Loading Admin Dashboard...</div>;
@@ -48,7 +53,7 @@ export default function AdminPanel({ onBack }: { onBack?: () => void }) {
 
   const TABS: { key: Tab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <Activity size={16} /> },
-    { key: 'users', label: 'Users', icon: <Users size={16} /> },
+    { key: 'users', label: 'Users', icon: <Users size={16} />, count: pendingUsers },
     { key: 'reports', label: 'Reports', icon: <Flag size={16} />, count: pendingReports },
     { key: 'content', label: 'Content', icon: <BookOpen size={16} /> },
     { key: 'submissions', label: 'Submissions', icon: <FileText size={16} />, count: pendingSubmissions },
