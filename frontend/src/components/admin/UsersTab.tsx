@@ -181,22 +181,22 @@ export function UsersTab() {
           </div>
         </div>
 
-        <div className="overflow-hidden">
-          <table className="w-full text-left">
+        <div>
+          <table className="w-full text-left table-fixed">
             <colgroup>
-              <col className="w-[35%]" />
-              <col className="w-[12%]" />
+              <col className="w-[26%]" />
+              <col className="w-[14%]" />
               <col className="w-[18%]" />
-              <col className="w-[12%]" />
-              <col className="w-[23%]" />
+              <col className="w-[13%]" />
+              <col className="w-[29%]" />
             </colgroup>
             <thead>
               <tr className="text-xs uppercase tracking-wider font-black text-slate-400 border-b-2 border-slate-100">
-                <th className="px-10 py-5 text-left">User</th>
-                <th className="px-7 py-5 text-left">Role</th>
-                <th className="px-5 py-5 text-left">Statistics</th>
-                <th className="px-7 py-5 text-left">Status</th>
-                <th className="px-7 py-5 text-right">Actions</th>
+                <th className="px-5 py-5 text-left">User</th>
+                <th className="px-4 py-5 text-left">Role</th>
+                <th className="px-4 py-5 text-left">Statistics</th>
+                <th className="px-4 py-5 text-left">Status</th>
+                <th className="px-4 py-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -209,27 +209,27 @@ export function UsersTab() {
                           <span className={`block w-2.5 h-2.5 rounded-full ${user.isOnline ? 'bg-green-500' : 'bg-slate-300'}`} />
                           {user.isOnline && <span className="absolute inset-0 block w-2.5 h-2.5 rounded-full bg-green-500 animate-ping" />}
                         </span>
-                        <p className="font-black text-slate-800 text-base">{user.username}</p>
-                        <p className="text-sm text-slate-400 font-medium">{user.email}</p>
+                        <p className="font-black text-slate-800 text-base truncate">{user.username}</p>
+                        <p className="text-sm text-slate-400 font-medium truncate">{user.email}</p>
                       </div>
                     </td>
-                    <td className="px-5 py-5">
+                    <td className="px-4 py-5">
                       <span className={`px-3 py-1 rounded-full text-sm font-black ${ROLE_COLOR[user.role]}`}>{user.role}</span>
                     </td>
-                    <td className="px-5 py-5">
+                    <td className="px-4 py-5">
                       <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 group/stat">
-                          <div className="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20 shadow-sm transition-all group-hover/stat:scale-110">
-                            <Trophy size={14} />
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20">
+                            <Trophy size={13} />
                           </div>
                           <div>
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Rank</p>
                             <p className="text-sm font-black text-slate-800">Lvl {user.level}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 group/stat">
-                          <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 border border-amber-200 shadow-sm transition-all group-hover/stat:scale-110">
-                            <Coins size={14} />
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 border border-amber-200">
+                            <Coins size={13} />
                           </div>
                           <div>
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Coins</p>
@@ -238,20 +238,20 @@ export function UsersTab() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-5">
+                    <td className="px-4 py-5">
                       {!user.enabled && user.role === 'CONTRIBUTOR' ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider bg-amber-50/50 border-amber-100 text-amber-600">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider bg-amber-50/50 border-amber-100 text-amber-600">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          Pending Approval
+                          Pending
                         </div>
                       ) : (
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider ${user.enabled ? 'bg-green-50/50 border-green-100 text-green-600' : 'bg-red-50/50 border-red-100 text-red-600'}`}>
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider ${user.enabled ? 'bg-green-50/50 border-green-100 text-green-600' : 'bg-red-50/50 border-red-100 text-red-600'}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
                           {user.enabled ? 'Verified' : 'Banned'}
                         </div>
                       )}
                     </td>
-                    <td className="px-5 py-5">
+                    <td className="px-4 py-5">
                       <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         {!user.enabled && user.role === 'CONTRIBUTOR' && (
                           <button
@@ -261,31 +261,31 @@ export function UsersTab() {
                               if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: true } : x));
                             })}
                             title="Approve contributor"
-                            className="p-2.5 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm"
+                            className="p-2 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm"
                           >
-                            <ShieldCheck size={18} />
+                            <ShieldCheck size={17} />
                           </button>
                         )}
                         <button onClick={() => openRolePicker(user)} title="Change role"
-                          className="p-2.5 rounded-xl text-indigo-500 bg-indigo-50/30 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all active:scale-95 shadow-sm">
-                          <UserCheck size={18} />
+                          className="p-2 rounded-xl text-indigo-500 bg-indigo-50/30 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all active:scale-95 shadow-sm">
+                          <UserCheck size={17} />
                         </button>
                         <button onClick={() => handleBanToggle(user)} 
                           disabled={user.username === currentUser}
-                          className={`p-2.5 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.username === currentUser ? 'text-slate-200' : (user.enabled ? 'text-orange-500 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-100' : 'text-green-600 bg-green-50/30 hover:bg-green-50 hover:border-green-100')}`}>
-                          {user.enabled ? <Ban size={18} /> : <CheckCircle size={18} />}
+                          className={`p-2 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.username === currentUser ? 'text-slate-200' : (user.enabled ? 'text-orange-500 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-100' : 'text-green-600 bg-green-50/30 hover:bg-green-50 hover:border-green-100')}`}>
+                          {user.enabled ? <Ban size={17} /> : <CheckCircle size={17} />}
                         </button>
                         <button onClick={() => handleReset(user)} title="Reset progress" 
-                          className="p-2.5 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm">
-                          <RotateCcw size={18} />
+                          className="p-2 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm">
+                          <RotateCcw size={17} />
                         </button>
                         <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN' || user.username === currentUser} 
-                          className={`p-2.5 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200' : 'text-red-500 bg-red-50/30 hover:bg-red-50 hover:border-red-100'}`}>
-                          <Trash2 size={18} />
+                          className={`p-2 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200' : 'text-red-500 bg-red-50/30 hover:bg-red-50 hover:border-red-100'}`}>
+                          <Trash2 size={17} />
                         </button>
                         <button onClick={() => toggleExpand(user.id)} 
-                          className={`p-2.5 rounded-xl transition-all shadow-sm ${expandedId === user.id ? 'bg-slate-200 text-slate-800' : 'text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600'}`}>
-                          {expandedId === user.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                          className={`p-2 rounded-xl transition-all shadow-sm ${expandedId === user.id ? 'bg-slate-200 text-slate-800' : 'text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600'}`}>
+                          {expandedId === user.id ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
                         </button>
                       </div>
                     </td>
