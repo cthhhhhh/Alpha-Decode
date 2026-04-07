@@ -294,7 +294,7 @@ export function UsersTab() {
                           className="p-2 rounded-xl text-blue-500 bg-blue-50/30 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all active:scale-95 shadow-sm">
                           <RotateCcw size={17} />
                         </button>
-                        <button onClick={() => handleDelete(user.id)} disabled={user.role === 'ADMIN' || user.username === currentUser}
+                        <button onClick={() => handleDelete(user.id)} title="Delete user" disabled={user.role === 'ADMIN' || user.username === currentUser}
                           className={`p-2 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.role === 'ADMIN' || user.username === currentUser ? 'text-slate-200' : 'text-red-500 bg-red-50/30 hover:bg-red-50 hover:border-red-100'}`}>
                           <Trash2 size={17} />
                         </button>
