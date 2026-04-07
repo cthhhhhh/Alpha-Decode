@@ -1,0 +1,188 @@
+package com.csd.cs203t1.admin;
+
+import com.csd.cs203t1.common.Role;
+import com.csd.cs203t1.security.CustomUserDetailsService;
+import com.csd.cs203t1.security.JwtFilter;
+import com.csd.cs203t1.security.JwtUtil;
+import com.csd.cs203t1.security.SecurityConfig;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserRepository;
+import com.csd.cs203t1.user.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(AdminController.class)
+@Import({SecurityConfig.class, JwtFilter.class})
+@DisplayName("AdminController Unit Tests")
+class AdminControllerTest {
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+
+    @MockBean private UserRepository userRepository;
+    @MockBean private SessionTracker sessionTracker;
+    @MockBean private UserService userService;
+    @MockBean private JwtUtil jwtUtil;
+    @MockBean private CustomUserDetailsService userDetailsService;
+
+    private User adminUser;
+    private User regularUser;
+
+    @BeforeEach
+    void setUp() {
+        adminUser = new User();
+        adminUser.setId(1L);
+        adminUser.setUsername("admin");
+        adminUser.setEmail("admin@test.com");
+        adminUser.setRole(Role.ADMIN);
+
+        regularUser = new User();
+        regularUser.setId(2L);
+        regularUser.setUsername("user");
+        regularUser.setEmail("user@test.com");
+        regularUser.setRole(Role.USER);
+        regularUser.setEnabled(true);
+        regularUser.setPendingApproval(false);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("GET /api/admin/stats: success as ADMIN")
+    void getAdminStats_asAdmin_returns200() throws Exception {
+        when(userRepository.countByRole(Role.USER)).thenReturn(10L);
+        when(userRepository.countByRole(Role.CONTRIBUTOR)).thenReturn(2L);
+        when(sessionTracker.getActiveCount()).thenReturn(5L);
+
+        mockMvc.perform(get("/api/admin/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalUsers").value(10))
+                .andExpect(jsonPath("$.activeSessions").value(5));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("GET /api/admin/stats: forbidden as USER")
+    void getAdminStats_asUser_returns403() throws Exception {
+        mockMvc.perform(get("/api/admin/stats"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("DELETE /api/admin/users/{id}: success")
+    void deleteUser_asAdmin_success() throws Exception {
+        when(userService.getCurrentUser()).thenReturn(adminUser);
+
+        mockMvc.perform(delete("/api/admin/users/2"))
+                .andExpect(status().isOk());
+
+        verify(userService).deleteUserById(2L);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("DELETE /api/admin/users/{id}: cannot delete self")
+    void deleteUser_self_returns400() throws Exception {
+        when(userService.getCurrentUser()).thenReturn(adminUser);
+
+        mockMvc.perform(delete("/api/admin/users/1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("You cannot delete yourself"));
+
+        verify(userService, never()).deleteUserById(anyLong());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/admin/users/{id}/ban: success")
+    void banUser_asAdmin_success() throws Exception {
+        when(userService.getCurrentUser()).thenReturn(adminUser);
+
+        mockMvc.perform(post("/api/admin/users/2/ban"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User banned successfully"));
+
+        verify(userService).setUserEnabled(2L, false);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/admin/users/{id}/approve-contributor: success")
+    void approveContributor_valid_success() throws Exception {
+        regularUser.setPendingApproval(true);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
+
+        mockMvc.perform(post("/api/admin/users/2/approve-contributor"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User approved as contributor"));
+
+        verify(userRepository).save(argThat(u -> 
+            u.getRole() == Role.CONTRIBUTOR && !u.isPendingApproval() && u.isEnabled()
+        ));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/admin/users/{id}/approve-contributor: fails if not pending")
+    void approveContributor_notPending_returns400() throws Exception {
+        regularUser.setPendingApproval(false);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
+
+        mockMvc.perform(post("/api/admin/users/2/approve-contributor"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("User is not pending approval"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("GET /api/admin/contributors/pending: returns list")
+    void getPendingContributors_returnsList() throws Exception {
+        User contributor = new User();
+        contributor.setId(10L);
+        contributor.setUsername("tester");
+        contributor.setEmail("tester@test.com");
+        contributor.setRole(Role.CONTRIBUTOR);
+        contributor.setEnabled(true);
+        contributor.setPendingApproval(true);
+
+        when(userRepository.findByRoleAndPendingApprovalTrue(Role.CONTRIBUTOR))
+                .thenReturn(Collections.singletonList(contributor));
+
+        mockMvc.perform(get("/api/admin/contributors/pending"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("tester"))
+                .andExpect(jsonPath("$[0].pendingApproval").value(true));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("PATCH /api/admin/users/{id}/role: updates role")
+    void updateUserRole_success() throws Exception {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
+
+        mockMvc.perform(patch("/api/admin/users/2/role")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("role", "ADMIN"))))
+                .andExpect(status().isOk());
+
+        verify(userRepository).save(argThat(u -> u.getRole() == Role.ADMIN));
+    }
+}
