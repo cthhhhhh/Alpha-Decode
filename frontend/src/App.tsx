@@ -98,6 +98,33 @@ export default function App() {
     // "Started" should mean "in progress today" (not already completed).
     return saved === today && localStorage.getItem('dailyQuizDate') !== today;
   });
+  const [dailyQuizCountdown, setDailyQuizCountdown] = useState<string>('');
+
+  const formatCountdown = (ms: number) => {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const msUntilNextLocalMidnight = () => {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(24, 0, 0, 0);
+    return next.getTime() - now.getTime();
+  };
+
+  useEffect(() => {
+    if (!dailyQuizCompleted) {
+      setDailyQuizCountdown('');
+      return;
+    }
+    const tick = () => setDailyQuizCountdown(formatCountdown(msUntilNextLocalMidnight()));
+    tick();
+    const t = window.setInterval(tick, 1000);
+    return () => window.clearInterval(t);
+  }, [dailyQuizCompleted]);
 
   useEffect(() => {
     if (authToken) {
@@ -786,6 +813,11 @@ export default function App() {
                       {dailyQuizCompleted ? 'Completed Today' : (dailyQuizStarted ? 'Resume Quiz →' : 'Start Quiz →')}
                     </motion.button>
                   </div>
+                  {dailyQuizCompleted && dailyQuizCountdown && (
+                    <p className="relative z-10 mt-3 text-white/75 text-sm font-bold">
+                      Next quiz in <span className="font-black text-white">{dailyQuizCountdown}</span>
+                    </p>
+                  )}
                 </div>
               )}
 
