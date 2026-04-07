@@ -1,4 +1,4 @@
-# Unit Testing — Full Summary (CS203T1)
+# Unit Testing
 
 **Total: 118 tests across 14 files — all passing ✅ | BUILD SUCCESS**
 
