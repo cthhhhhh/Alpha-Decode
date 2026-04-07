@@ -174,3 +174,16 @@ mvn test
 # Open the coverage report in Chrome:
 # C:\CS203T1\target\site\jacoco\index.html
 ```
+
+---
+
+## 7. Accessing Coverage Evidence on GitHub
+
+The project is configured with a GitHub Actions pipeline that automatically runs all 118 tests and generates a fresh Jacoco report on every push. This provides immutable proof of testing for your lab report.
+
+### How to Retrieve the Report:
+1.  Go to the **Actions** tab of your GitHub repository.
+2.  Click on the most recent workflow run (e.g., *"Trigger auto deployment for alpha-decode"*).
+3.  Scroll down to the **Artifacts** section at the bottom of the page.
+4.  Download the **`jacoco-report`** zip file.
+5.  Extract the zip and open **`index.html`** in any browser to view the full, interactive coverage site.
