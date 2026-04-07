@@ -94,7 +94,9 @@ export default function App() {
   });
   const [dailyQuizStarted, setDailyQuizStarted] = useState(() => {
     const saved = localStorage.getItem('dailyQuizStartedDate');
-    return saved === new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
+    // "Started" should mean "in progress today" (not already completed).
+    return saved === today && localStorage.getItem('dailyQuizDate') !== today;
   });
 
   useEffect(() => {
@@ -160,10 +162,13 @@ export default function App() {
           {
             const doneToday = data.dailyQuizCompletedToday === true;
             setDailyQuizCompleted(doneToday);
-            setDailyQuizStarted(doneToday);
+            // If done today, it's not "in progress". Otherwise, keep local "started" semantics.
+            setDailyQuizStarted(
+              !doneToday && localStorage.getItem('dailyQuizStartedDate') === today
+            );
             if (doneToday && data.dailyQuizLastDate) {
               localStorage.setItem('dailyQuizDate', data.dailyQuizLastDate);
-              localStorage.setItem('dailyQuizStartedDate', data.dailyQuizLastDate);
+              localStorage.removeItem('dailyQuizStartedDate');
             } else {
               localStorage.removeItem('dailyQuizDate');
               localStorage.removeItem('dailyQuizStartedDate');
@@ -214,7 +219,10 @@ export default function App() {
     const interval = setInterval(() => {
       const today = new Date().toISOString().slice(0, 10);
       setDailyQuizCompleted(localStorage.getItem('dailyQuizDate') === today);
-      setDailyQuizStarted(localStorage.getItem('dailyQuizStartedDate') === today);
+      setDailyQuizStarted(
+        localStorage.getItem('dailyQuizStartedDate') === today &&
+        localStorage.getItem('dailyQuizDate') !== today
+      );
     }, 60_000);
     return () => clearInterval(interval);
   }, []);
@@ -308,14 +316,32 @@ export default function App() {
     fetchAll();
   }, [authToken, authRole]);
 
-  // Fetch daily quiz questions
+  // Fetch daily quiz questions (requires auth)
   useEffect(() => {
-    fetch('/api/quiz/daily')
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data: { id: number; title: string; options: string[]; correctAnswer: number; explanation: string }[]) =>
-        setDailyQuizQuestions(data.map(q => ({ id: q.id, q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })))
-      ).catch(() => { });
-  }, []);
+    if (!authToken) return;
+    fetch('/api/quiz/daily', {
+      headers: { 'Authorization': `Bearer ${authToken}` },
+    })
+      .then(async r => {
+        if (r.status === 409) {
+          // Already completed today (server truth)
+          const today = new Date().toISOString().slice(0, 10);
+          localStorage.setItem('dailyQuizDate', today);
+          localStorage.removeItem('dailyQuizStartedDate');
+          setDailyQuizCompleted(true);
+          setDailyQuizStarted(false);
+          setDailyQuizQuestions([]);
+          return null;
+        }
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: { id: number; title: string; options: string[]; correctAnswer: number; explanation: string }[] | null) => {
+        if (!data) return;
+        setDailyQuizQuestions(data.map(q => ({ id: q.id, q: q.title, options: q.options, correct: q.correctAnswer, explanation: q.explanation })));
+      })
+      .catch(() => { });
+  }, [authToken]);
 
   // Fetch onboarding questions
   useEffect(() => {
@@ -359,10 +385,10 @@ export default function App() {
     {
       const doneToday = dailyQuizCompletedToday === true;
       setDailyQuizCompleted(doneToday);
-      setDailyQuizStarted(doneToday);
+      setDailyQuizStarted(!doneToday && localStorage.getItem('dailyQuizStartedDate') === new Date().toISOString().slice(0, 10));
       if (doneToday && dailyQuizLastDate) {
         localStorage.setItem('dailyQuizDate', dailyQuizLastDate);
-        localStorage.setItem('dailyQuizStartedDate', dailyQuizLastDate);
+        localStorage.removeItem('dailyQuizStartedDate');
       } else {
         localStorage.removeItem('dailyQuizDate');
         localStorage.removeItem('dailyQuizStartedDate');
@@ -705,7 +731,7 @@ export default function App() {
               <DailyWord onLearnMore={() => navigate('/glossary')} />
 
               {/* Daily Quiz CTA */}
-              {(authRole === 'ADMIN' || (!dailyQuizCompleted && !dailyQuizStarted)) && (
+              {(authRole === 'ADMIN' || !!authToken) && (
                 <div className="relative rounded-3xl p-6 mb-8 overflow-hidden bg-brand-secondary shadow-xl shadow-brand-secondary/30">
                   {/* Decorative blobs */}
                   <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
@@ -741,13 +767,22 @@ export default function App() {
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
+                        if (dailyQuizCompleted) {
+                          window.alert("You already completed today’s Daily Quiz.");
+                          return;
+                        }
+                        if (!dailyQuizQuestions || dailyQuizQuestions.length === 0) {
+                          window.alert("Daily Quiz isn’t ready yet. If you’re logged in, wait a moment and try again.");
+                          return;
+                        }
+
                         localStorage.setItem('dailyQuizStartedDate', new Date().toISOString().slice(0, 10));
                         setDailyQuizStarted(true);
                         setShowDailyQuiz(true);
                       }}
                       className="shrink-0 bg-white text-brand-secondary px-7 py-3.5 rounded-2xl font-black text-base shadow-[0_4px_0_rgba(0,0,0,0.25)] active:translate-y-1 active:shadow-none transition-all"
                     >
-                      Start Quiz →
+                      {dailyQuizCompleted ? 'Completed Today' : (dailyQuizStarted ? 'Resume Quiz →' : 'Start Quiz →')}
                     </motion.button>
                   </div>
                 </div>
@@ -1055,26 +1090,8 @@ export default function App() {
       <DailyQuizModal
         show={showDailyQuiz}
         onClose={() => {
-          // Exit without finishing: do not record completion on the server (no dailyQuizLastDate),
-          // so the user can open the Daily Quiz again the same day. Progress is not persisted
-          // across refresh (modal state resets).
-          // If the user closes the quiz before finishing, treat it as a failed attempt:
-          // reset streak to 0 and record the attempt in the DB so the quiz won't
-          // reappear today and the streak correctly goes back to 0.
-          if (!dailyQuizCompleted) {
-            setStreak(0);
-            localStorage.setItem('streak', '0');
-            localStorage.setItem('dailyQuizDate', new Date().toISOString().slice(0, 10));
-            setDailyQuizCompleted(true);
-            const token = localStorage.getItem('token');
-            if (token) {
-              fetch('/api/auth/coins', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ coinsToAdd: 0, streakToSet: 0, dailyQuizCountIncrement: true }),
-              }).catch(() => { });
-            }
-          }
+          // Exit without finishing: do not record completion or attempt in DB.
+          // User should be able to reopen and finish later the same day.
           setShowDailyQuiz(false);
         }}
         onComplete={handleDailyQuizComplete}
