@@ -146,7 +146,7 @@ The overall % is an **average across all packages**. Untested modules pull the w
 
 ---
 
-## 5. Testing Concept Checklist for Your Report
+## 5. Testing Concept
 
 | Concept | ✅ Covered | Evidence |
 |---|---|---|
