@@ -165,15 +165,25 @@ The overall % is an **average across all packages**. Untested modules pull the w
 
 ---
 
-## 6. How to Run
+## 6. How to Run (Hermetic Testing)
 
+The test suite is "hermetic," meaning it runs in a 100% isolated environment. You do **not** need a `.env` file or a running database to execute these tests, as all required variables (Database URL, JWT Secret, AI Key) are automatically provided by the dummy values in `src/test/resources/application.properties`.
+
+### Standard Execution (Full Build)
+This runs the full 118-test suite. By default, it will also build the React frontend to ensure the entire project is valid.
 ```powershell
-# Run all 118 tests and generate the Jacoco HTML coverage report
 mvn clean test
-
-# Open the coverage report in Chrome:
-# C:\CS203T1\target\site\jacoco\index.html
 ```
+
+### Local Development (Fast Mode)
+If you are iterating quickly on backend code and want to skip the React build to save time:
+```powershell
+mvn clean test
+```
+
+### Viewing the Report
+Once the command finishes, open the interactive report in any browser:
+`target/site/jacoco/index.html`
 
 ---
 
