@@ -117,7 +117,7 @@ When you click into a package → then into a class (e.g. `UserServiceImpl`), Ja
 - 🟡 **Yellow line (diamond)** = Statement was executed, BUT not all branches were taken. For example, an `if` was tested when `true` but never when `false` → **Partial branch coverage**
 - 🔴 **Red line** = Statement was never executed by any test at all → **No coverage**
 
-### Mapping to the Coverage Levels from Your Slides
+### Mapping to the Coverage Levels
 
 | Slide Concept | Jacoco Column | Our Result |
 |---|---|---|
