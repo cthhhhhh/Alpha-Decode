@@ -284,7 +284,7 @@ export function UsersTab() {
                           </div>
                         )}
                         {!user.pendingApproval && (
-                          <button onClick={() => handleBanToggle(user)}
+                          <button onClick={() => handleBanToggle(user)} title={user.enabled ? "Ban user" : "Unban user"}
                             disabled={user.username === currentUser}
                             className={`p-2 rounded-xl border border-transparent transition-all active:scale-95 shadow-sm ${user.username === currentUser ? 'text-slate-200' : (user.enabled ? 'text-orange-500 bg-orange-50/30 hover:bg-orange-50 hover:border-orange-100' : 'text-green-600 bg-green-50/30 hover:bg-green-50 hover:border-green-100')}`}>
                             {user.enabled ? <Ban size={17} /> : <CheckCircle size={17} />}
