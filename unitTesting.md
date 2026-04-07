@@ -1,10 +1,10 @@
-# Unit Testing — Full Summary (CS203T1)
+# Unit Testing
 
 **Total: 118 tests across 14 files — all passing ✅ | BUILD SUCCESS**
 
 ---
 
-## 0. Prerequisites & Installation
+## Prerequisites & Installation
 
 To run these tests and generate the coverage reports on your own machine, ensure you have the following installed:
 
@@ -117,7 +117,7 @@ When you click into a package → then into a class (e.g. `UserServiceImpl`), Ja
 - 🟡 **Yellow line (diamond)** = Statement was executed, BUT not all branches were taken. For example, an `if` was tested when `true` but never when `false` → **Partial branch coverage**
 - 🔴 **Red line** = Statement was never executed by any test at all → **No coverage**
 
-### Mapping to the Coverage Levels from Your Slides
+### Mapping to the Coverage Levels
 
 | Slide Concept | Jacoco Column | Our Result |
 |---|---|---|
@@ -146,7 +146,7 @@ The overall % is an **average across all packages**. Untested modules pull the w
 
 ---
 
-## 5. Testing Concept Checklist for Your Report
+## 5. Testing Concept
 
 | Concept | ✅ Covered | Evidence |
 |---|---|---|
