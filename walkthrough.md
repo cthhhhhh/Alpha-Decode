@@ -4,7 +4,7 @@
 
 ---
 
-## 0. Prerequisites & Installation
+## Prerequisites & Installation
 
 To run these tests and generate the coverage reports on your own machine, ensure you have the following installed:
 
