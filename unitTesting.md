@@ -175,12 +175,6 @@ This runs the full 118-test suite. By default, it will also build the React fron
 mvn clean test
 ```
 
-### Local Development (Fast Mode)
-If you are iterating quickly on backend code and want to skip the React build to save time:
-```powershell
-mvn clean test
-```
-
 ### Viewing the Report
 Once the command finishes, open the interactive report in any browser:
 `target/site/jacoco/index.html`
