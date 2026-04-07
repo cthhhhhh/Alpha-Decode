@@ -31,7 +31,11 @@ jobs:
           node-version: '22.14.0'
 
       - name: Run Tests and Generate Coverage
+<<<<<<< HEAD
         run: mvn clean test -Dskip.frontend=true
+=======
+        run: mvn clean test
+>>>>>>> 240319b7a18272e0a3cd1d29b0068f05550eb456
 
       - name: Upload Jacoco Report Artifact
         uses: actions/upload-artifact@v4
