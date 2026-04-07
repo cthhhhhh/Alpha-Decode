@@ -30,7 +30,7 @@ public class LessonServiceImpl implements LessonService {
     }
 	@Override
 	public List<Lesson> listLessons(){
-		return lessons.findAll();
+		return lessons.findAllOrderedById();
 	}
 	@Override
 	public Lesson getLesson(Long id){

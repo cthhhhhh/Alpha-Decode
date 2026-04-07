@@ -709,6 +709,7 @@ export default function App() {
         authUsername={authUsername}
         profilePic={profilePic}
         faceId={faceId}
+        bodyTypeId={bodyTypeId}
         hairId={hairId}
         skinColor={skinColor}
         hairColor={hairColor}
@@ -831,6 +832,8 @@ export default function App() {
                     faceId={faceId}
                     bodyTypeId={bodyTypeId}
                     hairId={hairId}
+                    skinColor={skinColor}
+                    hairColor={hairColor}
                     equippedOutfitId={equippedOutfitId}
                     equippedPetId={equippedPetId}
                     itemAssetMap={itemAssetMap}
@@ -928,7 +931,11 @@ export default function App() {
                 itemAssetMap={itemAssetMap}
                 onCoinsUpdate={handleCoinsUpdate}
                 onEquip={handleEquipChange}
+                faceId={faceId}
+                bodyTypeId={bodyTypeId}
                 hairId={hairId}
+                skinColor={skinColor}
+                hairColor={hairColor}
               />
             </motion.div>
           )}

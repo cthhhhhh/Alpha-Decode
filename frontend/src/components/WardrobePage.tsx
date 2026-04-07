@@ -149,7 +149,11 @@ export default function WardrobePage({
                     isEquipped={item.id === localOutfit}
                     onEquip={() => handleEquip(item)}
                     onUnequip={() => handleUnequip('outfit')}
+                    faceId={faceId}
+                    bodyTypeId={bodyTypeId}
                     hairId={hairId}
+                    skinColor={skinColor}
+                    hairColor={hairColor}
                   />
                 ))}
               </div>
@@ -170,6 +174,11 @@ export default function WardrobePage({
                     isEquipped={item.id === localPet}
                     onEquip={() => handleEquip(item)}
                     onUnequip={() => handleUnequip('pet')}
+                    faceId={faceId}
+                    bodyTypeId={bodyTypeId}
+                    hairId={hairId}
+                    skinColor={skinColor}
+                    hairColor={hairColor}
                   />
                 ))}
               </div>
@@ -186,13 +195,21 @@ function ItemCard({
   isEquipped,
   onEquip,
   onUnequip,
+  faceId,
+  bodyTypeId,
   hairId,
+  skinColor,
+  hairColor,
 }: {
   item: ShopItem;
   isEquipped: boolean;
   onEquip: () => void;
   onUnequip: () => void;
+  faceId?: string | null;
+  bodyTypeId?: string | null;
   hairId?: string | null;
+  skinColor?: string | null;
+  hairColor?: string | null;
 }) {
   return (
     <motion.div
@@ -203,7 +220,7 @@ function ItemCard({
     >
       <div className="w-14">
         {item.type === 'OUTFIT' ? (
-          <Avatar outfitAssetId={item.assetId} faceId="face_1" bodyTypeId="body_1" hairId={hairId} size="sm" />
+          <Avatar outfitAssetId={item.assetId} faceId={faceId} bodyTypeId={bodyTypeId} hairId={hairId} skinColor={skinColor} hairColor={hairColor} size="sm" />
         ) : (
           <Avatar petAssetId={item.assetId} size="sm" />
         )}

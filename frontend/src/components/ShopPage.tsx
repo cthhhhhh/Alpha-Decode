@@ -18,12 +18,16 @@ interface Props {
   itemAssetMap: Record<number, string>;
   onCoinsUpdate: (newCoins: number) => void;
   onEquip: (outfitId: number | null, petId: number | null) => void;
+  faceId?: string | null;
+  bodyTypeId?: string | null;
   hairId?: string | null;
+  skinColor?: string | null;
+  hairColor?: string | null;
 }
 
 type FilterTab = 'all' | 'outfit' | 'pet';
 
-export default function ShopPage({ authToken, coins, onCoinsUpdate, onEquip, hairId }: Props) {
+export default function ShopPage({ authToken, coins, onCoinsUpdate, onEquip, faceId, bodyTypeId, hairId, skinColor, hairColor }: Props) {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [filter, setFilter] = useState<FilterTab>('all');
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +134,7 @@ export default function ShopPage({ authToken, coins, onCoinsUpdate, onEquip, hai
               {/* Preview */}
               <div className="w-16">
                 {item.type === 'OUTFIT' ? (
-                  <Avatar outfitAssetId={item.assetId} faceId="face_1" bodyTypeId="body_1" hairId={hairId} size="sm" />
+                  <Avatar outfitAssetId={item.assetId} faceId={faceId} bodyTypeId={bodyTypeId} hairId={hairId} skinColor={skinColor} hairColor={hairColor} size="sm" />
                 ) : (
                   <Avatar petAssetId={item.assetId} size="sm" />
                 )}

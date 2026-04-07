@@ -26,6 +26,8 @@ interface Props {
     faceId?: string | null;
     bodyTypeId?: string | null;
     hairId?: string | null;
+    skinColor?: string | null;
+    hairColor?: string | null;
     equippedOutfitId?: number | null;
     equippedPetId?: number | null;
     itemAssetMap?: Record<number, string>;
@@ -51,7 +53,7 @@ type PathNode =
     | { kind: 'lesson'; lesson: Lesson; visibleIndex: number; isLocked: boolean }
     | { kind: 'checkpoint'; quiz: RevisionQuiz; isCompleted: boolean; isLocked: boolean };
 
-const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision, faceId, bodyTypeId, hairId, equippedOutfitId, equippedPetId, itemAssetMap = {} }: Props) => {
+const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, onStartRevision, faceId, bodyTypeId, hairId, skinColor, hairColor, equippedOutfitId, equippedPetId, itemAssetMap = {} }: Props) => {
     const [flagTarget, setFlagTarget] = useState<{ id: number; type: 'LESSON' | 'QUIZ'; context: string } | null>(null);
     const [isWalking, setIsWalking] = useState(false);
 
@@ -298,6 +300,8 @@ const LessonPath = ({ lessons, onStart, revisionQuizzes, completedRevisionIds, o
                                             faceId={faceId}
                                             bodyTypeId={bodyTypeId}
                                             hairId={hairId}
+                                            skinColor={skinColor}
+                                            hairColor={hairColor}
                                             outfitAssetId={equippedOutfitId ? itemAssetMap[equippedOutfitId] : null}
                                             petAssetId={equippedPetId ? itemAssetMap[equippedPetId] : null}
                                             size="sm"
