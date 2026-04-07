@@ -12,7 +12,7 @@ To run these tests and generate the coverage reports on your own machine, ensure
 2.  **Apache Maven**: Used for dependency management and executing the test lifecycle.
 
 ### Automatic Dependencies
-The following are automatically handled by Maven when you run `mvn test`:
+The following are automatically handled by Maven when you run `mvn clean test`:
 - **JUnit 5 / Mockito**: Core testing frameworks.
 - **Jacoco**: The coverage plugin (version 0.8.12).
 - **H2 Database**: An in-memory database used strictly for testing.
@@ -91,7 +91,7 @@ Uses `@WebMvcTest` + `MockMvc` to simulate HTTP requests without starting a real
 
 ## 3. Branch Coverage (Jacoco) + Understanding the Report
 
-Jacoco is configured in `pom.xml` to run on every `mvn test`. Following the final expansion, the overall instruction coverage has reached **~50%**.
+Jacoco is configured in `pom.xml` to run on every `mvn clean test`. Following the final expansion, the overall instruction coverage has reached **~50%**.
 
 ### How to Read the Jacoco index.html report
 
@@ -169,7 +169,7 @@ The overall % is an **average across all packages**. Untested modules pull the w
 
 ```powershell
 # Run all 118 tests and generate the Jacoco HTML coverage report
-mvn test
+mvn clean test
 
 # Open the coverage report in Chrome:
 # C:\CS203T1\target\site\jacoco\index.html
