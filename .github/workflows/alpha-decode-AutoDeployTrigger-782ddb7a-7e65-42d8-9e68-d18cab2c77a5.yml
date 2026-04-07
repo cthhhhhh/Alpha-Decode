@@ -42,5 +42,7 @@ jobs:
           containerAppName: alpha-decode
           resourceGroup: CS203T1
           imageToBuild: cs203reg-cahscsdhf7f5hray.azurecr.io/alpha-decode:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
 
 

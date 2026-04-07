@@ -52,8 +52,8 @@ class ShopServiceImplTest {
     }
 
     @Test
-    @DisplayName("buyItem: success deducts coins and equips item")
-    void buyItem_success() {
+    @DisplayName("buyItem: success for outfit")
+    void buyItem_outfit_success() {
         when(itemRepository.findById(10L)).thenReturn(Optional.of(outfitItem));
         when(userItemRepository.existsByUserAndItem(user, outfitItem)).thenReturn(false);
 
@@ -61,6 +61,21 @@ class ShopServiceImplTest {
 
         assertEquals(50, user.getCoins());
         assertEquals(10L, user.getEquippedOutfitId());
+        verify(userItemRepository).save(any(UserItem.class));
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("buyItem: success for pet")
+    void buyItem_pet_success() {
+        user.setCoins(200);
+        when(itemRepository.findById(11L)).thenReturn(Optional.of(petItem));
+        when(userItemRepository.existsByUserAndItem(user, petItem)).thenReturn(false);
+
+        shopService.buyItem(user, 11L);
+
+        assertEquals(50, user.getCoins());
+        assertEquals(11L, user.getEquippedPetId());
         verify(userItemRepository).save(any(UserItem.class));
         verify(userRepository).save(user);
     }
@@ -88,14 +103,26 @@ class ShopServiceImplTest {
     }
 
     @Test
-    @DisplayName("equipItem: success for owned item")
-    void equipItem_success() {
+    @DisplayName("equipItem: success for outfit")
+    void equipItem_outfit_success() {
         when(itemRepository.findById(10L)).thenReturn(Optional.of(outfitItem));
         when(userItemRepository.existsByUserAndItem(user, outfitItem)).thenReturn(true);
 
-        ShopDTO.EquipResponse response = shopService.equipItem(user, 10L);
+        shopService.equipItem(user, 10L);
 
-        assertEquals(10L, response.getEquippedOutfitId());
+        assertEquals(10L, user.getEquippedOutfitId());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("equipItem: success for pet")
+    void equipItem_pet_success() {
+        when(itemRepository.findById(11L)).thenReturn(Optional.of(petItem));
+        when(userItemRepository.existsByUserAndItem(user, petItem)).thenReturn(true);
+
+        shopService.equipItem(user, 11L);
+
+        assertEquals(11L, user.getEquippedPetId());
         verify(userRepository).save(user);
     }
 
@@ -111,13 +138,20 @@ class ShopServiceImplTest {
     }
 
     @Test
-    @DisplayName("unequipSlot: success clears slot")
-    void unequipSlot_success() {
+    @DisplayName("unequipSlot: success for outfit")
+    void unequipSlot_outfit_success() {
         user.setEquippedOutfitId(10L);
-        
-        ShopDTO.EquipResponse response = shopService.unequipSlot(user, "outfit");
-
+        shopService.unequipSlot(user, "outfit");
         assertNull(user.getEquippedOutfitId());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    @DisplayName("unequipSlot: success for pet")
+    void unequipSlot_pet_success() {
+        user.setEquippedPetId(11L);
+        shopService.unequipSlot(user, "pet");
+        assertNull(user.getEquippedPetId());
         verify(userRepository).save(user);
     }
 
@@ -127,5 +161,31 @@ class ShopServiceImplTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, 
             () -> shopService.unequipSlot(user, "gloves"));
         assertTrue(ex.getMessage().contains("Unknown slot"));
+    }
+
+    @Test
+    @DisplayName("getShopItems: returns items with correct status")
+    void getShopItems_allStatuses() {
+        Item lockedItem = new Item();
+        lockedItem.setId(12L);
+        lockedItem.setName("Locked Mask");
+        lockedItem.setPrice(200);
+        lockedItem.setType(ItemType.OUTFIT);
+
+        user.setEquippedOutfitId(10L);
+        user.setEquippedPetId(11L);
+
+        when(itemRepository.findAll()).thenReturn(java.util.List.of(outfitItem, petItem, lockedItem));
+        when(userItemRepository.findByUser(user)).thenReturn(java.util.List.of(
+            new UserItem(1L, user, outfitItem),
+            new UserItem(2L, user, petItem)
+        ));
+
+        java.util.List<ShopDTO.ShopItemDTO> items = shopService.getShopItems(user);
+
+        assertEquals(3, items.size());
+        assertEquals("equipped", items.get(0).getStatus()); // Outfit
+        assertEquals("equipped", items.get(1).getStatus()); // Pet
+        assertEquals("locked", items.get(2).getStatus());   // Locked
     }
 }

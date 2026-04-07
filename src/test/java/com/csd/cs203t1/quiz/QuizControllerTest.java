@@ -83,7 +83,7 @@ class QuizControllerTest {
         when(userService.getCurrentUser()).thenThrow(new RuntimeException("No user"));
 
         mockMvc.perform(get("/api/quiz/daily"))
-               .andExpect(status().isForbidden());
+               .andExpect(status().isUnauthorized());
     }
 
     @Test
