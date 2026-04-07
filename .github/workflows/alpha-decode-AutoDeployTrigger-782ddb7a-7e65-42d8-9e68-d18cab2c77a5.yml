@@ -2,16 +2,10 @@ name: Trigger auto deployment for alpha-decode
 
 # When this action will be executed
 on:
-  # Automatically trigger it when detected changes in repo
   push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/alpha-decode-AutoDeployTrigger-782ddb7a-7e65-42d8-9e68-d18cab2c77a5.yml'
-
-  # Allow manual trigger 
-  workflow_dispatch:      
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
