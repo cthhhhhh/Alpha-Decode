@@ -44,24 +44,24 @@ public class LeaderboardController {
         if ("weekly".equals(period)) {
             if ("streak".equals(sort)) {
                 topUsers = userRepository
-                        .findAllByRoleNotOrderByWeeklyCoinsDescLevelDesc(Role.ADMIN, pageable)
+                        .findAllByRoleNotOrderByWeeklyCoinsCollectedDescLevelDesc(Role.ADMIN, pageable)
                         .getContent()
                         .stream()
                         .sorted((a, b) -> b.getStreak() != a.getStreak()
                                 ? Integer.compare(b.getStreak(), a.getStreak())
-                                : Integer.compare(b.getWeeklyCoins(), a.getWeeklyCoins()))
+                                : Integer.compare(b.getWeeklyCoinsCollected(), a.getWeeklyCoinsCollected()))
                         .collect(Collectors.toList());
             } else {
                 topUsers = userRepository
-                        .findAllByRoleNotOrderByWeeklyCoinsDescLevelDesc(Role.ADMIN, pageable)
+                        .findAllByRoleNotOrderByWeeklyCoinsCollectedDescLevelDesc(Role.ADMIN, pageable)
                         .getContent();
             }
         } else {
             if ("streak".equals(sort)) {
-                topUsers = userRepository.findAllByRoleNotOrderByStreakDescCoinsDesc(Role.ADMIN, pageable).getContent();
+                topUsers = userRepository.findAllByRoleNotOrderByStreakDescTotalCoinsCollectedDesc(Role.ADMIN, pageable).getContent();
             } else {
-                // Default: Coins primarily
-                topUsers = userRepository.findAllByRoleNotOrderByCoinsDescLevelDesc(Role.ADMIN, pageable).getContent();
+                // Default: Total coins collected
+                topUsers = userRepository.findAllByRoleNotOrderByTotalCoinsCollectedDescLevelDesc(Role.ADMIN, pageable).getContent();
             }
         }
 
@@ -71,7 +71,7 @@ public class LeaderboardController {
                         rank.getAndIncrement(),
                         u.getUsername(),
                         u.getLevel(),
-                        "weekly".equals(period) ? u.getWeeklyCoins() : u.getCoins(),
+                        "weekly".equals(period) ? u.getWeeklyCoinsCollected() : u.getTotalCoinsCollected(),
                         u.getStreak()))
                 .collect(Collectors.toList());
 
@@ -95,19 +95,19 @@ public class LeaderboardController {
         if ("weekly".equals(period)) {
             if ("streak".equals(sort)) {
                 long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-                long sameStreakBetterCoins = userRepository.countByRoleNotAndStreakAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyCoins());
+                long sameStreakBetterCoins = userRepository.countByRoleNotAndStreakAndWeeklyCoinsCollectedGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getWeeklyCoinsCollected());
                 rank = streakGreater + sameStreakBetterCoins + 1;
             } else {
-                long coinsGreater = userRepository.countByRoleNotAndWeeklyCoinsGreaterThan(Role.ADMIN, currentUser.getWeeklyCoins());
+                long coinsGreater = userRepository.countByRoleNotAndWeeklyCoinsCollectedGreaterThan(Role.ADMIN, currentUser.getWeeklyCoinsCollected());
                 rank = coinsGreater + 1;
             }
         } else {
             if ("streak".equals(sort)) {
                 long streakGreater = userRepository.countByRoleNotAndStreakGreaterThan(Role.ADMIN, currentUser.getStreak());
-                long sameStreakBetterCoins = userRepository.countByRoleNotAndStreakAndCoinsGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getCoins());
+                long sameStreakBetterCoins = userRepository.countByRoleNotAndStreakAndTotalCoinsCollectedGreaterThan(Role.ADMIN, currentUser.getStreak(), currentUser.getTotalCoinsCollected());
                 rank = streakGreater + sameStreakBetterCoins + 1;
             } else {
-                long coinsGreater = userRepository.countByRoleNotAndCoinsGreaterThan(Role.ADMIN, currentUser.getCoins());
+                long coinsGreater = userRepository.countByRoleNotAndTotalCoinsCollectedGreaterThan(Role.ADMIN, currentUser.getTotalCoinsCollected());
                 rank = coinsGreater + 1;
             }
         }
@@ -118,7 +118,7 @@ public class LeaderboardController {
                 (int) rank,
                 currentUser.getUsername(),
                 currentUser.getLevel(),
-                "weekly".equals(period) ? currentUser.getWeeklyCoins() : currentUser.getCoins(),
+                "weekly".equals(period) ? currentUser.getWeeklyCoinsCollected() : currentUser.getTotalCoinsCollected(),
                 currentUser.getStreak()));
         return ResponseEntity.ok(result);
     }

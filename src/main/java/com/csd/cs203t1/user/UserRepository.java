@@ -68,10 +68,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByStreakGreaterThan(int streak);
 
     long countByStreakAndCoinsGreaterThan(int streak, int coins);
-    
+
+    // Leaderboard queries using total coins collected instead of current coins
+    Page<User> findAllByRoleNotOrderByTotalCoinsCollectedDescLevelDesc(Role role, Pageable pageable);
+
+    Page<User> findAllByRoleNotOrderByWeeklyCoinsCollectedDescLevelDesc(Role role, Pageable pageable);
+
+    Page<User> findAllByRoleNotOrderByStreakDescTotalCoinsCollectedDesc(Role role, Pageable pageable);
+
+    long countByRoleNotAndTotalCoinsCollectedGreaterThan(Role role, int totalCoinsCollected);
+
+    long countByRoleNotAndWeeklyCoinsCollectedGreaterThan(Role role, int weeklyCoinsCollected);
+
+    long countByRoleNotAndStreakAndTotalCoinsCollectedGreaterThan(Role role, int streak, int totalCoinsCollected);
+
+    long countByRoleNotAndStreakAndWeeklyCoinsCollectedGreaterThan(Role role, int streak, int weeklyCoinsCollected);
+
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.weeklyCoins = 0")
+    @Query("UPDATE User u SET u.weeklyCoins = 0, u.weeklyCoinsCollected = 0")
     void resetAllWeeklyCoins();
     @Modifying
     @Transactional

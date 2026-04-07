@@ -58,6 +58,20 @@ public class UserServiceImpl implements UserService {
         this.draftRepository = draftRepository;
     }
 
+    /**
+     * Ensures totalCoinsCollected is properly initialized.
+     * For existing users, sets totalCoinsCollected to current coins if it was 0.
+     * This handles migration from old schema that didn't have these fields.
+     */
+    private void ensureTotalCoinsInitialized(User user) {
+        if (user.getTotalCoinsCollected() == 0 && user.getCoins() > 0) {
+            user.setTotalCoinsCollected(user.getCoins());
+        }
+        if (user.getWeeklyCoinsCollected() == 0 && user.getWeeklyCoins() > 0) {
+            user.setWeeklyCoinsCollected(user.getWeeklyCoins());
+        }
+    }
+
     @Override
     public UserDTO.AuthResponse register(UserDTO.RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -76,6 +90,8 @@ public class UserServiceImpl implements UserService {
         if (request.getCoins() != null) {
             user.setCoins(request.getCoins());
             user.setWeeklyCoins(request.getCoins());
+            user.setTotalCoinsCollected(request.getCoins());
+            user.setWeeklyCoinsCollected(request.getCoins());
         }
         if (request.getMaxUnlockedLessonIndex() != null) user.setMaxUnlockedLessonIndex(request.getMaxUnlockedLessonIndex());
 
@@ -123,6 +139,8 @@ public class UserServiceImpl implements UserService {
         if (request.getCoins() != null) {
             user.setCoins(request.getCoins());
             user.setWeeklyCoins(request.getCoins());
+            user.setTotalCoinsCollected(request.getCoins());
+            user.setWeeklyCoinsCollected(request.getCoins());
         }
 
         checkStreakLapse(user);
@@ -173,8 +191,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDTO.AuthResponse updateCoins(UserDTO.CoinUpdateRequest request) {
         User user = getCurrentUser(); // checkStreakLapse called inside getCurrentUser
+        ensureTotalCoinsInitialized(user); // Ensure totals are initialized for existing users
         user.setCoins(user.getCoins() + request.getCoinsToAdd());
         user.setWeeklyCoins(user.getWeeklyCoins() + request.getCoinsToAdd());
+        user.setTotalCoinsCollected(user.getTotalCoinsCollected() + request.getCoinsToAdd());
+        user.setWeeklyCoinsCollected(user.getWeeklyCoinsCollected() + request.getCoinsToAdd());
         int newLevel = user.getCoins() / 50 + 1;
         user.setLevel(newLevel);
 
@@ -317,7 +338,13 @@ public class UserServiceImpl implements UserService {
     public UserDTO.AuthResponse completeOnboarding(UserDTO.OnboardingRequest request) {
         User user = getCurrentUser();
         user.setLevel(request.getLevel());
+        // Preserve any coins already earned before onboarding
+        ensureTotalCoinsInitialized(user);
+        int totalCoinsEarned = Math.max(user.getTotalCoinsCollected(), request.getCoins());
         user.setCoins(request.getCoins());
+        user.setWeeklyCoins(request.getCoins());
+        user.setTotalCoinsCollected(totalCoinsEarned);
+        user.setWeeklyCoinsCollected(request.getCoins());
         user.setOnboardingCompleted(true);
         if (request.getFaceId() != null) user.setFaceId(request.getFaceId());
         if (request.getBodyTypeId() != null) user.setBodyTypeId(request.getBodyTypeId());
@@ -427,6 +454,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setCoins(0);
         user.setWeeklyCoins(0);
+        // Do NOT reset totalCoinsCollected or weeklyCoinsCollected - these track historical data
         user.setLevel(1);
         user.setStreak(0);
         user.setMaxUnlockedLessonIndex(0);

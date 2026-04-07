@@ -62,6 +62,12 @@ public class User {
 	private int weeklyCoins = 0;
 
 	@Column(columnDefinition = "integer default 0", nullable = false)
+	private int totalCoinsCollected = 0;
+
+	@Column(columnDefinition = "integer default 0", nullable = false)
+	private int weeklyCoinsCollected = 0;
+
+	@Column(columnDefinition = "integer default 0", nullable = false)
 	private int maxUnlockedLessonIndex = 0;
 
 	@Column(columnDefinition = "text default ''", nullable = false)
