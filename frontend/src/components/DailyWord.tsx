@@ -84,8 +84,8 @@ const DailyWord = ({ authToken }: DailyWordProps) => {
 
                     <div className="flex items-center gap-4">
                         <div className="flex gap-2">
-                            <a
-                                href={`https://www.tiktok.com/search?q=${encodeURIComponent(dailyTerm?.term + ' slang' || '')}`}
+                            <a 
+                                href={dailyTerm?.term ? `https://www.tiktok.com/search?q=${encodeURIComponent(dailyTerm.term + ' slang')}` : '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-[#00f2ea] hover:bg-[#00f2ea]/10 hover:border-[#00f2ea]/30 transition-all group shadow-lg"
@@ -93,8 +93,8 @@ const DailyWord = ({ authToken }: DailyWordProps) => {
                             >
                                 <TikTokIcon size={20} />
                             </a>
-                            <a
-                                href={`https://www.instagram.com/explore/tags/${encodeURIComponent(dailyTerm?.term?.replace(/\s+/g, '') || '')}`}
+                            <a 
+                                href={dailyTerm?.term ? `https://www.instagram.com/explore/tags/${encodeURIComponent(dailyTerm.term.replace(/\s+/g, ''))}` : '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-[#e1306c] hover:bg-[#e1306c]/10 hover:border-[#e1306c]/30 transition-all group shadow-lg"
@@ -102,8 +102,8 @@ const DailyWord = ({ authToken }: DailyWordProps) => {
                             >
                                 <Instagram size={20} />
                             </a>
-                            <a
-                                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(dailyTerm?.term + ' slang' || '')}`}
+                            <a 
+                                href={dailyTerm?.term ? `https://www.youtube.com/results?search_query=${encodeURIComponent(dailyTerm.term + ' slang')}` : '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-[#ff0000] hover:bg-[#ff0000]/10 hover:border-[#ff0000]/30 transition-all group shadow-lg"
