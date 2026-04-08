@@ -765,7 +765,7 @@ public class DataSeeder implements CommandLineRunner {
 
 	@SuppressWarnings("null")
 	private void seedTerms() {
-		if (termRepository.count() >= 7)
+		if (termRepository.count() >= 20)
 			return;
 		termRepository.deleteAll();
 
@@ -777,33 +777,82 @@ public class DataSeeder implements CommandLineRunner {
 		Lesson mewing = lessonByTitle(all, "Mewing Pro");
 		Lesson sigma = lessonByTitle(all, "Sigma Mindset");
 		Lesson delulu = lessonByTitle(all, "Delulu Land");
+		Lesson noCap = lessonByTitle(all, "No Cap");
+		Lesson slay = lessonByTitle(all, "Slay");
+		Lesson bussin = lessonByTitle(all, "Bussin");
+		Lesson lowkey = lessonByTitle(all, "Lowkey");
+		Lesson npc = lessonByTitle(all, "NPC Behaviour");
+		Lesson mainChar = lessonByTitle(all, "Main Character");
+		Lesson based = lessonByTitle(all, "Based");
+		Lesson rentFree = lessonByTitle(all, "Rent Free");
+		Lesson itsGiving = lessonByTitle(all, "It's Giving");
+		Lesson touchGrass = lessonByTitle(all, "Touch Grass");
+		Lesson caught4K = lessonByTitle(all, "Caught in 4K");
+		Lesson vibeCheck = lessonByTitle(all, "Vibe Check");
+		Lesson gyatt = lessonByTitle(all, "Gyatt");
 
 		termRepository.saveAll(List.of(
 				term("Rizz", "Short for charisma. Ability to attract a romantic partner.",
 						"He has so much rizz, he didn't even have to say anything.",
 						Difficulty.EASY, Category.NOUN,
 						rizz),
-				term("Skibidi", "Often used to describe something bad/evil, from the Skibidi Toilet series.",
-						"That's so skibidi of you.", Difficulty.MEDIUM, Category.ADJECTIVE,
-						skibidi),
-				term("Gyatt", "An exclamation used when seeing someone with a large posterior.",
-						"Gyatt! Look at that!",
-						Difficulty.EASY, Category.REACTION, null),
 				term("Fanum Tax",
 						"Stealing a portion of someone else's food, popularized by streamer Fanum.",
 						"You gotta pay the Fanum Tax on those fries.", Difficulty.MEDIUM,
 						Category.NOUN, fanum),
-				term("Sigma", "A lone wolf who is successful and independent. Often used ironically.",
-						"He's such a sigma male.", Difficulty.EASY, Category.NOUN, sigma),
 				term("Ohio", "Used to describe something weird, cringey, or abnormal.",
 						"Only in Ohio would that happen.", Difficulty.MEDIUM,
 						Category.ADJECTIVE, ohio),
+				term("Skibidi", "Often used to describe something bad/evil, from the Skibidi Toilet series.",
+						"That's so skibidi of you.", Difficulty.MEDIUM, Category.ADJECTIVE,
+						skibidi),
 				term("Mewing", "A tongue exercise meant to define the jawline. Associated with sigma culture.",
 						"I can't talk right now, I'm mewing.", Difficulty.HARD, Category.NOUN,
 						mewing),
+				term("Sigma", "A lone wolf who is successful and independent. Often used ironically.",
+						"He's such a sigma male.", Difficulty.EASY, Category.NOUN, sigma),
 				term("Delulu", "Short for delusional. Often used in the context of fan culture or relationships.",
 						"She's so delulu if she thinks they're dating.", Difficulty.EASY,
-						Category.ADJECTIVE, delulu)));
+						Category.ADJECTIVE, delulu),
+				term("No Cap", "An expression meaning 'for real' — used to emphasize you are not lying.",
+						"That was the best meal I've ever had, no cap.",
+						Difficulty.EASY, Category.REACTION, noCap),
+				term("Slay", "To perform something exceptionally well or to look amazing.",
+						"She walked in and absolutely slayed the whole room.",
+						Difficulty.EASY, Category.NOUN, slay),
+				term("Bussin", "Something extremely good, especially food.",
+						"These tacos are bussin, bro.",
+						Difficulty.EASY, Category.ADJECTIVE, bussin),
+				term("Lowkey", "Secretly, subtly, or to a moderate degree.",
+						"I'm lowkey obsessed with that new show.",
+						Difficulty.EASY, Category.ADJECTIVE, lowkey),
+				term("NPC Behaviour", "Acting without original thought, like a background video game character.",
+						"Just copying whatever is trending is total NPC behaviour.",
+						Difficulty.MEDIUM, Category.NOUN, npc),
+				term("Main Character", "Acting as if you are the protagonist of your own story.",
+						"She ordered an elaborate drink order — total main character energy.",
+						Difficulty.MEDIUM, Category.NOUN, mainChar),
+				term("Based", "Holding a confident, authentic opinion without caring what others think.",
+						"Going phoneless for a weekend is actually pretty based.",
+						Difficulty.MEDIUM, Category.ADJECTIVE, based),
+				term("Rent Free", "Something that occupies your thoughts constantly without permission.",
+						"That song has been living rent free in my head all week.",
+						Difficulty.MEDIUM, Category.ADJECTIVE, rentFree),
+				term("It's Giving", "Has the energy or vibe of something; used to describe a resemblance.",
+						"That outfit? It's giving main character energy.",
+						Difficulty.EASY, Category.REACTION, itsGiving),
+				term("Touch Grass", "Go outside and disconnect from the internet or screens.",
+						"You've been online for 12 hours straight — go touch grass.",
+						Difficulty.EASY, Category.REACTION, touchGrass),
+				term("Caught in 4K", "Caught in the act with undeniable, crystal-clear evidence.",
+						"He lied about being there but got caught in 4K on camera.",
+						Difficulty.MEDIUM, Category.NOUN, caught4K),
+				term("Vibe Check", "An assessment of someone's energy, mood, or overall vibe.",
+						"He failed the vibe check the moment he walked in.",
+						Difficulty.EASY, Category.NOUN, vibeCheck),
+				term("Gyatt", "An exclamation of admiration used when seeing something impressive.",
+						"Gyatt! That sunset is absolutely fire.",
+						Difficulty.EASY, Category.REACTION, gyatt)));
 	}
 
 	// ─── Daily Quiz ─────────────────────────────────────────────────────────────
