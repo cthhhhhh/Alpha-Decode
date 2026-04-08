@@ -10,6 +10,7 @@ Alpha Decode is a gamified web application designed to help users master "Gen Al
 * **Learning Path:** A gamified progression system with unlockable levels (e.g., Rizz 101, Ohio Lore).
 * **Slang Dictionary:** A searchable glossary of terms with bookmarking capabilities.
 * **Gamification:** Streak counters, Coins tracking, leaderboards, and a virtual shop.
+* **Achievements:** Unlockable badges tied to user milestones and learning progress.
 * **AI Integration:** AI-powered definitions and real-world usage examples and explanation.
 * **Admin Dashboard:** Built-in tools for user management and content moderation.
 * **Contributor Dashboard:** Built-in tools for sending lesson contributions.
