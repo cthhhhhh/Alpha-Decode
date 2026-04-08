@@ -97,6 +97,23 @@ const AnswerOption = ({ opt, idx, isSelected, isChecked, isCorrect, isWrong, isD
     );
 };
 
+const CORRECT_MSGS = [
+    "YOU'RE BUILT DIFFERENT FR ✅",
+    "NO CAP THAT'S RIGHT 🔥",
+    "SLAY BESTIE ✨",
+    "UNDERSTOOD THE ASSIGNMENT 💯",
+    "W ANSWER FR FR 🎯",
+    "SIGMA MOVE 👑",
+];
+const WRONG_MSGS = [
+    'COOKED 💀 NOT EVEN CLOSE',
+    'L + RATIO 💀',
+    'OHIO MOMENT 😭',
+    "MAJOR DELULU 😤",
+    'THAT AIN\'T IT FR 🫠',
+    'SKIBIDI FAIL 💀',
+];
+
 // ── QuestionView ───────────────────────────────────────────────────────────
 const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect, onSelect, onCheck, onNext, onFlag }:
     { question: { id: number; q: string; options: string[]; correct: number; explanation: string }; qIndex: number; total: number; selected: number | null; isChecked: boolean; isCorrect: boolean; onSelect: (i: number) => void; onCheck: () => void; onNext: () => void; onFlag: (id: number) => void }
@@ -139,7 +156,7 @@ const QuestionView = ({ question, qIndex, total, selected, isChecked, isCorrect,
                     className={`p-5 rounded-2xl border-2 ${isCorrect ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800'}`}>
                     <div className="flex items-center gap-3 mb-2">
                         {isCorrect ? <CheckCircle2 className="text-green-500 shrink-0" size={20} /> : <XCircle className="text-red-400 shrink-0" size={20} />}
-                        <p className="font-black text-base">{isCorrect ? "YOU'RE BUILT DIFFERENT FR ✅" : 'COOKED 💀 NOT EVEN CLOSE'}</p>
+                        <p className="font-black text-base">{isCorrect ? CORRECT_MSGS[qIndex % CORRECT_MSGS.length] : WRONG_MSGS[qIndex % WRONG_MSGS.length]}</p>
                     </div>
                     <p className="text-sm font-medium leading-relaxed">{question.explanation}</p>
                 </motion.div>

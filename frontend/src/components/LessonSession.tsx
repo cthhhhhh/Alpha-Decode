@@ -105,6 +105,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
     // Tracking wrong questions
     interface WrongQuestion { questionNumber: number; questionText: string; userAnswer: string; correctAnswer: string; }
     const [wrongQuestions, setWrongQuestions] = useState<WrongQuestion[]>([]);
+    const [answerResults, setAnswerResults] = useState<(boolean | null)[]>([]);
 
     useEffect(() => {
         let isMounted = true;
@@ -192,6 +193,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
         }
         setIsCorrect(correct);
         setIsChecked(true);
+        setAnswerResults(prev => { const next = [...prev]; next[stepIdx] = correct; return next; });
     };
 
     const handleContinue = () => {
@@ -235,7 +237,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
                     {steps.map((_, i) => (
                         <div
                             key={i}
-                            className={`flex-1 h-3.5 rounded-full transition-all duration-500 ${i < stepIdx ? 'bg-green-500' : 'bg-slate-200'}`}
+                            className={`flex-1 h-3.5 rounded-full transition-all duration-500 ${answerResults[i] === true ? 'bg-green-500' : answerResults[i] === false ? 'bg-red-500' : 'bg-slate-200'}`}
                         />
                     ))}
                 </div>
