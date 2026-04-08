@@ -756,7 +756,7 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <DailyWord onLearnMore={() => navigate('/glossary')} />
+              <DailyWord authToken={authToken} />
 
               {/* Daily Quiz CTA */}
               {(authRole === 'ADMIN' || !!authToken) && (
