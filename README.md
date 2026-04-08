@@ -1,6 +1,6 @@
 # Alpha Decode
 
-Alpha Decode is a gamified web application designed to help users master "Gen Alpha" slang. Built with a modern React stack, it mimics the engagement mechanics of popular language learning apps like Duolingo.
+Alpha Decode is a gamified web application designed to help users master "Gen Alpha" slang.
 
 **[☁️ Play Alpha Decode Live!](https://alpha-decode.wittydesert-fcae5fd0.southeastasia.azurecontainerapps.io/)**
 
