@@ -1,5 +1,7 @@
 package com.csd.cs203t1.shop;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,8 +27,6 @@ import com.csd.cs203t1.security.JwtUtil;
 import com.csd.cs203t1.security.SecurityConfig;
 import com.csd.cs203t1.user.User;
 import com.csd.cs203t1.user.UserService;
-
-import java.util.List;
 
 @WebMvcTest(ShopController.class)
 @Import({SecurityConfig.class, JwtFilter.class})
