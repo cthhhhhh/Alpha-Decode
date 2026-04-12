@@ -1,21 +1,21 @@
 package com.csd.cs203t1.term;
 
-import com.csd.cs203t1.lesson.Lesson;
-import com.csd.cs203t1.lesson.LessonRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.csd.cs203t1.lesson.Lesson;
+import com.csd.cs203t1.lesson.LessonRepository;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TermServiceImpl Unit Tests")

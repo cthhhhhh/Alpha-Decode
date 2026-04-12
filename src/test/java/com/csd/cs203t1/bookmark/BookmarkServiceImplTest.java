@@ -1,25 +1,25 @@
 package com.csd.cs203t1.bookmark;
 
-import com.csd.cs203t1.term.Term;
-import com.csd.cs203t1.term.TermRepository;
-import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.csd.cs203t1.term.Term;
+import com.csd.cs203t1.term.TermRepository;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserService;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BookmarkServiceImpl Unit Tests")
