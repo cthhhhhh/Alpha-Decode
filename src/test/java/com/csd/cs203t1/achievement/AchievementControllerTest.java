@@ -68,7 +68,7 @@ class AchievementControllerTest {
     @Test
     @DisplayName("GET /api/achievements/me: returns 401 when not authenticated")
     void getMyAchievements_noAuth_returns401() throws Exception {
-        when(userService.getCurrentUser()).thenThrow(new RuntimeException("Not authenticated"));
+        when(userService.getCurrentUserReadOnly()).thenThrow(new RuntimeException("Not authenticated"));
 
         mockMvc.perform(get("/api/achievements/me"))
                 .andExpect(status().isUnauthorized())

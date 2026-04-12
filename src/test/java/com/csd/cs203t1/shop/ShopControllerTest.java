@@ -5,7 +5,7 @@ import com.csd.cs203t1.security.JwtFilter;
 import com.csd.cs203t1.security.JwtUtil;
 import com.csd.cs203t1.security.SecurityConfig;
 import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserRepository;
+import com.csd.cs203t1.user.UserService;
 import com.csd.cs203t1.admin.SessionTracker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +18,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
-import java.util.Optional;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,7 +31,7 @@ class ShopControllerTest {
     @Autowired private MockMvc mockMvc;
 
     @MockBean private ShopService shopService;
-    @MockBean private UserRepository userRepository;
+    @MockBean private UserService userService;
     @MockBean private SessionTracker sessionTracker; // Needed by JwtFilter
     @MockBean private JwtUtil jwtUtil;
     @MockBean private CustomUserDetailsService userDetailsService;
@@ -50,7 +49,7 @@ class ShopControllerTest {
     @WithMockUser(username = "testuser")
     @DisplayName("GET /api/shop: success returns item list")
     void getShopItems_success() throws Exception {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.getShopItems(user)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/api/shop"))
@@ -61,7 +60,7 @@ class ShopControllerTest {
     @WithMockUser(username = "testuser")
     @DisplayName("POST /api/shop/buy/{id}: success")
     void buyItem_success() throws Exception {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.buyItem(eq(user), eq(1L))).thenReturn(new ShopDTO.EquipResponse(1L, null));
 
         mockMvc.perform(post("/api/shop/buy/1"))
@@ -73,7 +72,7 @@ class ShopControllerTest {
     @WithMockUser(username = "testuser")
     @DisplayName("POST /api/shop/buy/{id}: returns 400 on error")
     void buyItem_fail_returns400() throws Exception {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.buyItem(eq(user), anyLong())).thenThrow(new IllegalArgumentException("Insufficient coins"));
 
         mockMvc.perform(post("/api/shop/buy/1"))

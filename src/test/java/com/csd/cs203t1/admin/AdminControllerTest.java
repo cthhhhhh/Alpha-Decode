@@ -6,7 +6,6 @@ import com.csd.cs203t1.security.JwtFilter;
 import com.csd.cs203t1.security.JwtUtil;
 import com.csd.cs203t1.security.SecurityConfig;
 import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserRepository;
 import com.csd.cs203t1.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -37,7 +35,7 @@ class AdminControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockBean private UserRepository userRepository;
+    @MockBean private AdminService adminService;
     @MockBean private SessionTracker sessionTracker;
     @MockBean private UserService userService;
     @MockBean private JwtUtil jwtUtil;
@@ -67,9 +65,13 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /api/admin/stats: success as ADMIN")
     void getAdminStats_asAdmin_returns200() throws Exception {
-        when(userRepository.countByRole(Role.USER)).thenReturn(10L);
-        when(userRepository.countByRole(Role.CONTRIBUTOR)).thenReturn(2L);
-        when(sessionTracker.getActiveCount()).thenReturn(5L);
+        when(adminService.getAdminStats()).thenReturn(Map.of(
+            "totalUsers", 10,
+            "contributors", 2,
+            "activeSessions", 5,
+            "systemHealth", "Excellent",
+            "message", "Welcome"
+        ));
 
         mockMvc.perform(get("/api/admin/stats"))
                 .andExpect(status().isOk())
@@ -89,7 +91,7 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /api/admin/users/{id}: success")
     void deleteUser_asAdmin_success() throws Exception {
-        when(userService.getCurrentUser()).thenReturn(adminUser);
+        when(userService.getCurrentUserReadOnly()).thenReturn(adminUser);
 
         mockMvc.perform(delete("/api/admin/users/2"))
                 .andExpect(status().isOk());
@@ -101,7 +103,7 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /api/admin/users/{id}: cannot delete self")
     void deleteUser_self_returns400() throws Exception {
-        when(userService.getCurrentUser()).thenReturn(adminUser);
+        when(userService.getCurrentUserReadOnly()).thenReturn(adminUser);
 
         mockMvc.perform(delete("/api/admin/users/1"))
                 .andExpect(status().isBadRequest())
@@ -114,7 +116,7 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/admin/users/{id}/ban: success")
     void banUser_asAdmin_success() throws Exception {
-        when(userService.getCurrentUser()).thenReturn(adminUser);
+        when(userService.getCurrentUserReadOnly()).thenReturn(adminUser);
 
         mockMvc.perform(post("/api/admin/users/2/ban"))
                 .andExpect(status().isOk())
@@ -127,24 +129,21 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/admin/users/{id}/approve-contributor: success")
     void approveContributor_valid_success() throws Exception {
-        regularUser.setPendingApproval(true);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
+        doNothing().when(adminService).approveContributor(2L);
 
         mockMvc.perform(post("/api/admin/users/2/approve-contributor"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("User approved as contributor"));
 
-        verify(userRepository).save(argThat(u -> 
-            u.getRole() == Role.CONTRIBUTOR && !u.isPendingApproval() && u.isEnabled()
-        ));
+        verify(adminService).approveContributor(2L);
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/admin/users/{id}/approve-contributor: fails if not pending")
     void approveContributor_notPending_returns400() throws Exception {
-        regularUser.setPendingApproval(false);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
+        doThrow(new IllegalArgumentException("User is not pending approval"))
+            .when(adminService).approveContributor(2L);
 
         mockMvc.perform(post("/api/admin/users/2/approve-contributor"))
                 .andExpect(status().isBadRequest())
@@ -155,16 +154,14 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /api/admin/contributors/pending: returns list")
     void getPendingContributors_returnsList() throws Exception {
-        User contributor = new User();
-        contributor.setId(10L);
-        contributor.setUsername("tester");
-        contributor.setEmail("tester@test.com");
-        contributor.setRole(Role.CONTRIBUTOR);
-        contributor.setEnabled(true);
-        contributor.setPendingApproval(true);
-
-        when(userRepository.findByRoleAndPendingApprovalTrue(Role.CONTRIBUTOR))
-                .thenReturn(Collections.singletonList(contributor));
+        when(adminService.getPendingContributors()).thenReturn(Collections.singletonList(Map.of(
+            "id", 10,
+            "username", "tester",
+            "email", "tester@test.com",
+            "role", "CONTRIBUTOR",
+            "enabled", true,
+            "pendingApproval", true
+        )));
 
         mockMvc.perform(get("/api/admin/contributors/pending"))
                 .andExpect(status().isOk())
@@ -176,13 +173,13 @@ class AdminControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("PATCH /api/admin/users/{id}/role: updates role")
     void updateUserRole_success() throws Exception {
-        when(userRepository.findById(2L)).thenReturn(Optional.of(regularUser));
+        doNothing().when(adminService).updateUserRole(2L, "ADMIN");
 
         mockMvc.perform(patch("/api/admin/users/2/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("role", "ADMIN"))))
                 .andExpect(status().isOk());
 
-        verify(userRepository).save(argThat(u -> u.getRole() == Role.ADMIN));
+        verify(adminService).updateUserRole(2L, "ADMIN");
     }
 }
