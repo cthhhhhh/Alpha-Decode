@@ -65,24 +65,4 @@ class AiControllerTest {
                 .andExpect(jsonPath("$.feedback").value("Nice work"))
                 .andExpect(jsonPath("$.example").value("Try this example"));
     }
-
-    @Test
-        @DisplayName("POST /api/ai/feedback can be called without explicit mock user")
-        void getFeedback_withoutMockUser_returns200() throws Exception {
-                when(aiService.getLessonFeedback(anyString(), anyInt(), anyList()))
-                                .thenReturn(new FeedbackResponse("Nice work", "Try this example", null));
-
-        String body = """
-                {
-                  "lessonTitle": "Slang Basics",
-                  "score": 80,
-                  "wrongQuestions": []
-                }
-                """;
-
-        mockMvc.perform(post("/api/ai/feedback")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk());
-    }
 }

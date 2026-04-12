@@ -1,6 +1,7 @@
 package com.csd.cs203t1.achievement;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +15,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.csd.cs203t1.admin.SessionTracker;
@@ -49,10 +51,15 @@ class AchievementControllerTest {
     @Test
     @DisplayName("GET /api/achievements: success returns catalog")
     void getAllAchievements_success() throws Exception {
-        when(achievementService.getAllAchievements()).thenReturn(Collections.emptyList());
+        when(achievementService.getAllAchievements()).thenReturn(List.of(
+            new AchievementDTO.AchievementInfo(1L, "First Win", "desc", "icon", "lesson_complete", 1)
+        ));
 
         mockMvc.perform(get("/api/achievements"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].name").value("First Win"))
+            .andExpect(jsonPath("$[0].triggerType").value("lesson_complete"));
     }
 
     @Test

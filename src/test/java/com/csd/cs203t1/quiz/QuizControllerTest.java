@@ -1,6 +1,8 @@
 package com.csd.cs203t1.quiz;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -146,7 +148,10 @@ class QuizControllerTest {
         mockMvc.perform(put("/api/quiz/revision/1").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedRq)))
-               .andExpect(status().isOk());
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.afterLessonIndex").value(5));
+
+        verify(quizService).updateRevisionQuiz(eq(1L), any(RevisionQuiz.class));
     }
 
     @Test

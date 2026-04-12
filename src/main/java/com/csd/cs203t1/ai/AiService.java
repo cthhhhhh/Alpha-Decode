@@ -1,5 +1,10 @@
 package com.csd.cs203t1.ai;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -8,15 +13,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Service
 public class AiService {
 
     @Value("${GEMINI_API_KEY}")
     private String geminiApiKey;
+
+    private Supplier<RestTemplate> restTemplateSupplier = RestTemplate::new;
+
+    // Test seam to avoid real network calls in unit tests.
+    void setRestTemplateSupplier(Supplier<RestTemplate> restTemplateSupplier) {
+        this.restTemplateSupplier = restTemplateSupplier;
+    }
 
     @SuppressWarnings("unchecked")
     public FeedbackResponse getLessonFeedback(String lessonTitle, int score, List<WrongQuestion> wrongQuestions) {
@@ -47,7 +55,7 @@ public class AiService {
         String prompt = promptBuilder.toString();
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = restTemplateSupplier.get();
             String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
 
             HttpHeaders headers = new HttpHeaders();

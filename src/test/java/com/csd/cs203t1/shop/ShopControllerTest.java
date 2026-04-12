@@ -1,7 +1,5 @@
 package com.csd.cs203t1.shop;
 
-import java.util.Collections;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +25,8 @@ import com.csd.cs203t1.security.JwtUtil;
 import com.csd.cs203t1.security.SecurityConfig;
 import com.csd.cs203t1.user.User;
 import com.csd.cs203t1.user.UserService;
+
+import java.util.List;
 
 @WebMvcTest(ShopController.class)
 @Import({SecurityConfig.class, JwtFilter.class})
@@ -55,10 +55,15 @@ class ShopControllerTest {
     @DisplayName("GET /api/shop: success returns item list")
     void getShopItems_success() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(user);
-        when(shopService.getShopItems(user)).thenReturn(Collections.emptyList());
+        when(shopService.getShopItems(user)).thenReturn(List.of(
+            new ShopDTO.ShopItemDTO(1L, "Starter Hoodie", "hoodie_1", "OUTFIT", 50, "owned")
+        ));
 
         mockMvc.perform(get("/api/shop"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].name").value("Starter Hoodie"))
+            .andExpect(jsonPath("$[0].status").value("owned"));
     }
 
     @Test

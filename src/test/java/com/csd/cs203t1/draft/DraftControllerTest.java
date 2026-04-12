@@ -88,13 +88,21 @@ class DraftControllerTest {
     @WithMockUser(roles = "CONTRIBUTOR")
     @DisplayName("PUT /api/drafts/{id}: success")
     void updateDraft_success() throws Exception {
+        DraftDTO.DraftResponse updated = new DraftDTO.DraftResponse();
+        updated.setId(1L);
+        updated.setContributorId(10L);
+        updated.setTitle("Updated");
+        updated.setStatus(DraftStatus.DRAFT);
+
         when(userService.getCurrentUser()).thenReturn(contributor);
-        when(draftService.updateDraft(eq(1L), any(), eq(10L))).thenReturn(draftResponse);
+        when(draftService.updateDraft(eq(1L), any(), eq(10L))).thenReturn(updated);
 
         mockMvc.perform(put("/api/drafts/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"Updated\"}"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Updated"))
+            .andExpect(jsonPath("$.status").value("DRAFT"));
     }
 
     @Test
@@ -112,20 +120,36 @@ class DraftControllerTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/drafts/{id}/approve: success as ADMIN")
     void approveDraft_success() throws Exception {
-        when(draftService.approveDraft(1L)).thenReturn(draftResponse);
+        DraftDTO.DraftResponse approved = new DraftDTO.DraftResponse();
+        approved.setId(1L);
+        approved.setContributorId(10L);
+        approved.setTitle("Mock Draft");
+        approved.setStatus(DraftStatus.APPROVED);
+        approved.setApprovedLessonId(100L);
+
+        when(draftService.approveDraft(1L)).thenReturn(approved);
 
         mockMvc.perform(post("/api/drafts/1/approve"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("APPROVED"))
+            .andExpect(jsonPath("$.approvedLessonId").value(100));
     }
 
     @Test
     @WithMockUser(roles = "CONTRIBUTOR")
     @DisplayName("POST /api/drafts/{id}/submit: success")
     void submitDraft_success() throws Exception {
+        DraftDTO.DraftResponse submitted = new DraftDTO.DraftResponse();
+        submitted.setId(1L);
+        submitted.setContributorId(10L);
+        submitted.setTitle("Mock Draft");
+        submitted.setStatus(DraftStatus.PENDING);
+
         when(userService.getCurrentUser()).thenReturn(contributor);
-        when(draftService.submitDraft(1L, 10L)).thenReturn(draftResponse);
+        when(draftService.submitDraft(1L, 10L)).thenReturn(submitted);
 
         mockMvc.perform(post("/api/drafts/1/submit"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("PENDING"));
     }
 }

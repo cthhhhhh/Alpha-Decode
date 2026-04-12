@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -66,6 +67,8 @@ class BookmarkControllerTest {
 
         mockMvc.perform(post("/api/bookmarks/9"))
                 .andExpect(status().isOk());
+
+        verify(bookmarkService).addBookmarkForCurrentUser(9L);
     }
 
     @Test

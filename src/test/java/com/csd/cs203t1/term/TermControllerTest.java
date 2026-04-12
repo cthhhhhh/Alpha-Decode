@@ -5,6 +5,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -144,5 +145,7 @@ class TermControllerTest {
 
         mockMvc.perform(delete("/api/terms/3"))
                 .andExpect(status().isOk());
+
+                verify(termService).deleteTerm(3L);
     }
 }

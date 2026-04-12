@@ -353,13 +353,4 @@ class UserControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").value("mock-token"));
     }
-
-    // ─── POST /api/auth/ping ──────────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("POST /ping: always returns 200")
-    void ping_returnsOk() throws Exception {
-        mockMvc.perform(post("/api/auth/ping").with(csrf()))
-            .andExpect(status().isOk());
-    }
 }

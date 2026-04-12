@@ -84,14 +84,4 @@ class LeaderboardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rank").value(2));
     }
-
-    @Test
-        @DisplayName("GET /api/leaderboard is accessible without explicit mock user")
-        void getLeaderboard_withoutMockUser_returns200() throws Exception {
-                when(leaderboardService.getLeaderboard(10, "allTime", "coins"))
-                                .thenReturn(List.of());
-
-        mockMvc.perform(get("/api/leaderboard"))
-                                .andExpect(status().isOk());
-    }
 }

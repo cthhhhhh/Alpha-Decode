@@ -1,5 +1,34 @@
 package com.csd.cs203t1.user;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.csd.cs203t1.achievement.AchievementService;
 import com.csd.cs203t1.achievement.UserAchievementRepository;
 import com.csd.cs203t1.bookmark.UserBookmarkRepository;
@@ -7,24 +36,10 @@ import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.draft.DraftRepository;
 import com.csd.cs203t1.flag.FlagRepository;
 import com.csd.cs203t1.security.JwtUtil;
+import com.csd.cs203t1.shop.Item;
 import com.csd.cs203t1.shop.ItemRepository;
+import com.csd.cs203t1.shop.ItemType;
 import com.csd.cs203t1.shop.UserItemRepository;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.LocalDate;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserServiceImpl Unit Tests")
@@ -57,6 +72,11 @@ class UserServiceImplTest {
         testUser.setEnabled(true);
         testUser.setCoins(100);
         testUser.setLevel(3);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
     // ─── register() ─────────────────────────────────────────────────────────────
@@ -528,5 +548,311 @@ class UserServiceImplTest {
 
         // ASSERT — streak MUST be reset to 0
         assertEquals(0, testUser.getStreak());
+    }
+
+    @Test
+    @DisplayName("updateCoins: updates progress, handles daily quiz increment, and returns achievement notifications")
+    void updateCoins_happyPath_updatesFieldsAndReturnsNotifications() {
+        authenticateAs("testuser");
+        testUser.setTotalCoinsCollected(0);
+        testUser.setWeeklyCoinsCollected(0);
+        testUser.setWeeklyCoins(100);
+        testUser.setMaxUnlockedLessonIndex(1);
+        testUser.setStreak(1);
+        testUser.setCompletedRevisionQuizIds("1,2");
+
+        UserDTO.CoinUpdateRequest req = new UserDTO.CoinUpdateRequest(50, 3, 4, true, 3L);
+
+        com.csd.cs203t1.achievement.Achievement ach = new com.csd.cs203t1.achievement.Achievement();
+        ach.setName("Streak Starter");
+        ach.setIcon("icon");
+        ach.setDescription("desc");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(achievementService.checkAndUnlock(any(User.class))).thenReturn(List.of(ach));
+        when(jwtUtil.generateToken(any())).thenReturn("token");
+
+        UserDTO.AuthResponse response = userService.updateCoins(req);
+
+        assertEquals(150, testUser.getCoins());
+        assertEquals(150, testUser.getWeeklyCoins());
+        assertEquals(150, testUser.getTotalCoinsCollected());
+        assertEquals(150, testUser.getWeeklyCoinsCollected());
+        assertEquals(4, testUser.getLevel());
+        assertEquals(3, testUser.getMaxUnlockedLessonIndex());
+        assertEquals(4, testUser.getStreak());
+        assertEquals(1, testUser.getDailyQuizCount());
+        assertEquals(LocalDate.now(), testUser.getDailyQuizLastDate());
+        assertEquals("1,2,3", testUser.getCompletedRevisionQuizIds());
+
+        assertEquals("token", response.getToken());
+        assertNotNull(response.getNewAchievements());
+        assertEquals(1, response.getNewAchievements().size());
+        assertEquals("Streak Starter", response.getNewAchievements().get(0).getName());
+    }
+
+    @Test
+    @DisplayName("updateCoins: rejects second daily quiz completion on same day")
+    void updateCoins_dailyQuizAlreadyCompleted_throwsException() {
+        authenticateAs("testuser");
+        testUser.setDailyQuizLastDate(LocalDate.now());
+
+        UserDTO.CoinUpdateRequest req = new UserDTO.CoinUpdateRequest(10, null, null, true, null);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.updateCoins(req));
+
+        assertEquals("Daily quiz already completed today", ex.getMessage());
+        verify(achievementService, never()).checkAndUnlock(any(User.class));
+    }
+
+    @Test
+    @DisplayName("changePassword: valid request updates password")
+    void changePassword_validRequest_updatesPassword() {
+        authenticateAs("testuser");
+
+        UserDTO.ChangePasswordRequest req = new UserDTO.ChangePasswordRequest("oldpass", "newpass123");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.matches("oldpass", "hashed_password")).thenReturn(true);
+        when(passwordEncoder.matches("newpass123", "hashed_password")).thenReturn(false);
+        when(passwordEncoder.encode("newpass123")).thenReturn("encoded-new-pass");
+
+        userService.changePassword(req);
+
+        assertEquals("encoded-new-pass", testUser.getPassword());
+        verify(passwordEncoder).encode("newpass123");
+    }
+
+    @Test
+    @DisplayName("completeOnboarding: grants starter items and auto-equips starter outfit")
+    void completeOnboarding_grantsStartersAndAutoEquipsOutfit() {
+        authenticateAs("testuser");
+        testUser.setCoins(40);
+        testUser.setTotalCoinsCollected(0);
+        testUser.setWeeklyCoinsCollected(0);
+        testUser.setEquippedOutfitId(null);
+
+        UserDTO.OnboardingRequest req = new UserDTO.OnboardingRequest(
+                2, 30, "face1", "body1", "hair1", "tan", "black"
+        );
+
+        Item starterOutfit = new Item();
+        starterOutfit.setId(101L);
+        starterOutfit.setType(ItemType.OUTFIT);
+        starterOutfit.setStarter(true);
+
+        Item starterPet = new Item();
+        starterPet.setId(202L);
+        starterPet.setType(ItemType.PET);
+        starterPet.setStarter(true);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(itemRepository.findByIsStarterTrue()).thenReturn(List.of(starterOutfit, starterPet));
+        when(userItemRepository.existsByUserAndItem(testUser, starterOutfit)).thenReturn(false);
+        when(userItemRepository.existsByUserAndItem(testUser, starterPet)).thenReturn(false);
+
+        UserDTO.AuthResponse response = userService.completeOnboarding(req);
+
+        assertTrue(testUser.isOnboardingCompleted());
+        assertEquals(2, testUser.getLevel());
+        assertEquals(30, testUser.getCoins());
+        assertEquals(30, testUser.getWeeklyCoins());
+        assertEquals(40, testUser.getTotalCoinsCollected());
+        assertEquals(30, testUser.getWeeklyCoinsCollected());
+        assertEquals("face1", testUser.getFaceId());
+        assertEquals("body1", testUser.getBodyTypeId());
+        assertEquals("hair1", testUser.getHairId());
+        assertEquals("tan", testUser.getSkinColor());
+        assertEquals("black", testUser.getHairColor());
+        assertEquals(101L, testUser.getEquippedOutfitId());
+
+        verify(userItemRepository, times(2)).save(any());
+        assertEquals("testuser", response.getUsername());
+    }
+
+    @Test
+    @DisplayName("requestContributorStatus: valid user becomes pending and receives token")
+    void requestContributorStatus_validState_setsPendingAndReturnsToken() {
+        authenticateAs("testuser");
+        testUser.setRole(Role.USER);
+        testUser.setPendingApproval(false);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(jwtUtil.generateToken(any())).thenReturn("contributor-token");
+
+        UserDTO.AuthResponse response = userService.requestContributorStatus();
+
+        assertTrue(testUser.isPendingApproval());
+        assertEquals("contributor-token", response.getToken());
+    }
+
+    @Test
+    @DisplayName("requestContributorStatus: pending user is rejected")
+    void requestContributorStatus_pendingUser_throwsException() {
+        authenticateAs("testuser");
+        testUser.setPendingApproval(true);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> userService.requestContributorStatus());
+
+        assertEquals("Invalid state for contributor request.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("deleteCurrentUser: removes linked records before deleting user")
+    void deleteCurrentUser_removesDependenciesAndDeletesUser() {
+        authenticateAs("testuser");
+        testUser.setId(42L);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        userService.deleteCurrentUser();
+
+        verify(draftRepository).deleteByContributorId(42L);
+        verify(userAchievementRepository).deleteByUser(testUser);
+        verify(userBookmarkRepository).deleteByUser(testUser);
+        verify(flagRepository).deleteByReportedBy(testUser);
+        verify(userItemRepository).deleteByUser(testUser);
+        verify(userRepository).delete(testUser);
+    }
+
+    @Test
+    @DisplayName("registerAdmin: creates admin account and returns token")
+    void registerAdmin_success_returnsAdminAuthResponse() {
+        UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
+        req.setUsername("newadmin");
+        req.setEmail("admin@example.com");
+        req.setPassword("adminpass");
+        req.setCoins(200);
+        req.setLevel(5);
+
+        when(userRepository.existsByUsername("newadmin")).thenReturn(false);
+        when(userRepository.existsByEmail("admin@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("adminpass")).thenReturn("encoded-admin");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            u.setId(999L);
+            return u;
+        });
+        when(jwtUtil.generateToken(any())).thenReturn("admin-token");
+
+        UserDTO.AuthResponse response = userService.registerAdmin(req);
+
+        assertEquals("admin-token", response.getToken());
+        assertEquals("ADMIN", response.getRole());
+        assertEquals("newadmin", response.getUsername());
+    }
+
+    @Test
+    @DisplayName("updateLessonProgress: increases max unlocked lesson and returns achievements")
+    void updateLessonProgress_higherIndex_updatesAndReturnsAchievements() {
+        authenticateAs("testuser");
+        testUser.setMaxUnlockedLessonIndex(2);
+
+        com.csd.cs203t1.achievement.Achievement ach = new com.csd.cs203t1.achievement.Achievement();
+        ach.setName("Lesson Boost");
+        ach.setIcon("icon");
+        ach.setDescription("desc");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(achievementService.checkAndUnlock(any(User.class))).thenReturn(List.of(ach));
+        when(jwtUtil.generateToken(any())).thenReturn("lesson-token");
+
+        UserDTO.AuthResponse response = userService.updateLessonProgress(4);
+
+        assertEquals(4, testUser.getMaxUnlockedLessonIndex());
+        assertEquals("lesson-token", response.getToken());
+        assertNotNull(response.getNewAchievements());
+        assertEquals(1, response.getNewAchievements().size());
+    }
+
+    @Test
+    @DisplayName("updateProfile: duplicate username is rejected")
+    void updateProfile_duplicateUsername_throwsException() {
+        authenticateAs("testuser");
+
+        UserDTO.UpdateProfileRequest req = new UserDTO.UpdateProfileRequest("takenName");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.existsByUsername("takenName")).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> userService.updateProfile(req));
+
+        assertEquals("Username is already taken", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("updateProfile: valid username update persists and returns new token")
+    void updateProfile_validUsername_updatesUser() {
+        authenticateAs("testuser");
+
+        UserDTO.UpdateProfileRequest req = new UserDTO.UpdateProfileRequest("freshName");
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.existsByUsername("freshName")).thenReturn(false);
+        when(jwtUtil.generateToken(any())).thenReturn("profile-token");
+
+        UserDTO.AuthResponse response = userService.updateProfile(req);
+
+        assertEquals("freshName", testUser.getUsername());
+        assertEquals("profile-token", response.getToken());
+        assertEquals("freshName", response.getUsername());
+    }
+
+    @Test
+    @DisplayName("getMe: returns authenticated user profile without token")
+    void getMe_returnsCurrentUserProfile() {
+        authenticateAs("testuser");
+        testUser.setDailyQuizLastDate(LocalDate.now());
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+        UserDTO.AuthResponse response = userService.getMe();
+
+        assertEquals("testuser", response.getUsername());
+        assertNull(response.getToken());
+        assertTrue(response.getDailyQuizCompletedToday());
+    }
+
+    @Test
+    @DisplayName("deleteUserById: removes linked records and deletes target user")
+    void deleteUserById_removesDependenciesAndDeletesUser() {
+        User target = new User();
+        target.setId(77L);
+        target.setUsername("target");
+        target.setEmail("target@example.com");
+        target.setPassword("pw");
+
+        when(userRepository.findById(77L)).thenReturn(Optional.of(target));
+
+        userService.deleteUserById(77L);
+
+        verify(draftRepository).deleteByContributorId(77L);
+        verify(userAchievementRepository).deleteByUser(target);
+        verify(userBookmarkRepository).deleteByUser(target);
+        verify(flagRepository).deleteByReportedBy(target);
+        verify(userItemRepository).deleteByUser(target);
+        verify(userRepository).delete(target);
+    }
+
+    private void authenticateAs(String username) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(username, "pw")
+        );
     }
 }
