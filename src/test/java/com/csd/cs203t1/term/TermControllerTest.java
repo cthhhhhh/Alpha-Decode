@@ -48,7 +48,7 @@ class TermControllerTest {
     private CustomUserDetailsService userDetailsService;
 
     @Test
-    @DisplayName("GET /api/terms/ is public")
+        @DisplayName("GET /api/terms is public")
     void getTerms_public_success() throws Exception {
         Term t = new Term();
         t.setId(1L);
@@ -59,14 +59,31 @@ class TermControllerTest {
         t.setCategory(Category.NOUN);
         when(termService.listTerms()).thenReturn(List.of(t));
 
-        mockMvc.perform(get("/api/terms/"))
+                mockMvc.perform(get("/api/terms"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].term").value("rizz"));
     }
 
+        @Test
+        @DisplayName("GET /api/terms/{id} is public")
+        void getTermById_public_success() throws Exception {
+                Term t = new Term();
+                t.setId(2L);
+                t.setTerm("sigma");
+                t.setDefinition("definition");
+                t.setExample("example");
+                t.setDifficulty(Difficulty.MEDIUM);
+                t.setCategory(Category.NOUN);
+                when(termService.getTerm(2L)).thenReturn(t);
+
+                mockMvc.perform(get("/api/terms/2"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.term").value("sigma"));
+        }
+
     @Test
     @WithMockUser(roles = "CONTRIBUTOR")
-    @DisplayName("POST /api/terms/create succeeds for contributor")
+        @DisplayName("POST /api/terms succeeds for contributor")
     void createTerm_contributor_success() throws Exception {
         Term t = new Term();
         t.setId(5L);
@@ -88,7 +105,7 @@ class TermControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/terms/create")
+        mockMvc.perform(post("/api/terms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -96,10 +113,73 @@ class TermControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "CONTRIBUTOR")
+    @DisplayName("POST /api/terms succeeds for contributor")
+    void createTerm_nounRoute_success() throws Exception {
+        Term t = new Term();
+        t.setId(6L);
+        t.setTerm("gamma");
+        t.setDefinition("definition");
+        t.setExample("example");
+        t.setDifficulty(Difficulty.MEDIUM);
+        t.setCategory(Category.NOUN);
+
+        when(termService.createTerm(org.mockito.ArgumentMatchers.any(Term.class))).thenReturn(t);
+
+        String body = """
+                {
+                  "term": "gamma",
+                  "definition": "definition",
+                  "example": "example",
+                  "difficulty": "MEDIUM",
+                                                                        "category": "NOUN"
+                }
+                """;
+
+        mockMvc.perform(post("/api/terms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(6));
+    }
+
+    @Test
+    @WithMockUser(roles = "CONTRIBUTOR")
+    @DisplayName("POST /api/terms/lesson-links/{lessonId} succeeds for contributor")
+    void addTermWithLesson_nounRoute_success() throws Exception {
+        Term t = new Term();
+        t.setId(9L);
+        t.setTerm("delta");
+        t.setDefinition("definition");
+        t.setExample("example");
+        t.setDifficulty(Difficulty.EASY);
+        t.setCategory(Category.NOUN);
+
+        when(termService.addTerm(org.mockito.ArgumentMatchers.eq(7L), org.mockito.ArgumentMatchers.any(Term.class)))
+                .thenReturn(t);
+
+        String body = """
+                {
+                  "term": "delta",
+                  "definition": "definition",
+                  "example": "example",
+                  "difficulty": "EASY",
+                  "category": "NOUN"
+                }
+                """;
+
+        mockMvc.perform(post("/api/terms/lesson-links/7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(9));
+    }
+
+    @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("POST /api/terms/create forbidden for regular user")
+        @DisplayName("POST /api/terms forbidden for regular user")
     void createTerm_user_forbidden() throws Exception {
-        mockMvc.perform(post("/api/terms/create")
+                mockMvc.perform(post("/api/terms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isForbidden());

@@ -63,7 +63,7 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/users/{id}/ban")
+    @PostMapping("/users/{id}/bans")
     public ResponseEntity<?> banUser(@PathVariable Long id) {
         User currentUser = userService.getCurrentUserReadOnly();
         if (currentUser.getId().equals(id)) {
@@ -73,13 +73,13 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "User banned successfully"));
     }
 
-    @PostMapping("/users/{id}/unban")
-    public ResponseEntity<?> unbanUser(@PathVariable Long id) {
+    @DeleteMapping("/users/{id}/bans")
+    public ResponseEntity<?> removeBan(@PathVariable Long id) {
         userService.setUserEnabled(id, true);
         return ResponseEntity.ok(Map.of("message", "User unbanned successfully"));
     }
 
-    @PostMapping("/users/{id}/approve-contributor")
+    @PostMapping("/users/{id}/contributor-approvals")
     public ResponseEntity<?> approveContributor(@PathVariable Long id) {
         try {
             adminService.approveContributor(id);
@@ -89,7 +89,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/users/{id}/reject-contributor")
+    @PostMapping("/users/{id}/contributor-rejections")
     public ResponseEntity<?> rejectContributor(@PathVariable Long id) {
         try {
             adminService.rejectContributor(id);
@@ -99,7 +99,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping("/users/{id}/reset")
+    @DeleteMapping("/users/{id}/progress")
     public ResponseEntity<?> resetUserProgress(@PathVariable Long id) {
         userService.resetProgress(id);
         return ResponseEntity.ok(Map.of("message", "Progress reset successfully"));

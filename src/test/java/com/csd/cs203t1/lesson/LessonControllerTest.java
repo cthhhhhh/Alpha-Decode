@@ -1,14 +1,14 @@
 package com.csd.cs203t1.lesson;
 
-import com.csd.cs203t1.security.CustomUserDetailsService;
-import com.csd.cs203t1.security.JwtFilter;
-import com.csd.cs203t1.security.JwtUtil;
-import com.csd.cs203t1.security.SecurityConfig;
-import com.csd.cs203t1.admin.SessionTracker;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,14 +16,19 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Collections;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.csd.cs203t1.admin.SessionTracker;
+import com.csd.cs203t1.security.CustomUserDetailsService;
+import com.csd.cs203t1.security.JwtFilter;
+import com.csd.cs203t1.security.JwtUtil;
+import com.csd.cs203t1.security.SecurityConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(LessonController.class)
 @Import({SecurityConfig.class, JwtFilter.class})
@@ -48,11 +53,11 @@ class LessonControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/lessons/: success returns list")
+    @DisplayName("GET /api/lessons: success returns list")
     void getLessons_success() throws Exception {
         when(lessonService.listLessons()).thenReturn(Collections.singletonList(lesson));
 
-        mockMvc.perform(get("/api/lessons/"))
+        mockMvc.perform(get("/api/lessons"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Introduction to Java"));
     }
@@ -87,16 +92,26 @@ class LessonControllerTest {
 
     @Test
     @WithMockUser(roles = "CONTRIBUTOR")
-    @DisplayName("POST /api/lessons/create: 201 Created for CONTRIBUTOR")
+    @DisplayName("POST /api/lessons: 201 Created for CONTRIBUTOR")
     void createLesson_asContributor_success() throws Exception {
         when(lessonService.addLesson(any(), any())).thenReturn(lesson);
 
         LessonController.CreateLessonRequest req = new LessonController.CreateLessonRequest();
         
-        mockMvc.perform(post("/api/lessons/create")
+        mockMvc.perform(post("/api/lessons")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/lessons/{id}/questions: success")
+    void getLessonQuestions_nounRoute_success() throws Exception {
+        when(lessonService.getLessonWithQuizAndQuestions(1L)).thenReturn(lesson);
+
+        mockMvc.perform(get("/api/lessons/1/questions"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
     }
 

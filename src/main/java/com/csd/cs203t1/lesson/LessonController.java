@@ -32,7 +32,7 @@ public class LessonController {
 	 * 
 	 * @return a list of all lessons
 	 */
-	@GetMapping("/")
+	@GetMapping
 	public List<Lesson> getLessons() {
 		return lessonService.listLessons();
 	}
@@ -55,7 +55,7 @@ public class LessonController {
 	 * @param id
 	 * @return Lesson with associated quiz and question
 	 */
-	@GetMapping("/questions/{id}")
+	@GetMapping("/{id}/questions")
 	public Lesson getLessonsWithQuizAndQuestions(@PathVariable Long id) {
 		return lessonService.getLessonWithQuizAndQuestions(id);
 	}
@@ -80,7 +80,7 @@ public class LessonController {
 	}
 
 	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
-	@PostMapping("/create")
+	@PostMapping
 	public ResponseEntity<Lesson> createLesson(@RequestBody CreateLessonRequest request) {
 		// Delegate the work to the service
 		Lesson savedLesson = lessonService.addLesson(
@@ -89,11 +89,6 @@ public class LessonController {
 
 		// Return 201 Created with the saved object
 		return new ResponseEntity<>(savedLesson, HttpStatus.CREATED);
-	}
-
-	@GetMapping("/test")
-	public String test() {
-		return "Controller is active!";
 	}
 
 }

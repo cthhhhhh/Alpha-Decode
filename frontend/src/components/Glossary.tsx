@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { Bookmark, Flag, Lock, Search, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Search, SlidersHorizontal, Flag, Bookmark, Lock } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import FlagModal from './FlagModal';
 
 interface ApiTerm {
@@ -42,7 +42,7 @@ const Glossary = ({ lessonIdToPosition, completedLessonIds }: Props) => {
     const [showSavedOnly, setShowSavedOnly] = useState(false);
 
     useEffect(() => {
-        fetch('/api/terms/')
+        fetch('/api/terms')
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: ApiTerm[]) => setTerms(data))
             .catch(() => {});

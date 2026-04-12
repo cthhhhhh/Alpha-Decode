@@ -1,10 +1,16 @@
 package com.csd.cs203t1.user;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 public class UserController {
 
     private final UserService userService;
@@ -13,7 +19,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/users")
     public ResponseEntity<?> register(@RequestBody UserDTO.RegisterRequest request) {
         try {
             UserDTO.AuthResponse response = userService.register(request);
@@ -23,7 +29,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/register-admin")
+    @PostMapping("/admin/users")
     public ResponseEntity<?> registerAdmin(@RequestBody UserDTO.RegisterRequest request) {
         try {
             UserDTO.AuthResponse response = userService.registerAdmin(request);
@@ -33,7 +39,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/register-contributor")
+    @PostMapping("/contributor-registrations")
     public ResponseEntity<?> registerContributor(@RequestBody UserDTO.RegisterRequest request) {
         try {
             userService.registerContributor(request);
@@ -44,7 +50,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/login")
+    @PostMapping("/sessions")
     public ResponseEntity<?> login(@RequestBody UserDTO.LoginRequest request) {
         try {
             UserDTO.AuthResponse response = userService.login(request);
@@ -54,7 +60,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/me")
+    @GetMapping("/users/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
             UserDTO.AuthResponse response = userService.getMe();
@@ -64,7 +70,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/request-contributor")
+    @PostMapping("/contributor-requests")
     public ResponseEntity<?> requestContributor() {
         try {
             UserDTO.AuthResponse response = userService.requestContributorStatus();
@@ -76,7 +82,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/coins")
+    @PostMapping("/user-coins")
     public ResponseEntity<?> addCoins(@RequestBody UserDTO.CoinUpdateRequest request) {
         try {
             if (request.getCoinsToAdd() < 0) throw new IllegalArgumentException("Coins to add must be non-negative");
@@ -89,7 +95,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/lesson-progress")
+    @PostMapping("/lesson-progress-updates")
     public ResponseEntity<?> updateLessonProgress(@RequestBody UserDTO.LessonProgressUpdateRequest request) {
         try {
             UserDTO.AuthResponse response = userService.updateLessonProgress(request.getMaxUnlockedLessonIndex());
@@ -101,7 +107,7 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/profile")
+    @PatchMapping("/users/me/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UserDTO.UpdateProfileRequest request) {
         try {
             UserDTO.AuthResponse response = userService.updateProfile(request);
@@ -113,7 +119,7 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/password")
+    @PatchMapping("/users/me/password")
     public ResponseEntity<?> changePassword(@RequestBody UserDTO.ChangePasswordRequest request) {
         try {
             userService.changePassword(request);
@@ -125,7 +131,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/me")
+    @DeleteMapping("/users/me")
     public ResponseEntity<?> deleteAccount() {
         try {
             userService.deleteCurrentUser();
@@ -135,7 +141,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/verify-user")
+    @PostMapping("/password-reset-verifications")
     public ResponseEntity<?> verifyUser(@RequestBody UserDTO.VerifyUserRequest request) {
         if (userService.verifyUserForReset(request)) {
             return ResponseEntity.ok("User verified");
@@ -143,7 +149,7 @@ public class UserController {
         return ResponseEntity.badRequest().body("Invalid username or email");
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/password-resets")
     public ResponseEntity<?> resetPassword(@RequestBody UserDTO.ResetPasswordRequest request) {
         try {
             userService.resetPassword(request);
@@ -153,7 +159,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/ping")
+    @PostMapping("/session-checks")
     public ResponseEntity<?> ping() {
         return ResponseEntity.ok().build();
     }

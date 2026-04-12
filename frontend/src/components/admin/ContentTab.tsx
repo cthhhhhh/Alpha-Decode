@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, BookA, Plus, Edit2, Trash2, ChevronDown, ChevronUp, CheckCircle2, Tag, AlignLeft, ClipboardList } from 'lucide-react';
-import type { Lesson, LessonWithQuestions, Question, Term, RevisionQuiz } from './types';
-import { authHeaders } from './utils';
+import { AlignLeft, BookA, BookOpen, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Edit2, Plus, Tag, Trash2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
+import type { Lesson, LessonWithQuestions, Question, RevisionQuiz, Term } from './types';
+import { authHeaders } from './utils';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -158,8 +158,8 @@ export function ContentTab() {
   const fetchContent = async () => {
     setLoading(true);
     const [lr, tr, rqr] = await Promise.all([
-      fetch('/api/lessons/'),
-      fetch('/api/terms/'),
+      fetch('/api/lessons'),
+      fetch('/api/terms'),
       fetch('/api/quiz/revision')
     ]);
     if (lr.ok) setLessons(await lr.json());
@@ -194,7 +194,7 @@ export function ContentTab() {
   const openAddLesson = () => { setLessonForm({ title: '', story: '', emoji: '', colour: '#46a302' }); setShowLessonModal(true); };
 
   const handleSaveLesson = async () => {
-    const url = '/api/lessons/create';
+    const url = '/api/lessons';
     const method = 'POST';
     const body = { lesson: lessonForm, questions: [] };
     const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
@@ -219,7 +219,7 @@ export function ContentTab() {
       ...termForm, 
       category: termForm.category.toUpperCase() 
     };
-    const res = await fetch(isEdit ? `/api/terms/${editTerm!.id}` : '/api/terms/create',
+    const res = await fetch(isEdit ? `/api/terms/${editTerm!.id}` : '/api/terms',
       { method: isEdit ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(body) });
     if (res.ok) { setShowTermModal(false); fetchContent(); }
     else alert('Failed to save term');
@@ -239,7 +239,7 @@ export function ContentTab() {
     setExpandedRQId(null); // Close other panels
     setLessonDetail(null);
     setLoadingQuestions(true);
-    const res = await fetch(`/api/lessons/questions/${lessonId}`);
+    const res = await fetch(`/api/lessons/${lessonId}/questions`);
     if (res.ok) setLessonDetail(await res.json());
     else alert('Failed to load questions');
     setLoadingQuestions(false);
@@ -257,7 +257,7 @@ export function ContentTab() {
 
   const refreshQuestions = async () => {
     if (expandedLessonId) {
-      const res = await fetch(`/api/lessons/questions/${expandedLessonId}`);
+      const res = await fetch(`/api/lessons/${expandedLessonId}/questions`);
       if (res.ok) setLessonDetail(await res.json());
     } else if (expandedRQId) {
       const rqr = await fetch('/api/quiz/revision');

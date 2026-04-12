@@ -22,7 +22,7 @@ public class WardrobeController {
         this.userService = userService;
     }
 
-    @PostMapping("/equip/{id}")
+    @PostMapping("/equipped-items/{id}")
     public ResponseEntity<?> equipItem(@PathVariable Long id) {
         User user = userService.getCurrentUserReadOnly();
         try {
@@ -33,7 +33,7 @@ public class WardrobeController {
         }
     }
 
-    @DeleteMapping("/unequip/{slot}")
+    @DeleteMapping("/equipped-slots/{slot}")
     public ResponseEntity<?> unequipSlot(@PathVariable String slot) {
         User user = userService.getCurrentUserReadOnly();
         try {

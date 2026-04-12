@@ -68,24 +68,24 @@ class ShopControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("POST /api/shop/buy/{id}: success")
+    @DisplayName("POST /api/shop/purchases/{id}: success")
     void buyItem_success() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.buyItem(eq(user), eq(1L))).thenReturn(new ShopDTO.EquipResponse(1L, null));
 
-        mockMvc.perform(post("/api/shop/buy/1"))
+        mockMvc.perform(post("/api/shop/purchases/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.equippedOutfitId").value(1));
     }
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("POST /api/shop/buy/{id}: returns 400 on error")
+    @DisplayName("POST /api/shop/purchases/{id}: returns 400 on error")
     void buyItem_fail_returns400() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.buyItem(eq(user), anyLong())).thenThrow(new IllegalArgumentException("Insufficient coins"));
 
-        mockMvc.perform(post("/api/shop/buy/1"))
+        mockMvc.perform(post("/api/shop/purchases/1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Insufficient coins"));
     }

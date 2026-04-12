@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { FileText, ChevronDown, ChevronUp, Check, X, AlertCircle, CheckCircle, Trash2, RefreshCcw } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle, ChevronDown, ChevronUp, FileText, RefreshCcw, Trash2, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import type { Draft } from '../contributor/types';
-import { authHeaders } from './utils';
 import { ConfirmModal } from './ConfirmModal';
+import { authHeaders } from './utils';
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   INTRO:     { label: 'Intro',     color: 'bg-blue-100 text-blue-700' },
@@ -69,7 +69,7 @@ export function SubmissionsTab() {
     setActionLoading(id);
     setError('');
     try {
-      const res = await fetch(`/api/drafts/${id}/approve`, { method: 'POST', headers: authHeaders() });
+      const res = await fetch(`/api/drafts/${id}/approvals`, { method: 'POST', headers: authHeaders() });
       if (!res.ok) throw new Error(await res.text());
       const draft = drafts.find(d => d.id === id);
       if (draft) {
@@ -89,7 +89,7 @@ export function SubmissionsTab() {
     setActionLoading(id);
     setError('');
     try {
-      const res = await fetch(`/api/drafts/${id}/reject`, {
+      const res = await fetch(`/api/drafts/${id}/rejections`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ rejectionReason: rejectReason }),

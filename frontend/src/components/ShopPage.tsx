@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { Coins } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import Avatar from './avatar/Avatar';
 
 interface ShopItem {
@@ -46,7 +46,7 @@ export default function ShopPage({ authToken, coins, onCoinsUpdate, onEquip, fac
   const handleBuy = async (item: ShopItem) => {
     if (!authToken) return;
     setError(null);
-    const res = await fetch(`/api/shop/buy/${item.id}`, {
+    const res = await fetch(`/api/shop/purchases/${item.id}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${authToken}` },
     });
@@ -63,7 +63,7 @@ export default function ShopPage({ authToken, coins, onCoinsUpdate, onEquip, fac
 
   const handleEquip = async (item: ShopItem) => {
     if (!authToken) return;
-    const res = await fetch(`/api/wardrobe/equip/${item.id}`, {
+    const res = await fetch(`/api/wardrobe/equipped-items/${item.id}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${authToken}` },
     });

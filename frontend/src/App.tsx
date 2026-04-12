@@ -130,7 +130,7 @@ export default function App() {
     if (authToken) {
       // Ping backend to keep session tracker online
       const pingServer = () => {
-        fetch('/api/auth/ping', {
+        fetch('/api/session-checks', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${authToken}` }
         }).catch(() => { });
@@ -140,7 +140,7 @@ export default function App() {
 
 
       // Hydrate profile data from server
-      fetch('/api/auth/me', {
+      fetch('/api/users/me', {
         headers: { 'Authorization': `Bearer ${authToken}` }
       })
         .then(r => r.json())
@@ -296,7 +296,7 @@ export default function App() {
     const fetchAll = async () => {
       try {
         const [lessonsRes, revisionRes] = await Promise.all([
-          fetch('/api/lessons/'),
+          fetch('/api/lessons'),
           fetch('/api/quiz/revision')
         ]);
 
@@ -496,7 +496,7 @@ export default function App() {
 
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('/api/auth/coins', {
+      fetch('/api/user-coins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -548,7 +548,7 @@ export default function App() {
 
       const token = localStorage.getItem('token');
       if (token) {
-        fetch('/api/auth/coins', {
+        fetch('/api/user-coins', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ 
@@ -631,7 +631,7 @@ export default function App() {
             setCoins(newCoins);
             localStorage.setItem('coins', newCoins.toString());
             
-            fetch('/api/auth/coins', {
+            fetch('/api/user-coins', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify({
@@ -651,7 +651,7 @@ export default function App() {
             })
             .catch(err => console.error('Failed to save coins:', err));
         } else if (passed) {
-          fetch('/api/auth/lesson-progress', {
+          fetch('/api/lesson-progress-updates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ maxUnlockedLessonIndex: payloadIndex }),
@@ -687,7 +687,7 @@ export default function App() {
   const completeOnboarding = () => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('/api/auth/onboarding-complete', {
+      fetch('/api/users/me/onboarding', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
