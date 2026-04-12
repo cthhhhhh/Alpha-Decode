@@ -39,7 +39,7 @@ class QuizControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
-    @MockBean private QuizRepository quizRepository;
+    @MockBean private QuizService quizService;
     @MockBean private UserService userService;
 
     // Security dependencies
@@ -52,15 +52,12 @@ class QuizControllerTest {
     void getDailyQuiz_notCompleted_returnsQuestions() throws Exception {
         User mockUser = new User();
         mockUser.setDailyQuizLastDate(LocalDate.now().minusDays(1)); // Not today
-        when(userService.getCurrentUser()).thenReturn(mockUser);
+        when(userService.getCurrentUserReadOnly()).thenReturn(mockUser);
 
-        DailyQuiz dQuiz = new DailyQuiz();
         Question q1 = new com.csd.cs203t1.question.SelectQuestion(); q1.setId(1L);
         Question q2 = new com.csd.cs203t1.question.SelectQuestion(); q2.setId(2L);
         Question q3 = new com.csd.cs203t1.question.SelectQuestion(); q3.setId(3L);
-        dQuiz.setQuestions(List.of(q1, q2, q3));
-
-        when(quizRepository.findAll()).thenReturn(List.of(dQuiz));
+        when(quizService.getDailyQuizQuestions()).thenReturn(List.of(q1, q2, q3));
 
         mockMvc.perform(get("/api/quiz/daily"))
                .andExpect(status().isOk())
@@ -72,7 +69,7 @@ class QuizControllerTest {
     void getDailyQuiz_alreadyCompleted_returns409() throws Exception {
         User mockUser = new User();
         mockUser.setDailyQuizLastDate(LocalDate.now()); // Already completed today!
-        when(userService.getCurrentUser()).thenReturn(mockUser);
+        when(userService.getCurrentUserReadOnly()).thenReturn(mockUser);
 
         mockMvc.perform(get("/api/quiz/daily"))
                .andExpect(status().isConflict());
@@ -80,7 +77,7 @@ class QuizControllerTest {
 
     @Test
     void getDailyQuiz_unauthenticated_returns401() throws Exception {
-        when(userService.getCurrentUser()).thenThrow(new RuntimeException("No user"));
+        when(userService.getCurrentUserReadOnly()).thenThrow(new RuntimeException("No user"));
 
         mockMvc.perform(get("/api/quiz/daily"))
                .andExpect(status().isUnauthorized());
@@ -88,11 +85,8 @@ class QuizControllerTest {
 
     @Test
     void getOnboardingQuiz_valid_returnsQuiz() throws Exception {
-        OnboardingQuiz oQuiz = new OnboardingQuiz();
         Question q1 = new com.csd.cs203t1.question.SelectQuestion(); q1.setId(10L);
-        oQuiz.setQuestions(List.of(q1));
-
-        when(quizRepository.findAll()).thenReturn(List.of(oQuiz));
+        when(quizService.getOnboardingQuizQuestions()).thenReturn(List.of(q1));
 
         mockMvc.perform(get("/api/quiz/onboarding"))
                .andExpect(status().isOk())
@@ -101,14 +95,13 @@ class QuizControllerTest {
 
     @Test
     void getRevisionQuizzes_returnsShuffledList() throws Exception {
-        RevisionQuiz rq = new RevisionQuiz();
-        rq.setId(99L);
-        rq.setAfterLessonIndex(2);
         Question q1 = new com.csd.cs203t1.question.SelectQuestion(); q1.setId(30L);
         Question q2 = new com.csd.cs203t1.question.SelectQuestion(); q2.setId(31L);
-        rq.setQuestions(List.of(q1, q2));
-
-        when(quizRepository.findAll()).thenReturn(List.of(rq));
+        when(quizService.getRevisionQuizzes()).thenReturn(List.of(java.util.Map.of(
+            "id", 99L,
+            "afterLessonIndex", 2,
+            "questions", List.of(q1, q2)
+        )));
 
         mockMvc.perform(get("/api/quiz/revision"))
                .andExpect(status().isOk())
@@ -123,7 +116,7 @@ class QuizControllerTest {
         RevisionQuiz rq = new RevisionQuiz();
         rq.setAfterLessonIndex(3);
 
-        when(quizRepository.save(any(RevisionQuiz.class))).thenReturn(rq);
+        when(quizService.createRevisionQuiz(any(RevisionQuiz.class))).thenReturn(rq);
 
         mockMvc.perform(post("/api/quiz/revision").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -146,15 +139,9 @@ class QuizControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void updateRevisionQuiz_asAdmin_returnsOk() throws Exception {
-        RevisionQuiz rq = new RevisionQuiz();
-        rq.setId(1L);
-        rq.setAfterLessonIndex(1);
-
-        when(quizRepository.findById(1L)).thenReturn(Optional.of(rq));
-        
         RevisionQuiz updatedRq = new RevisionQuiz();
         updatedRq.setAfterLessonIndex(5);
-        when(quizRepository.save(any(RevisionQuiz.class))).thenReturn(updatedRq);
+        when(quizService.updateRevisionQuiz(any(Long.class), any(RevisionQuiz.class))).thenReturn(Optional.of(updatedRq));
 
         mockMvc.perform(put("/api/quiz/revision/1").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -165,7 +152,7 @@ class QuizControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteRevisionQuiz_asAdmin_returnsNoContent() throws Exception {
-        when(quizRepository.existsById(1L)).thenReturn(true);
+        when(quizService.revisionQuizExists(1L)).thenReturn(true);
 
         mockMvc.perform(delete("/api/quiz/revision/1").with(csrf()))
                .andExpect(status().isNoContent());

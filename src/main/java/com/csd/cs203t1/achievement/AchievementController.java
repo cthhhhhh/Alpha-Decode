@@ -1,11 +1,14 @@
 package com.csd.cs203t1.achievement;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.csd.cs203t1.user.User;
 import com.csd.cs203t1.user.UserService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/achievements")
@@ -27,7 +30,7 @@ public class AchievementController {
     @GetMapping("/me")
     public ResponseEntity<?> getMyAchievements() {
         try {
-            User user = userService.getCurrentUser();
+            User user = userService.getCurrentUserReadOnly();
             return ResponseEntity.ok(achievementService.getUserAchievements(user));
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Not authenticated");

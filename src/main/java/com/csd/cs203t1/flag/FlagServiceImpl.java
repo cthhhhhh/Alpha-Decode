@@ -1,11 +1,13 @@
 package com.csd.cs203t1.flag;
 
-import com.csd.cs203t1.user.User;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.csd.cs203t1.user.User;
 
 @Service
 public class FlagServiceImpl implements FlagService {
@@ -75,6 +77,13 @@ public class FlagServiceImpl implements FlagService {
             throw new IllegalArgumentException("Invalid content type: " + contentType);
         }
         return flagRepository.findByReportedByAndContentTypeAndContentId(user, ct, contentId).isPresent();
+    }
+
+    @Override
+    public List<String> getFlagReasons() {
+        return Arrays.stream(FlagReason.values())
+                .map(FlagReason::name)
+                .toList();
     }
 
     @Override

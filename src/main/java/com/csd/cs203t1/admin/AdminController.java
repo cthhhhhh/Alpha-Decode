@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserRepository;
 import com.csd.cs203t1.user.UserService;
 
 @RestController
@@ -23,48 +21,28 @@ import com.csd.cs203t1.user.UserService;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    private final UserRepository userRepository;
-    private final SessionTracker sessionTracker;
+    private final AdminService adminService;
     private final UserService userService;
 
-    public AdminController(UserRepository userRepository, SessionTracker sessionTracker, UserService userService) {
-        this.userRepository = userRepository;
-        this.sessionTracker = sessionTracker;
+    public AdminController(AdminService adminService, UserService userService) {
+        this.adminService = adminService;
         this.userService = userService;
     }
 
     @GetMapping("/stats")
     public ResponseEntity<?> getAdminStats() {
-        long totalUsers = userRepository.countByRole(Role.USER);
-        long contributors = userRepository.countByRole(Role.CONTRIBUTOR);
-        return ResponseEntity.ok(Map.of(
-            "totalUsers", totalUsers,
-            "contributors", contributors,
-            "activeSessions", sessionTracker.getActiveCount(),
-            "systemHealth", "Excellent",
-            "message", "Welcome to the Admin Dashboard!"
-        ));
+        return ResponseEntity.ok(adminService.getAdminStats());
     }
 
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok(userRepository.findAll().stream().map(user -> Map.of(
-            "id", user.getId(),
-            "username", user.getUsername(),
-            "email", user.getEmail(),
-            "role", user.getRole().name(),
-            "level", user.getLevel(),
-            "coins", user.getCoins(),
-            "enabled", (Object) user.isEnabled(),
-            "pendingApproval", (Object) user.isPendingApproval(),
-            "isOnline", (Object) sessionTracker.isOnline(user.getUsername())
-        )).toList());
+        return ResponseEntity.ok(adminService.getAllUsers());
     }
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
-            User currentUser = userService.getCurrentUser();
+            User currentUser = userService.getCurrentUserReadOnly();
             if (currentUser.getId().equals(id)) {
                 return ResponseEntity.badRequest().body("You cannot delete yourself");
             }
@@ -80,21 +58,14 @@ public class AdminController {
     @PatchMapping("/users/{id}/role")
     public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         if (id == null) return ResponseEntity.badRequest().build();
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         String newRoleStr = payload.get("role");
-        if (newRoleStr != null) {
-            user.setRole(Role.valueOf(newRoleStr.toUpperCase()));
-            if (user.getRole() != Role.CONTRIBUTOR) {
-                user.setPendingApproval(false);
-            }
-            userRepository.save(user);
-        }
+        adminService.updateUserRole(id, newRoleStr);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/users/{id}/ban")
     public ResponseEntity<?> banUser(@PathVariable Long id) {
-        User currentUser = userService.getCurrentUser();
+        User currentUser = userService.getCurrentUserReadOnly();
         if (currentUser.getId().equals(id)) {
             return ResponseEntity.badRequest().body(Map.of("error", "You cannot ban yourself"));
         }
@@ -110,26 +81,22 @@ public class AdminController {
 
     @PostMapping("/users/{id}/approve-contributor")
     public ResponseEntity<?> approveContributor(@PathVariable Long id) {
-        User user = userRepository.findById(id).orElseThrow();
-        if (!user.isPendingApproval()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "User is not pending approval"));
+        try {
+            adminService.approveContributor(id);
+            return ResponseEntity.ok(Map.of("message", "User approved as contributor"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-        user.setRole(Role.CONTRIBUTOR);
-        user.setPendingApproval(false);
-        user.setEnabled(true);
-        userRepository.save(user);
-        return ResponseEntity.ok(Map.of("message", "User approved as contributor"));
     }
 
     @PostMapping("/users/{id}/reject-contributor")
     public ResponseEntity<?> rejectContributor(@PathVariable Long id) {
-        User user = userRepository.findById(id).orElseThrow();
-        if (!user.isPendingApproval()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "User is not pending approval"));
+        try {
+            adminService.rejectContributor(id);
+            return ResponseEntity.ok(Map.of("message", "Contributor request rejected"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-        user.setPendingApproval(false);
-        userRepository.save(user);
-        return ResponseEntity.ok(Map.of("message", "Contributor request rejected"));
     }
 
     @PostMapping("/users/{id}/reset")
@@ -140,27 +107,11 @@ public class AdminController {
 
     @GetMapping("/contributors/pending")
     public ResponseEntity<?> getPendingContributors() {
-        return ResponseEntity.ok(userRepository.findByRoleAndPendingApprovalTrue(Role.CONTRIBUTOR)
-                .stream().map(user -> Map.of(
-                        "id", user.getId(),
-                        "username", user.getUsername(),
-                        "email", user.getEmail(),
-                        "role", user.getRole().name(),
-                "enabled", (Object) user.isEnabled(),
-                "pendingApproval", (Object) user.isPendingApproval()
-                )).toList());
+        return ResponseEntity.ok(adminService.getPendingContributors());
     }
 
     @GetMapping("/users/{id}/stats")
     public ResponseEntity<?> getUserStats(@PathVariable Long id) {
-        User user = userRepository.findById(id).orElseThrow();
-        return ResponseEntity.ok(Map.of(
-            "coins", user.getCoins(),
-            "level", user.getLevel(),
-            "streak", user.getStreak(),
-            "lessonsCompleted", user.getMaxUnlockedLessonIndex(),
-            "dailyQuizzesTaken", user.getDailyQuizCount(),
-            "lastActive", user.getDailyQuizLastDate() != null ? user.getDailyQuizLastDate().toString() : "Never"
-        ));
+        return ResponseEntity.ok(adminService.getUserStats(id));
     }
 }

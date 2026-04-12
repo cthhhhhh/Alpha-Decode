@@ -1,10 +1,7 @@
 package com.csd.cs203t1.quiz;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +23,11 @@ import com.csd.cs203t1.user.UserService;
 @RequestMapping("/api/quiz")
 public class QuizController {
 
-    private final QuizRepository quizRepository;
+    private final QuizService quizService;
     private final UserService userService;
 
-    public QuizController(QuizRepository quizRepository, UserService userService) {
-        this.quizRepository = quizRepository;
+    public QuizController(QuizService quizService, UserService userService) {
+        this.quizService = quizService;
         this.userService = userService;
     }
 
@@ -42,99 +39,49 @@ public class QuizController {
     @GetMapping("/daily")
     public ResponseEntity<?> getDailyQuiz() {
         try {
-            User user = userService.getCurrentUser();
+            User user = userService.getCurrentUserReadOnly();
             if (user.getDailyQuizLastDate() != null && user.getDailyQuizLastDate().equals(LocalDate.now())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Daily quiz already completed today");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
         }
-
-        List<Question> bank = quizRepository.findAll().stream()
-                .filter(q -> q instanceof DailyQuiz)
-                .findFirst()
-                .map(Quiz::getQuestions)
-                .orElse(null);
-        if (bank == null || bank.size() < 3) {
+        List<Question> questions = quizService.getDailyQuizQuestions();
+        if (questions == null || questions.size() < 3) {
             return ResponseEntity.notFound().build();
         }
-        List<Question> copy = new ArrayList<>(bank);
-        long seed = LocalDate.now().toEpochDay();
-        ThreadLocalRandom rng = ThreadLocalRandom.current();
-        // Deterministic shuffle-by-day: simple seeded swap for first k positions.
-        int k = Math.min(3, copy.size());
-        for (int i = 0; i < k; i++) {
-            int j = (int) ((seed + i * 31) % copy.size());
-            Question tmp = copy.get(i);
-            copy.set(i, copy.get(j));
-            copy.set(j, tmp);
-        }
-        return ResponseEntity.ok(copy.subList(0, 3));
+        return ResponseEntity.ok(questions);
     }
 
     /** Returns the OnboardingQuiz questions */
     @GetMapping("/onboarding")
     public ResponseEntity<?> getOnboardingQuiz() {
-        return quizRepository.findAll().stream()
-                .filter(q -> q instanceof OnboardingQuiz)
-                .findFirst()
-                .<ResponseEntity<?>>map(q -> ResponseEntity.ok(q.getQuestions()))
-                .orElse(ResponseEntity.notFound().build());
+        List<Question> questions = quizService.getOnboardingQuizQuestions();
+        if (questions == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(questions);
     }
 
     /** Returns all RevisionQuizzes with their afterLessonIndex and questions */
     @GetMapping("/revision")
     public ResponseEntity<?> getRevisionQuizzes() {
-        List<?> result = quizRepository.findAll().stream()
-                .filter(q -> q instanceof RevisionQuiz)
-                .map(q -> {
-                    RevisionQuiz rq = (RevisionQuiz) q;
-                    // Random-sample a subset each request (checkpoint quiz should feel fresh).
-                    // Keep it bounded to avoid huge payloads if the pool grows.
-                    var questions = rq.getQuestions();
-                    int sampleSize = Math.min(10, questions == null ? 0 : questions.size());
-                    List<?> sampled;
-                    if (questions == null || questions.isEmpty() || sampleSize == questions.size()) {
-                        sampled = questions;
-                    } else {
-                        List<Object> copy = new ArrayList<>(questions);
-                        // Fisher–Yates shuffle for first k positions
-                        for (int i = 0; i < sampleSize; i++) {
-                            int j = ThreadLocalRandom.current().nextInt(i, copy.size());
-                            Object tmp = copy.get(i);
-                            copy.set(i, copy.get(j));
-                            copy.set(j, tmp);
-                        }
-                        sampled = copy.subList(0, sampleSize);
-                    }
-                    return Map.of(
-                        "id", rq.getId(),
-                        "afterLessonIndex", rq.getAfterLessonIndex(),
-                        "questions", sampled
-                    );
-                })
-                .toList();
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(quizService.getRevisionQuizzes());
     }
 
     /** Creates a new RevisionQuiz */
     @PostMapping("/revision")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RevisionQuiz> createRevisionQuiz(@RequestBody RevisionQuiz revisionQuiz) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(quizRepository.save(revisionQuiz));
+        return ResponseEntity.status(HttpStatus.CREATED).body(quizService.createRevisionQuiz(revisionQuiz));
     }
 
     /** Updates an existing RevisionQuiz */
     @PutMapping("/revision/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RevisionQuiz> updateRevisionQuiz(@PathVariable Long id, @RequestBody RevisionQuiz details) {
-        return quizRepository.findById(id)
-                .filter(q -> q instanceof RevisionQuiz)
-                .map(q -> {
-                    RevisionQuiz rq = (RevisionQuiz) q;
-                    rq.setAfterLessonIndex(details.getAfterLessonIndex());
-                    return ResponseEntity.ok(quizRepository.save(rq));
-                })
+        return quizService.updateRevisionQuiz(id, details)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -142,10 +89,10 @@ public class QuizController {
     @DeleteMapping("/revision/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRevisionQuiz(@PathVariable Long id) {
-        if (!quizRepository.existsById(id)) {
+        if (!quizService.revisionQuizExists(id)) {
             return ResponseEntity.notFound().build();
         }
-        quizRepository.deleteById(id);
+        quizService.deleteRevisionQuiz(id);
         return ResponseEntity.noContent().build();
     }
 }

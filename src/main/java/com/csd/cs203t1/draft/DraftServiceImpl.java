@@ -1,30 +1,35 @@
 package com.csd.cs203t1.draft;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.csd.cs203t1.lesson.Lesson;
 import com.csd.cs203t1.lesson.LessonDTO;
-import com.csd.cs203t1.lesson.LessonService;
+import com.csd.cs203t1.lesson.LessonRepository;
+import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.QuestionDTO;
+import com.csd.cs203t1.question.QuestionMapper;
+import com.csd.cs203t1.quiz.LessonQuiz;
 import com.csd.cs203t1.user.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class DraftServiceImpl implements DraftService {
 
     private final DraftRepository draftRepository;
-    private final LessonService lessonService;
+    private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
     public DraftServiceImpl(DraftRepository draftRepository,
-                            LessonService lessonService,
+                            LessonRepository lessonRepository,
                             UserRepository userRepository,
                             ObjectMapper objectMapper) {
         this.draftRepository = draftRepository;
-        this.lessonService = lessonService;
+        this.lessonRepository = lessonRepository;
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
     }
@@ -112,13 +117,33 @@ public class DraftServiceImpl implements DraftService {
             lessonDTO.setStory(draft.getStory());
             lessonDTO.setEmoji(draft.getEmoji());
             lessonDTO.setColour(draft.getColour());
-            Lesson lesson = lessonService.addLesson(lessonDTO, questions);
+            Lesson lesson = createLesson(lessonDTO, questions);
             draft.setApprovedLessonId(lesson.getId());
             draft.setStatus(DraftStatus.APPROVED);
             return toResponse(draftRepository.save(draft));
         } catch (Exception e) {
             throw new RuntimeException("Failed to create lesson from draft: " + e.getMessage(), e);
         }
+    }
+
+    private Lesson createLesson(LessonDTO lessonDTO, List<QuestionDTO> questionDTOs) {
+        Lesson lesson = Lesson.builder()
+                .colour(lessonDTO.getColour())
+                .story(lessonDTO.getStory())
+                .title(lessonDTO.getTitle())
+                .emoji(lessonDTO.getEmoji())
+                .build();
+
+        LessonQuiz quiz = new LessonQuiz();
+        quiz.setLesson(lesson);
+        lesson.setQuiz(quiz);
+
+        List<Question> questions = questionDTOs.stream()
+                .map(dto -> QuestionMapper.mapToEntity(dto, quiz))
+                .collect(Collectors.toList());
+        quiz.setQuestions(questions);
+
+        return lessonRepository.save(lesson);
     }
 
     @Override

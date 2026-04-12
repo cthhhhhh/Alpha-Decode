@@ -174,17 +174,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+        User user = loadCurrentUser();
         checkStreakLapse(user);
         return userRepository.save(user);
     }
 
     @Override
+    public User getCurrentUserReadOnly() {
+        return loadCurrentUser();
+    }
+
+    private User loadCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    @Override
     public UserDTO.AuthResponse getMe() {
-        User user = getCurrentUser();
+        User user = getCurrentUserReadOnly();
         return toAuthResponse(user, null, null);
     }
     @Override
@@ -313,7 +321,7 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             return false;
         }
-        return user.getEmail() != null && user.getEmail().equals(request.getEmail());
+        return user.getEmail().equals(request.getEmail());
     }
 
     @Override
