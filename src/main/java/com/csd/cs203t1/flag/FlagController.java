@@ -1,11 +1,20 @@
 package com.csd.cs203t1.flag;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.csd.cs203t1.user.User;
 import com.csd.cs203t1.user.UserService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/flags")
@@ -22,14 +31,14 @@ public class FlagController {
     /** Public — returns enum values for frontend dropdown. */
     @GetMapping("/reasons")
     public ResponseEntity<List<String>> getFlagReasons() {
-        return ResponseEntity.ok(FlagService.getFlagReasons());
+        return ResponseEntity.ok(flagService.getFlagReasons());
     }
 
     /** Authenticated user submits a flag. */
     @PostMapping
     public ResponseEntity<?> createFlag(@RequestBody FlagDTO.CreateFlagRequest request) {
         try {
-            User user = userService.getCurrentUser();
+            User user = userService.getCurrentUserReadOnly();
             if (user == null) return ResponseEntity.status(401).body("Session expired. Please log in again.");
             
             FlagDTO.FlagResponse response = flagService.createFlag(request, user);
@@ -65,7 +74,7 @@ public class FlagController {
 
     /** Admin — delete individual flag. */
     @DeleteMapping("/{id}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteFlag(@PathVariable Long id) {
         flagService.deleteFlag(id);
         return ResponseEntity.noContent().build();
@@ -73,7 +82,7 @@ public class FlagController {
 
     /** Admin — delete all resolved flags. */
     @DeleteMapping("/resolved")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteResolvedFlags() {
         flagService.deleteResolvedFlags();
         return ResponseEntity.noContent().build();

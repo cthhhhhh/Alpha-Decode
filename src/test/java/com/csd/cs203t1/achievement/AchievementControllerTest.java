@@ -1,27 +1,30 @@
 package com.csd.cs203t1.achievement;
 
-import com.csd.cs203t1.security.CustomUserDetailsService;
-import com.csd.cs203t1.security.JwtFilter;
-import com.csd.cs203t1.security.JwtUtil;
-import com.csd.cs203t1.security.SecurityConfig;
-import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserService;
-import com.csd.cs203t1.admin.SessionTracker;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Collections;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.csd.cs203t1.admin.SessionTracker;
+import com.csd.cs203t1.security.CustomUserDetailsService;
+import com.csd.cs203t1.security.JwtFilter;
+import com.csd.cs203t1.security.JwtUtil;
+import com.csd.cs203t1.security.SecurityConfig;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserService;
 
 @WebMvcTest(AchievementController.class)
 @Import({SecurityConfig.class, JwtFilter.class})
@@ -48,10 +51,15 @@ class AchievementControllerTest {
     @Test
     @DisplayName("GET /api/achievements: success returns catalog")
     void getAllAchievements_success() throws Exception {
-        when(achievementService.getAllAchievements()).thenReturn(Collections.emptyList());
+        when(achievementService.getAllAchievements()).thenReturn(List.of(
+            new AchievementDTO.AchievementInfo(1L, "First Win", "desc", "icon", "lesson_complete", 1)
+        ));
 
         mockMvc.perform(get("/api/achievements"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].name").value("First Win"))
+            .andExpect(jsonPath("$[0].triggerType").value("lesson_complete"));
     }
 
     @Test
@@ -68,7 +76,7 @@ class AchievementControllerTest {
     @Test
     @DisplayName("GET /api/achievements/me: returns 401 when not authenticated")
     void getMyAchievements_noAuth_returns401() throws Exception {
-        when(userService.getCurrentUser()).thenThrow(new RuntimeException("Not authenticated"));
+        when(userService.getCurrentUserReadOnly()).thenThrow(new RuntimeException("Not authenticated"));
 
         mockMvc.perform(get("/api/achievements/me"))
                 .andExpect(status().isUnauthorized())

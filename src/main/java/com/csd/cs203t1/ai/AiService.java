@@ -1,5 +1,12 @@
 package com.csd.cs203t1.ai;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -8,15 +15,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Service
 public class AiService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AiService.class);
+
     @Value("${GEMINI_API_KEY}")
     private String geminiApiKey;
+
+    private Supplier<RestTemplate> restTemplateSupplier = RestTemplate::new;
+
+    // Test seam to avoid real network calls in unit tests.
+    void setRestTemplateSupplier(Supplier<RestTemplate> restTemplateSupplier) {
+        this.restTemplateSupplier = restTemplateSupplier;
+    }
 
     @SuppressWarnings("unchecked")
     public FeedbackResponse getLessonFeedback(String lessonTitle, int score, List<WrongQuestion> wrongQuestions) {
@@ -47,7 +59,7 @@ public class AiService {
         String prompt = promptBuilder.toString();
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = restTemplateSupplier.get();
             String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
 
             HttpHeaders headers = new HttpHeaders();
@@ -101,7 +113,7 @@ public class AiService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.debug("Failed to fetch AI feedback; returning fallback response", e);
         }
         
         return new FeedbackResponse("Great job completing the lesson! Your score was " + score + "%.", "Example: Keep practicing and you will master this topic!", null);

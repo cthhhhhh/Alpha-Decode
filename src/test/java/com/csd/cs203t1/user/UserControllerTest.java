@@ -1,25 +1,30 @@
 package com.csd.cs203t1.user;
 
-import com.csd.cs203t1.common.Role;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.springframework.context.annotation.Import;
+import com.csd.cs203t1.common.Role;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(UserController.class)
 @Import({com.csd.cs203t1.security.SecurityConfig.class, com.csd.cs203t1.security.JwtFilter.class})
@@ -174,6 +179,46 @@ class UserControllerTest {
             .andExpect(content().string("Username is already taken"));
     }
 
+    // ─── POST /api/auth/register-admin (security rule) ─────────────────────────
+
+    @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("POST /register-admin: USER role is forbidden")
+    void registerAdmin_asUser_returns403() throws Exception {
+        UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
+        req.setUsername("admincandidate");
+        req.setEmail("admin@example.com");
+        req.setPassword("password123");
+
+        mockMvc.perform(post("/api/auth/register-admin")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isForbidden());
+
+        verify(userService, never()).registerAdmin(any(UserDTO.RegisterRequest.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /register-admin: ADMIN role can access")
+    void registerAdmin_asAdmin_returns200() throws Exception {
+        UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
+        req.setUsername("newadmin");
+        req.setEmail("newadmin@example.com");
+        req.setPassword("password123");
+
+        when(userService.registerAdmin(any(UserDTO.RegisterRequest.class)))
+            .thenReturn(sampleAuthResponse);
+
+        mockMvc.perform(post("/api/auth/register-admin")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
     // ─── GET /api/auth/me ────────────────────────────────────────────────────────
 
     @Test
@@ -197,6 +242,7 @@ class UserControllerTest {
             .andExpect(status().isUnauthorized())
             .andExpect(content().string("Not authenticated"));
     }
+
 
     // ─── POST /api/auth/verify-user ──────────────────────────────────────────────
 
@@ -290,12 +336,21 @@ class UserControllerTest {
             .andExpect(content().string("Coins to add must be non-negative"));
     }
 
-    // ─── POST /api/auth/ping ──────────────────────────────────────────────────────
-
     @Test
-    @DisplayName("POST /ping: always returns 200")
-    void ping_returnsOk() throws Exception {
-        mockMvc.perform(post("/api/auth/ping").with(csrf()))
-            .andExpect(status().isOk());
+    @WithMockUser
+    @DisplayName("POST /coins: authenticated positive request returns 200")
+    void addCoins_authenticatedPositive_returns200() throws Exception {
+        UserDTO.CoinUpdateRequest req = new UserDTO.CoinUpdateRequest();
+        req.setCoinsToAdd(10);
+
+        when(userService.updateCoins(any(UserDTO.CoinUpdateRequest.class)))
+            .thenReturn(sampleAuthResponse);
+
+        mockMvc.perform(post("/api/auth/coins")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value("mock-token"));
     }
 }

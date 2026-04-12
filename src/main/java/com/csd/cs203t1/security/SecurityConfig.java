@@ -55,7 +55,12 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.DELETE, "/api/auth/me")).authenticated()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/**")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/register-admin")).hasRole("ADMIN")
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/register")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/register-contributor")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/verify-user")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/reset-password")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/lessons/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/terms/**")).permitAll()
                         // Let the controller return 401/409 with clearer messages.

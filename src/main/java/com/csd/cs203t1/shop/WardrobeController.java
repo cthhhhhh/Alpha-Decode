@@ -1,28 +1,30 @@
 package com.csd.cs203t1.shop;
 
-import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Principal;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserService;
 
 @RestController
 @RequestMapping("/api/wardrobe")
 public class WardrobeController {
 
     private final ShopService shopService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public WardrobeController(ShopService shopService, UserRepository userRepository) {
+    public WardrobeController(ShopService shopService, UserService userService) {
         this.shopService = shopService;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @PostMapping("/equip/{id}")
-    public ResponseEntity<?> equipItem(@PathVariable Long id, Principal principal) {
-        User user = userRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public ResponseEntity<?> equipItem(@PathVariable Long id) {
+        User user = userService.getCurrentUserReadOnly();
         try {
             ShopDTO.EquipResponse response = shopService.equipItem(user, id);
             return ResponseEntity.ok(response);
@@ -32,9 +34,8 @@ public class WardrobeController {
     }
 
     @DeleteMapping("/unequip/{slot}")
-    public ResponseEntity<?> unequipSlot(@PathVariable String slot, Principal principal) {
-        User user = userRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public ResponseEntity<?> unequipSlot(@PathVariable String slot) {
+        User user = userService.getCurrentUserReadOnly();
         try {
             ShopDTO.EquipResponse response = shopService.unequipSlot(user, slot);
             return ResponseEntity.ok(response);

@@ -6,6 +6,7 @@ public interface UserService {
     void registerContributor(UserDTO.RegisterRequest request);
     UserDTO.AuthResponse login(UserDTO.LoginRequest request);
     User getCurrentUser();
+    User getCurrentUserReadOnly();
     UserDTO.AuthResponse getMe();
     UserDTO.AuthResponse updateCoins(UserDTO.CoinUpdateRequest request);
     UserDTO.AuthResponse updateLessonProgress(int maxUnlockedLessonIndex);

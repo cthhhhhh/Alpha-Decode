@@ -1,17 +1,15 @@
 package com.csd.cs203t1.quiz;
-import java.time.LocalDate;
 
 import com.csd.cs203t1.lesson.Lesson;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.DiscriminatorValue;
-
-
-
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

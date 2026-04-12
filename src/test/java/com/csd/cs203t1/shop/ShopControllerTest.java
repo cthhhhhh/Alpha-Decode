@@ -1,28 +1,32 @@
 package com.csd.cs203t1.shop;
 
-import com.csd.cs203t1.security.CustomUserDetailsService;
-import com.csd.cs203t1.security.JwtFilter;
-import com.csd.cs203t1.security.JwtUtil;
-import com.csd.cs203t1.security.SecurityConfig;
-import com.csd.cs203t1.user.User;
-import com.csd.cs203t1.user.UserRepository;
-import com.csd.cs203t1.admin.SessionTracker;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Collections;
-import java.util.Optional;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.csd.cs203t1.admin.SessionTracker;
+import com.csd.cs203t1.security.CustomUserDetailsService;
+import com.csd.cs203t1.security.JwtFilter;
+import com.csd.cs203t1.security.JwtUtil;
+import com.csd.cs203t1.security.SecurityConfig;
+import com.csd.cs203t1.user.User;
+import com.csd.cs203t1.user.UserService;
 
 @WebMvcTest(ShopController.class)
 @Import({SecurityConfig.class, JwtFilter.class})
@@ -32,7 +36,7 @@ class ShopControllerTest {
     @Autowired private MockMvc mockMvc;
 
     @MockBean private ShopService shopService;
-    @MockBean private UserRepository userRepository;
+    @MockBean private UserService userService;
     @MockBean private SessionTracker sessionTracker; // Needed by JwtFilter
     @MockBean private JwtUtil jwtUtil;
     @MockBean private CustomUserDetailsService userDetailsService;
@@ -50,18 +54,23 @@ class ShopControllerTest {
     @WithMockUser(username = "testuser")
     @DisplayName("GET /api/shop: success returns item list")
     void getShopItems_success() throws Exception {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-        when(shopService.getShopItems(user)).thenReturn(Collections.emptyList());
+        when(userService.getCurrentUserReadOnly()).thenReturn(user);
+        when(shopService.getShopItems(user)).thenReturn(List.of(
+            new ShopDTO.ShopItemDTO(1L, "Starter Hoodie", "hoodie_1", "OUTFIT", 50, "owned")
+        ));
 
         mockMvc.perform(get("/api/shop"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].name").value("Starter Hoodie"))
+            .andExpect(jsonPath("$[0].status").value("owned"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     @DisplayName("POST /api/shop/buy/{id}: success")
     void buyItem_success() throws Exception {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.buyItem(eq(user), eq(1L))).thenReturn(new ShopDTO.EquipResponse(1L, null));
 
         mockMvc.perform(post("/api/shop/buy/1"))
@@ -73,7 +82,7 @@ class ShopControllerTest {
     @WithMockUser(username = "testuser")
     @DisplayName("POST /api/shop/buy/{id}: returns 400 on error")
     void buyItem_fail_returns400() throws Exception {
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+        when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.buyItem(eq(user), anyLong())).thenThrow(new IllegalArgumentException("Insufficient coins"));
 
         mockMvc.perform(post("/api/shop/buy/1"))

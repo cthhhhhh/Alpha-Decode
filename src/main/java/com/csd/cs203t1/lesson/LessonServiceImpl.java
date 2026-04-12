@@ -4,29 +4,22 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.csd.cs203t1.draft.DraftRepository;
-import com.csd.cs203t1.draft.DraftStatus;
+import com.csd.cs203t1.draft.DraftService;
 import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.QuestionDTO;
 import com.csd.cs203t1.question.QuestionMapper;
-import com.csd.cs203t1.question.QuestionRepository;
 import com.csd.cs203t1.quiz.LessonQuiz;
-import com.csd.cs203t1.quiz.QuizRepository;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class LessonServiceImpl implements LessonService {
 	final LessonRepository lessons;
-	final QuestionRepository questions;
-	final QuizRepository quizzes;
-	final DraftRepository draftRepository;
+	final DraftService draftService;
 
-	public LessonServiceImpl(LessonRepository lessons, QuestionRepository questions, QuizRepository quizzes, DraftRepository draftRepository){
+	public LessonServiceImpl(LessonRepository lessons, DraftService draftService){
         this.lessons = lessons;
-		this.questions = questions;
-		this.quizzes = quizzes;
-		this.draftRepository = draftRepository;
+		this.draftService = draftService;
     }
 	@Override
 	public List<Lesson> listLessons(){
@@ -63,10 +56,7 @@ public class LessonServiceImpl implements LessonService {
 		if(!lessons.existsById(id)){
 			throw new RuntimeException("Lesson not found");
 		}
-		draftRepository.findByApprovedLessonId(id).ifPresent(draft -> {
-			draft.setStatus(DraftStatus.DELETED);
-			draftRepository.save(draft);
-		});
+		draftService.handleLessonDeletion(id);
 		lessons.deleteById(id);
 	}
 

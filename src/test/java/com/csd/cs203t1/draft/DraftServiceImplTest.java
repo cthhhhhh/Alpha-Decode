@@ -1,30 +1,32 @@
 package com.csd.cs203t1.draft;
 
-import com.csd.cs203t1.lesson.Lesson;
-import com.csd.cs203t1.lesson.LessonService;
-import com.csd.cs203t1.user.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.csd.cs203t1.lesson.Lesson;
+import com.csd.cs203t1.lesson.LessonRepository;
+import com.csd.cs203t1.user.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DraftServiceImpl Unit Tests")
 class DraftServiceImplTest {
 
     @Mock private DraftRepository draftRepository;
-    @Mock private LessonService lessonService;
+    @Mock private LessonRepository lessonRepository;
     @Mock private UserRepository userRepository;
     @Spy private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -39,6 +41,9 @@ class DraftServiceImplTest {
                 .id(1L)
                 .contributorId(10L)
                 .title("Initial Title")
+                .story("Initial Story")
+                .emoji("book")
+                .colour("#123456")
                 .status(DraftStatus.DRAFT)
                 .questionsJson("[]")
                 .build();
@@ -107,14 +112,14 @@ class DraftServiceImplTest {
         
         Lesson mockLesson = new Lesson();
         mockLesson.setId(100L);
-        when(lessonService.addLesson(any(), any())).thenReturn(mockLesson);
+        when(lessonRepository.save(any(Lesson.class))).thenReturn(mockLesson);
         when(draftRepository.save(any(Draft.class))).thenAnswer(i -> i.getArgument(0));
 
         DraftDTO.DraftResponse response = draftService.approveDraft(1L);
 
         assertEquals(DraftStatus.APPROVED, response.getStatus());
         assertEquals(100L, response.getApprovedLessonId());
-        verify(lessonService).addLesson(any(), any());
+        verify(lessonRepository).save(any(Lesson.class));
     }
 
     @Test

@@ -4,12 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.csd.cs203t1.lesson.Lesson;
 import com.csd.cs203t1.lesson.LessonRepository;
 
 import jakarta.transaction.Transactional;
-
-import java.lang.RuntimeException;
 
 @Service
 public class TermServiceImpl implements TermService {
@@ -20,11 +17,12 @@ public class TermServiceImpl implements TermService {
 		this.lessons = lessons;
 	}
 
-	
+	@Override
 	public List<Term> listTerms(){
 		return terms.findAll();
 	}
 
+	@Override
 	public Term getTerm(Long id){
 		return terms.findById(id).map(term ->{
 			return term;
@@ -33,6 +31,7 @@ public class TermServiceImpl implements TermService {
 	}
 
 
+	@Override
 	@Transactional
 	public Term addTerm(Long lessonId, Term term){
 		return lessons.findById(lessonId).map(lesson -> {
@@ -48,6 +47,7 @@ public class TermServiceImpl implements TermService {
 	}
 
 
+	@Override
 	public void deleteTerm(Long id){
 		if(!terms.existsById(id)){
 			throw new RuntimeException("Term not found");
