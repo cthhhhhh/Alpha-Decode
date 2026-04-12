@@ -1,193 +1,114 @@
 # Unit Testing
 
-**Total: 118 tests across 14 files — all passing ✅ | BUILD SUCCESS**
+Current backend snapshot (April 2026):
+
+- Test files: 33
+- Executed tests: 224
+- Failures: 0
+- Errors: 0
+- Skipped: 0
+- Status: BUILD SUCCESS
+
+The figures above are taken from the latest `target/surefire-reports` XML output.
 
 ---
 
-## Prerequisites & Installation
+## Prerequisites
 
-To run these tests and generate the coverage reports on your own machine, ensure you have the following installed:
+1. Java JDK 21
+2. Apache Maven
 
-1.  **Java JDK 21**: The project is optimized for Java 21 logic.
-2.  **Apache Maven**: Used for dependency management and executing the test lifecycle.
-
-### Automatic Dependencies
-The following are automatically handled by Maven when you run `mvn clean test`:
-- **JUnit 5 / Mockito**: Core testing frameworks.
-- **Jacoco**: The coverage plugin (version 0.8.12).
-- **H2 Database**: An in-memory database used strictly for testing.
-- **Spring Security Test**: Utilities for mocking user roles.
+Dependencies (JUnit 5, Mockito, Spring Test, H2, JaCoCo) are managed by Maven.
 
 ---
 
-## 1. Test Files Overview
+## Current Test Inventory
 
-| File | Type | Tests |
-|---|---|---|
-| `user/UserServiceImplTest.java` | Unit (Mockito) | 26 |
-| `user/UserRepositoryTest.java` | Repository (DataJpaTest) | 14 |
-| `user/UserControllerTest.java` | Web Layer (WebMvcTest) | 14 |
-| `user/UserIntegrationTest.java` | Integration (SpringBootTest) | 4 |
-| `quiz/QuizRepositoryTest.java` | Repository (DataJpaTest) | 3 |
-| `quiz/QuizControllerTest.java` | Web Layer (WebMvcTest) | 9 |
-| `admin/AdminControllerTest.java` | Web Layer (WebMvcTest) | 10 |
-| `draft/DraftControllerTest.java` | Web Layer (WebMvcTest) | 8 |
-| `draft/DraftServiceImplTest.java` | Unit (Mockito) | 7 |
-| `lesson/LessonControllerTest.java` | Web Layer (WebMvcTest) | 5 |
-| `shop/ShopControllerTest.java` | Web Layer (WebMvcTest) | 6 |
-| `shop/WardrobeControllerTest.java` | Web Layer (WebMvcTest) | 4 |
-| `shop/ShopServiceImplTest.java` | Unit (Mockito) | 7 |
-| `achievement/AchievementControllerTest.java` | Web Layer (WebMvcTest) | 1 |
-
----
-
-## 2. Testing Methodology (The 3-Tier Approach)
-
-To ensure high-quality code, we divided our tests to target each layer of the backend specifically:
-
-### 1. Unit Testing with Mocking (Mockito)
-**File Examples:** `UserServiceImplTest.java`, `DraftServiceImplTest.java`, `ShopServiceImplTest.java`
-
-Each dependency (`UserRepository`, `JwtUtil`, `PasswordEncoder`) is replaced with a **Mockito mock** so that tests run entirely in-memory with no database, no network, and no Spring context. This means:
-- Tests run in **milliseconds**.
-- If a test fails, the bug is **guaranteed to be in the service logic** — not the database or network connection.
-
-> *"The service layer was tested in strict isolation using Mockito. All dependencies — such as UserRepository and JwtUtil — were replaced with mock objects. This ensures that a test failure pinpoints a bug strictly within the business logic being tested."*
-
-### 2. Boundary Value Analysis (BVA)
-**File:** `UserServiceImplTest.java` (5 dedicated BVA tests)
-
-BVA tests values at the **exact edge** of a valid input range, plus one value just inside and outside. This catches off-by-one errors.
-
-**Password length boundary** (rule: `length < 6` is invalid):
-
-| Test | Input | Expected | Boundary Position |
-|---|---|---|---|
-| `bva_resetPassword_5chars_belowBoundary_throwsException` | `"abcde"` (5 chars) | ❌ throws | **Just below** |
-| `bva_resetPassword_6chars_onBoundary_succeeds` | `"abcdef"` (6 chars) | ✅ passes | **On the boundary** |
-| `bva_resetPassword_7chars_aboveBoundary_succeeds` | `"abcdefg"` (7 chars) | ✅ passes | **Just above** |
-
-**Streak lapse boundary** (rule: resets if `lastDate` is before `today - 1 day`):
-
-| Test | Last Quiz Date | Streak Result | Boundary Position |
-|---|---|---|---|
-| `bva_streak_1DayAgo_onBoundary_streakPreserved` | yesterday | **preserved** | **On the boundary** |
-| `bva_streak_2DaysAgo_justPastBoundary_streakReset` | 2 days ago | **reset to 0** | **Just past boundary** |
-
-### 3. Integration Testing
-**File:** `UserIntegrationTest.java`
-
-Uses `@SpringBootTest` to load the **entire application** — all layers together — backed by the H2 in-memory database. Unlike unit or web layer tests, no components are mocked. This validates that the full request → controller → service → repository → database → response pipeline works.
-
-### 4. Web Layer / API Simulation (MockMvc)
-**Files:** `UserControllerTest.java`, `QuizControllerTest.java`, `AdminControllerTest.java`, etc.
-
-Uses `@WebMvcTest` + `MockMvc` to simulate HTTP requests without starting a real Tomcat server. Tests verify that:
-- Correct HTTP status codes are returned (200, 201, 400, 401, 403, 404, 409).
-- Role-based access control works (`ADMIN` vs `USER`).
-- Security configuration (`SecurityConfig`, `JwtFilter`) is correctly loaded.
+| File | Tests (`@Test`) |
+|---|---:|
+| `src/test/java/com/csd/cs203t1/achievement/AchievementControllerTest.java` | 3 |
+| `src/test/java/com/csd/cs203t1/achievement/AchievementServiceImplTest.java` | 5 |
+| `src/test/java/com/csd/cs203t1/admin/AdminControllerTest.java` | 9 |
+| `src/test/java/com/csd/cs203t1/admin/AdminServiceImplTest.java` | 7 |
+| `src/test/java/com/csd/cs203t1/ai/AiControllerTest.java` | 1 |
+| `src/test/java/com/csd/cs203t1/ai/AiServiceTest.java` | 4 |
+| `src/test/java/com/csd/cs203t1/bookmark/BookmarkControllerTest.java` | 4 |
+| `src/test/java/com/csd/cs203t1/bookmark/BookmarkServiceImplTest.java` | 4 |
+| `src/test/java/com/csd/cs203t1/draft/DraftControllerTest.java` | 6 |
+| `src/test/java/com/csd/cs203t1/draft/DraftServiceImplTest.java` | 7 |
+| `src/test/java/com/csd/cs203t1/flag/FlagControllerTest.java` | 7 |
+| `src/test/java/com/csd/cs203t1/flag/FlagServiceImplTest.java` | 5 |
+| `src/test/java/com/csd/cs203t1/lesson/LessonControllerTest.java` | 6 |
+| `src/test/java/com/csd/cs203t1/lesson/LessonServiceImplTest.java` | 10 |
+| `src/test/java/com/csd/cs203t1/question/QuestionControllerTest.java` | 4 |
+| `src/test/java/com/csd/cs203t1/question/QuestionServiceImplTest.java` | 5 |
+| `src/test/java/com/csd/cs203t1/quiz/QuizControllerTest.java` | 9 |
+| `src/test/java/com/csd/cs203t1/quiz/QuizRepositoryTest.java` | 3 |
+| `src/test/java/com/csd/cs203t1/quiz/QuizServiceImplTest.java` | 9 |
+| `src/test/java/com/csd/cs203t1/security/JwtFilterTest.java` | 2 |
+| `src/test/java/com/csd/cs203t1/security/JwtUtilTest.java` | 3 |
+| `src/test/java/com/csd/cs203t1/shop/ShopControllerTest.java` | 3 |
+| `src/test/java/com/csd/cs203t1/shop/ShopServiceImplTest.java` | 11 |
+| `src/test/java/com/csd/cs203t1/shop/WardrobeControllerTest.java` | 3 |
+| `src/test/java/com/csd/cs203t1/term/TermControllerTest.java` | 5 |
+| `src/test/java/com/csd/cs203t1/term/TermServiceImplTest.java` | 4 |
+| `src/test/java/com/csd/cs203t1/user/LeaderboardControllerTest.java` | 3 |
+| `src/test/java/com/csd/cs203t1/user/LeaderboardServiceImplTest.java` | 8 |
+| `src/test/java/com/csd/cs203t1/user/OnboardingControllerTest.java` | 1 |
+| `src/test/java/com/csd/cs203t1/user/UserControllerTest.java` | 16 |
+| `src/test/java/com/csd/cs203t1/user/UserIntegrationTest.java` | 4 |
+| `src/test/java/com/csd/cs203t1/user/UserRepositoryTest.java` | 14 |
+| `src/test/java/com/csd/cs203t1/user/UserServiceImplTest.java` | 39 |
+| **Total** | **224** |
 
 ---
 
-## 3. Branch Coverage (Jacoco) + Understanding the Report
+## Coverage Snapshot (JaCoCo)
 
-Jacoco is configured in `pom.xml` to run on every `mvn clean test`. Following the final expansion, the overall instruction coverage has reached **~50%**.
+Source: `target/site/jacoco/index.html`
 
-### How to Read the Jacoco index.html report
+- Instruction coverage: 81% (1,159 missed of 6,297)
+- Branch coverage: 64% (145 missed of 410)
+- Classes covered: 53 / 62
 
-When you open the report at `target/site/jacoco/index.html`, you see a table with one row per Java package. Here is what **every single column** means:
+### Package Coverage
 
-| Column | Course Concept | What it means |
-|---|---|---|
-| **Element** | — | The Java package name. Click it to drill down into individual classes |
-| **Missed Instructions** | Statement Coverage | How many individual Java bytecode instructions were NOT executed by any test |
-| **Cov. (Instructions)** | Statement Coverage | The % of statements that WERE executed. This is your statement coverage score |
-| **Missed Branches** | Branch Coverage | How many `if/else` decision points had at least one path (true OR false) never taken by a test |
-| **Cov. (Branches)** | Branch Coverage | The % of `if/else` branches that were fully exercised. This is your branch coverage score |
-| **Missed / Cxty** | Cyclomatic Complexity | How many independent paths exist in code that were not tested. High complexity = harder to test |
-| **Missed / Lines** | Statement Coverage | How many source code lines were not touched by any test |
-| **Missed / Methods** | — | How many methods (functions) were never called by any test |
-| **Missed / Classes** | — | How many entire classes (Java files) were never loaded during testing |
-
-### The Colour Coding Inside Individual Class Files
-
-When you click into a package → then into a class (e.g. `UserServiceImpl`), Jacoco shows you the actual source code with coloured highlighting:
-
-- 🟢 **Green line** = Statement was executed AND all branches (true/false) were taken → **Full coverage**
-- 🟡 **Yellow line (diamond)** = Statement was executed, BUT not all branches were taken. For example, an `if` was tested when `true` but never when `false` → **Partial branch coverage**
-- 🔴 **Red line** = Statement was never executed by any test at all → **No coverage**
-
-### Mapping to the Coverage Levels
-
-| Slide Concept | Jacoco Column | Our Result |
-|---|---|---|
-| **Statement Coverage** | `Cov.` (Instructions) | **~50% overall**; ~81% for Quiz module |
-| **Branch Coverage** | `Cov.` (Branches) | **~35% overall**; ~54% for Quiz module |
-| **Path Coverage** | ❌ Not measured | Not feasible — 2ⁿ combinations |
-
-> *"Statement coverage and branch coverage were automatically measured using the Jacoco Maven plugin. The generated HTML report at `target/site/jacoco/index.html` provides a colour-coded breakdown of every class, showing which lines and conditional branches were exercised by the test suite. Path coverage was not pursued, as it is computationally infeasible for real-world systems — a method with just 5 conditionals yields up to 32 unique execution paths."*
+| Package | Instruction Coverage | Branch Coverage |
+|---|---:|---:|
+| `com.csd.cs203t1.ai` | 98% | 73% |
+| `com.csd.cs203t1.achievement` | 97% | 84% |
+| `com.csd.cs203t1.shop` | 93% | 87% |
+| `com.csd.cs203t1.security` | 93% | 60% |
+| `com.csd.cs203t1.lesson` | 92% | 80% |
+| `com.csd.cs203t1.quiz` | 91% | 67% |
+| `com.csd.cs203t1.user` | 85% | 71% |
+| `com.csd.cs203t1.term` | 78% | 50% |
+| `com.csd.cs203t1.bookmark` | 68% | 100% |
+| `com.csd.cs203t1.flag` | 66% | 33% |
+| `com.csd.cs203t1.question` | 66% | 46% |
+| `com.csd.cs203t1.admin` | 65% | 34% |
+| `com.csd.cs203t1.draft` | 60% | 50% |
+| `com.csd.cs203t1` | 51% | 0% |
+| `com.csd.cs203t1.common` | 100% | n/a |
 
 ---
 
-## 4. Final Coverage Metrics (Successive Expansion)
+## How To Run
 
-The overall % is an **average across all packages**. Untested modules pull the whole figure down. Since our expansion, nearly all core modules now have coverage:
+### Run full test suite
 
-| Package | Statement Coverage | Status |
-|---|---|---|
-| `quiz` | **78%** | Fully tested |
-| `shop` | **68%** | Tested during expansion |
-| `draft` | **60%** | Tested during expansion |
-| `user` | **58%** | Fully tested |
-| `security` | **72%** | Covered indirectly via controller tests |
-| `admin` | **46%** | Tested during expansion |
-| `lesson` | **26%** | Tested during expansion |
-| **Overall** | **~50%** | **Goal Met!** |
-
----
-
-## 5. Testing Concept
-
-| Concept | ✅ Covered | Evidence |
-|---|---|---|
-| Unit Testing (Mockito) | ✅ | `UserServiceImplTest` — 26 isolated tests |
-| AAA Pattern | ✅ | Arrange/Act/Assert comments in all test files |
-| Positive Testing | ✅ | All valid-input happy-path tests |
-| Negative Testing | ✅ | Exception-throwing and error-response tests |
-| Equivalence Partitioning | ✅ | Valid/Invalid username, email, password groups |
-| Boundary Value Analysis | ✅ | 5 dedicated BVA tests with boundary tables |
-| Integration Testing | ✅ | `UserIntegrationTest` — 4 full-stack tests |
-| Repository Testing | ✅ | `UserRepositoryTest`, `QuizRepositoryTest` |
-| Web Layer / API Testing | ✅ | `UserControllerTest`, `QuizControllerTest` |
-| Security Testing | ✅ | `@WithMockUser(roles="ADMIN")` vs `"USER"` |
-| Statement Coverage | ✅ | Jacoco `Cov.` (Instructions) column |
-| Branch Coverage | ✅ | Jacoco `Cov.` (Branches) column |
-
----
-
-## 6. How to Run (Hermetic Testing)
-
-The test suite is "hermetic," meaning it runs in a 100% isolated environment. You do **not** need a `.env` file or a running database to execute these tests, as all required variables (Database URL, JWT Secret, AI Key) are automatically provided by the dummy values in `src/test/resources/application.properties`.
-
-### Standard Execution (Full Build)
-This runs the full 118-test suite. By default, it will also build the React frontend to ensure the entire project is valid.
 ```powershell
 mvn clean test
 ```
 
-### Viewing the Report
-Once the command finishes, open the interactive report in any browser:
+### Run backend tests while skipping frontend build steps
+
+Use quoted property syntax in PowerShell:
+
+```powershell
+mvn "-Dskip.frontend=true" test
+```
+
+### Open coverage report
+
 `target/site/jacoco/index.html`
-
----
-
-## 7. Accessing Coverage Evidence on GitHub
-
-The project is configured with a GitHub Actions pipeline that automatically runs all 118 tests and generates a fresh Jacoco report on every push. This provides immutable proof of testing for your lab report.
-
-### How to Retrieve the Report:
-1.  Go to the **Actions** tab of your GitHub repository.
-2.  Click on the most recent workflow run (e.g., *"Trigger auto deployment for alpha-decode"*).
-3.  Scroll down to the **Artifacts** section at the bottom of the page.
-4.  Download the **`jacoco-report`** zip file.
-5.  Extract the zip and open **`index.html`** in any browser to view the full, interactive coverage site.
