@@ -17,7 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,10 +61,10 @@ class UserControllerTest {
         );
     }
 
-    // ─── POST /api/auth/register ─────────────────────────────────────────────────
+    // ─── POST /api/users ──────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("POST /register: valid request returns 200 with auth response")
+    @DisplayName("POST /users: valid request returns 200 with auth response")
     void register_validRequest_returns200() throws Exception {
         UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
         req.setUsername("newuser");
@@ -72,7 +74,7 @@ class UserControllerTest {
         when(userService.register(any(UserDTO.RegisterRequest.class)))
             .thenReturn(sampleAuthResponse);
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/users")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -83,7 +85,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /register: duplicate username returns 400 with error message")
+    @DisplayName("POST /users: duplicate username returns 400 with error message")
     void register_duplicateUsername_returns400() throws Exception {
         UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
         req.setUsername("existing");
@@ -93,7 +95,7 @@ class UserControllerTest {
         when(userService.register(any(UserDTO.RegisterRequest.class)))
             .thenThrow(new IllegalArgumentException("Username is already taken"));
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/users")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -101,10 +103,10 @@ class UserControllerTest {
             .andExpect(content().string("Username is already taken"));
     }
 
-    // ─── POST /api/auth/login ────────────────────────────────────────────────────
+    // ─── POST /api/sessions ───────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("POST /login: valid credentials returns 200 with token")
+    @DisplayName("POST /sessions: valid credentials returns 200 with token")
     void login_validCredentials_returns200() throws Exception {
         UserDTO.LoginRequest req = new UserDTO.LoginRequest();
         req.setUsername("testuser");
@@ -113,7 +115,7 @@ class UserControllerTest {
         when(userService.login(any(UserDTO.LoginRequest.class)))
             .thenReturn(sampleAuthResponse);
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/sessions")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -122,7 +124,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /login: invalid password returns 400")
+    @DisplayName("POST /sessions: invalid password returns 400")
     void login_invalidPassword_returns400() throws Exception {
         UserDTO.LoginRequest req = new UserDTO.LoginRequest();
         req.setUsername("testuser");
@@ -131,7 +133,7 @@ class UserControllerTest {
         when(userService.login(any(UserDTO.LoginRequest.class)))
             .thenThrow(new IllegalArgumentException("Invalid username or password"));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/sessions")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -139,10 +141,10 @@ class UserControllerTest {
             .andExpect(content().string("Invalid username or password"));
     }
 
-    // ─── POST /api/auth/register-contributor ─────────────────────────────────────
+    // ─── POST /api/contributor-registrations ─────────────────────────────────────
 
     @Test
-    @DisplayName("POST /register-contributor: valid request returns 200 with message")
+    @DisplayName("POST /contributor-registrations: valid request returns 200 with message")
     void registerContributor_validRequest_returns200() throws Exception {
         UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
         req.setUsername("contrib");
@@ -151,7 +153,7 @@ class UserControllerTest {
 
         doNothing().when(userService).registerContributor(any(UserDTO.RegisterRequest.class));
 
-        mockMvc.perform(post("/api/auth/register-contributor")
+        mockMvc.perform(post("/api/contributor-registrations")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -161,7 +163,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /register-contributor: duplicate username returns 400")
+    @DisplayName("POST /contributor-registrations: duplicate username returns 400")
     void registerContributor_duplicateUsername_returns400() throws Exception {
         UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
         req.setUsername("taken");
@@ -171,7 +173,7 @@ class UserControllerTest {
         doThrow(new IllegalArgumentException("Username is already taken"))
             .when(userService).registerContributor(any(UserDTO.RegisterRequest.class));
 
-        mockMvc.perform(post("/api/auth/register-contributor")
+        mockMvc.perform(post("/api/contributor-registrations")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -179,18 +181,18 @@ class UserControllerTest {
             .andExpect(content().string("Username is already taken"));
     }
 
-    // ─── POST /api/auth/register-admin (security rule) ─────────────────────────
+    // ─── POST /api/admin/users (security rule) ──────────────────────────────────
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("POST /register-admin: USER role is forbidden")
+    @DisplayName("POST /admin/users: USER role is forbidden")
     void registerAdmin_asUser_returns403() throws Exception {
         UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
         req.setUsername("admincandidate");
         req.setEmail("admin@example.com");
         req.setPassword("password123");
 
-        mockMvc.perform(post("/api/auth/register-admin")
+        mockMvc.perform(post("/api/admin/users")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -201,7 +203,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("POST /register-admin: ADMIN role can access")
+    @DisplayName("POST /admin/users: ADMIN role can access")
     void registerAdmin_asAdmin_returns200() throws Exception {
         UserDTO.RegisterRequest req = new UserDTO.RegisterRequest();
         req.setUsername("newadmin");
@@ -211,7 +213,7 @@ class UserControllerTest {
         when(userService.registerAdmin(any(UserDTO.RegisterRequest.class)))
             .thenReturn(sampleAuthResponse);
 
-        mockMvc.perform(post("/api/auth/register-admin")
+        mockMvc.perform(post("/api/admin/users")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -219,35 +221,35 @@ class UserControllerTest {
             .andExpect(jsonPath("$.token").value("mock-token"));
     }
 
-    // ─── GET /api/auth/me ────────────────────────────────────────────────────────
+    // ─── GET /api/users/me ────────────────────────────────────────────────────────
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /me: authenticated user returns 200 with profile")
+    @DisplayName("GET /users/me: authenticated user returns 200 with profile")
     void getMe_authenticated_returns200() throws Exception {
         when(userService.getMe()).thenReturn(sampleAuthResponse);
 
-        mockMvc.perform(get("/api/auth/me"))
+        mockMvc.perform(get("/api/users/me"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.username").value("testuser"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("GET /me: service throws exception returns 401")
+    @DisplayName("GET /users/me: service throws exception returns 401")
     void getMe_serviceThrows_returns401() throws Exception {
         when(userService.getMe()).thenThrow(new RuntimeException("Not found"));
 
-        mockMvc.perform(get("/api/auth/me"))
+        mockMvc.perform(get("/api/users/me"))
             .andExpect(status().isUnauthorized())
             .andExpect(content().string("Not authenticated"));
     }
 
 
-    // ─── POST /api/auth/verify-user ──────────────────────────────────────────────
+    // ─── POST /api/password-reset-verifications ──────────────────────────────────
 
     @Test
-    @DisplayName("POST /verify-user: matching credentials returns 200")
+    @DisplayName("POST /password-reset-verifications: matching credentials returns 200")
     void verifyUser_matchingCredentials_returns200() throws Exception {
         UserDTO.VerifyUserRequest req = new UserDTO.VerifyUserRequest();
         req.setUsername("testuser");
@@ -256,7 +258,7 @@ class UserControllerTest {
         when(userService.verifyUserForReset(any(UserDTO.VerifyUserRequest.class)))
             .thenReturn(true);
 
-        mockMvc.perform(post("/api/auth/verify-user")
+        mockMvc.perform(post("/api/password-reset-verifications")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -265,7 +267,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /verify-user: wrong email returns 400")
+    @DisplayName("POST /password-reset-verifications: wrong email returns 400")
     void verifyUser_wrongEmail_returns400() throws Exception {
         UserDTO.VerifyUserRequest req = new UserDTO.VerifyUserRequest();
         req.setUsername("testuser");
@@ -274,7 +276,7 @@ class UserControllerTest {
         when(userService.verifyUserForReset(any(UserDTO.VerifyUserRequest.class)))
             .thenReturn(false);
 
-        mockMvc.perform(post("/api/auth/verify-user")
+        mockMvc.perform(post("/api/password-reset-verifications")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -282,10 +284,10 @@ class UserControllerTest {
             .andExpect(content().string("Invalid username or email"));
     }
 
-    // ─── POST /api/auth/reset-password ───────────────────────────────────────────
+    // ─── POST /api/password-resets ────────────────────────────────────────────────
 
     @Test
-    @DisplayName("POST /reset-password: valid new password returns 200")
+    @DisplayName("POST /password-resets: valid new password returns 200")
     void resetPassword_validPassword_returns200() throws Exception {
         UserDTO.ResetPasswordRequest req = new UserDTO.ResetPasswordRequest();
         req.setUsername("testuser");
@@ -293,7 +295,7 @@ class UserControllerTest {
 
         doNothing().when(userService).resetPassword(any(UserDTO.ResetPasswordRequest.class));
 
-        mockMvc.perform(post("/api/auth/reset-password")
+        mockMvc.perform(post("/api/password-resets")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -302,7 +304,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("POST /reset-password: same password returns 400")
+    @DisplayName("POST /password-resets: same password returns 400")
     void resetPassword_samePassword_returns400() throws Exception {
         UserDTO.ResetPasswordRequest req = new UserDTO.ResetPasswordRequest();
         req.setUsername("testuser");
@@ -311,7 +313,7 @@ class UserControllerTest {
         doThrow(new IllegalArgumentException("New password cannot be the same as the old password"))
             .when(userService).resetPassword(any(UserDTO.ResetPasswordRequest.class));
 
-        mockMvc.perform(post("/api/auth/reset-password")
+        mockMvc.perform(post("/api/password-resets")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -319,16 +321,16 @@ class UserControllerTest {
             .andExpect(content().string("New password cannot be the same as the old password"));
     }
 
-    // ─── POST /api/auth/coins ─────────────────────────────────────────────────────
+    // ─── POST /api/user-coins ─────────────────────────────────────────────────────
 
     @Test
     @WithMockUser
-    @DisplayName("POST /coins: negative coins returns 400")
+    @DisplayName("POST /user-coins: negative coins returns 400")
     void addCoins_negativeCoinAmount_returns400() throws Exception {
         UserDTO.CoinUpdateRequest req = new UserDTO.CoinUpdateRequest();
         req.setCoinsToAdd(-10);
 
-        mockMvc.perform(post("/api/auth/coins")
+        mockMvc.perform(post("/api/user-coins")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
@@ -338,7 +340,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser
-    @DisplayName("POST /coins: authenticated positive request returns 200")
+    @DisplayName("POST /user-coins: authenticated positive request returns 200")
     void addCoins_authenticatedPositive_returns200() throws Exception {
         UserDTO.CoinUpdateRequest req = new UserDTO.CoinUpdateRequest();
         req.setCoinsToAdd(10);
@@ -346,11 +348,97 @@ class UserControllerTest {
         when(userService.updateCoins(any(UserDTO.CoinUpdateRequest.class)))
             .thenReturn(sampleAuthResponse);
 
-        mockMvc.perform(post("/api/auth/coins")
+        mockMvc.perform(post("/api/user-coins")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("POST /contributor-requests: authenticated request returns 200")
+    void requestContributor_authenticated_returns200() throws Exception {
+        when(userService.requestContributorStatus()).thenReturn(sampleAuthResponse);
+
+        mockMvc.perform(post("/api/contributor-requests")
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("POST /lesson-progress-updates: valid request returns 200")
+    void updateLessonProgress_validRequest_returns200() throws Exception {
+        UserDTO.LessonProgressUpdateRequest req = new UserDTO.LessonProgressUpdateRequest();
+        req.setMaxUnlockedLessonIndex(3);
+
+        when(userService.updateLessonProgress(3)).thenReturn(sampleAuthResponse);
+
+        mockMvc.perform(post("/api/lesson-progress-updates")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("PATCH /users/me/profile: valid request returns 200")
+    void updateProfile_validRequest_returns200() throws Exception {
+        UserDTO.UpdateProfileRequest req = new UserDTO.UpdateProfileRequest();
+        req.setUsername("renamed-user");
+
+        when(userService.updateProfile(any(UserDTO.UpdateProfileRequest.class)))
+            .thenReturn(sampleAuthResponse);
+
+        mockMvc.perform(patch("/api/users/me/profile")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value("mock-token"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("PATCH /users/me/password: valid request returns 200")
+    void changePassword_validRequest_returns200() throws Exception {
+        UserDTO.ChangePasswordRequest req = new UserDTO.ChangePasswordRequest();
+        req.setCurrentPassword("old-password");
+        req.setNewPassword("new-password");
+
+        doNothing().when(userService).changePassword(any(UserDTO.ChangePasswordRequest.class));
+
+        mockMvc.perform(patch("/api/users/me/password")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Password updated successfully"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("DELETE /users/me: authenticated request returns 200")
+    void deleteAccount_authenticated_returns200() throws Exception {
+        doNothing().when(userService).deleteCurrentUser();
+
+        mockMvc.perform(delete("/api/users/me")
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Account deleted successfully"));
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("POST /session-checks: authenticated request returns 200")
+    void sessionChecks_authenticated_returns200() throws Exception {
+        mockMvc.perform(post("/api/session-checks")
+                .with(csrf()))
+            .andExpect(status().isOk());
     }
 }

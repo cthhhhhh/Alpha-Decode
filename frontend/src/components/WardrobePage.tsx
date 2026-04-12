@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import Avatar from './avatar/Avatar';
 
 interface ShopItem {
@@ -55,7 +55,7 @@ export default function WardrobePage({
 
   const handleEquip = async (item: ShopItem) => {
     if (!authToken) return;
-    const res = await fetch(`/api/wardrobe/equip/${item.id}`, {
+    const res = await fetch(`/api/wardrobe/equipped-items/${item.id}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${authToken}` },
     });
@@ -74,7 +74,7 @@ export default function WardrobePage({
 
   const handleUnequip = async (slot: 'outfit' | 'pet') => {
     if (!authToken) return;
-    const res = await fetch(`/api/wardrobe/unequip/${slot}`, {
+    const res = await fetch(`/api/wardrobe/equipped-slots/${slot}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${authToken}` },
     });

@@ -1,11 +1,19 @@
 package com.csd.cs203t1.draft;
 
-import com.csd.cs203t1.user.UserService;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.csd.cs203t1.user.UserService;
 
 @RestController
 @RequestMapping("/api/drafts")
@@ -42,7 +50,7 @@ public class DraftController {
         }
     }
 
-    @PostMapping("/{id}/submit")
+    @PostMapping("/{id}/submissions")
     @PreAuthorize("hasRole('CONTRIBUTOR')")
     public ResponseEntity<?> submitDraft(@PathVariable Long id) {
         try {
@@ -78,7 +86,7 @@ public class DraftController {
         return ResponseEntity.ok(draftService.getPendingDrafts());
     }
 
-    @PostMapping("/{id}/approve")
+    @PostMapping("/{id}/approvals")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> approveDraft(@PathVariable Long id) {
         try {
@@ -90,7 +98,7 @@ public class DraftController {
         }
     }
 
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id}/rejections")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> rejectDraft(@PathVariable Long id,
                                           @RequestBody DraftDTO.RejectDraftRequest req) {

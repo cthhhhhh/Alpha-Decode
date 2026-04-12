@@ -98,6 +98,22 @@ class AdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    @DisplayName("GET /api/admin/users: returns users list")
+    void getAllUsers_asAdmin_returns200() throws Exception {
+        when(adminService.getAllUsers()).thenReturn(Collections.singletonList(Map.of(
+            "id", 2,
+            "username", "user",
+            "email", "user@test.com",
+            "role", "USER"
+        )));
+
+        mockMvc.perform(get("/api/admin/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("user"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("DELETE /api/admin/users/{id}: success")
     void deleteUser_asAdmin_success() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(adminUser);
@@ -123,11 +139,11 @@ class AdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("POST /api/admin/users/{id}/ban: success")
+    @DisplayName("POST /api/admin/users/{id}/bans: success")
     void banUser_asAdmin_success() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(adminUser);
 
-        mockMvc.perform(post("/api/admin/users/2/ban"))
+        mockMvc.perform(post("/api/admin/users/2/bans"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("User banned successfully"));
 
@@ -136,11 +152,22 @@ class AdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("POST /api/admin/users/{id}/approve-contributor: success")
+    @DisplayName("DELETE /api/admin/users/{id}/bans: success")
+    void unbanUser_nounRoute_success() throws Exception {
+        mockMvc.perform(delete("/api/admin/users/2/bans"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User unbanned successfully"));
+
+        verify(userService).setUserEnabled(2L, true);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/admin/users/{id}/contributor-approvals: success")
     void approveContributor_valid_success() throws Exception {
         doNothing().when(adminService).approveContributor(2L);
 
-        mockMvc.perform(post("/api/admin/users/2/approve-contributor"))
+        mockMvc.perform(post("/api/admin/users/2/contributor-approvals"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("User approved as contributor"));
 
@@ -149,14 +176,40 @@ class AdminControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("POST /api/admin/users/{id}/approve-contributor: fails if not pending")
+    @DisplayName("DELETE /api/admin/users/{id}/progress: success")
+    void resetProgress_nounRoute_success() throws Exception {
+        doNothing().when(userService).resetProgress(2L);
+
+        mockMvc.perform(delete("/api/admin/users/2/progress"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Progress reset successfully"));
+
+        verify(userService).resetProgress(2L);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/admin/users/{id}/contributor-approvals: fails if not pending")
     void approveContributor_notPending_returns400() throws Exception {
         doThrow(new IllegalArgumentException("User is not pending approval"))
             .when(adminService).approveContributor(2L);
 
-        mockMvc.perform(post("/api/admin/users/2/approve-contributor"))
+        mockMvc.perform(post("/api/admin/users/2/contributor-approvals"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("User is not pending approval"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/admin/users/{id}/contributor-rejections: success")
+    void rejectContributor_valid_success() throws Exception {
+        doNothing().when(adminService).rejectContributor(2L);
+
+        mockMvc.perform(post("/api/admin/users/2/contributor-rejections"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Contributor request rejected"));
+
+        verify(adminService).rejectContributor(2L);
     }
 
     @Test
@@ -190,5 +243,21 @@ class AdminControllerTest {
                 .andExpect(status().isOk());
 
         verify(adminService).updateUserRole(2L, "ADMIN");
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("GET /api/admin/users/{id}/stats: returns user stats")
+    void getUserStats_asAdmin_returns200() throws Exception {
+        when(adminService.getUserStats(2L)).thenReturn(Map.of(
+            "coins", 50,
+            "level", 3,
+            "lastActive", "Never"
+        ));
+
+        mockMvc.perform(get("/api/admin/users/2/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.coins").value(50))
+                .andExpect(jsonPath("$.level").value(3));
     }
 }

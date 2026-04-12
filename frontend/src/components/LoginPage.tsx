@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { AlertCircle, ArrowLeft, Eye, EyeOff, LogIn } from 'lucide-react';
 import { motion } from 'motion/react';
-import { LogIn, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 
 interface LoginPageProps {
   onLoginSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => void;
@@ -36,7 +36,7 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -63,7 +63,7 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
     setSuccessMsg('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/verify-user', {
+      const res = await fetch('/api/password-reset-verifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email: forgotEmail }),
@@ -82,7 +82,7 @@ export default function LoginPage({ onLoginSuccess, onGoToRegister, onBack }: Lo
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await fetch('/api/password-resets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, newPassword }),

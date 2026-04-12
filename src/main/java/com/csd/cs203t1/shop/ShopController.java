@@ -30,7 +30,7 @@ public class ShopController {
         return ResponseEntity.ok(shopService.getShopItems(user));
     }
 
-    @PostMapping("/buy/{id}")
+    @PostMapping("/purchases/{id}")
     public ResponseEntity<?> buyItem(@PathVariable Long id) {
         User user = userService.getCurrentUserReadOnly();
         try {

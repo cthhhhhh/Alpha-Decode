@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Flame, Zap, Edit3, Check, X, Shield, AlertCircle, LogOut } from 'lucide-react';
+import { AlertCircle, Check, Edit3, Flame, LogOut, Shield, X, Zap } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import AchievementsSection from './AchievementsSection';
 import Avatar from './avatar/Avatar';
 
@@ -56,7 +56,7 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
 
     useEffect(() => {
         if (!authToken) return;
-        fetch('/api/auth/me', {
+        fetch('/api/users/me', {
             headers: { 'Authorization': `Bearer ${authToken}` },
         })
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
@@ -86,7 +86,7 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
         setSaving(true);
         setSaveError('');
         try {
-            const res = await fetch('/api/auth/profile', {
+            const res = await fetch('/api/users/me/profile', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
         if (!currentPassword || !newPassword) { setPasswordError('Both fields are required'); return; }
         setSavingPassword(true);
         try {
-            const res = await fetch('/api/auth/password', {
+            const res = await fetch('/api/users/me/password', {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
         setDeleteError('');
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('/api/auth/me', {
+            const res = await fetch('/api/users/me', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -172,7 +172,7 @@ const ProfilePage = ({ authUsername, authToken, faceId, bodyTypeId, hairId, skin
         setApplying(true);
         setApplyError('');
         try {
-            const res = await fetch('/api/auth/request-contributor', {
+            const res = await fetch('/api/contributor-requests', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${authToken}` },
             });

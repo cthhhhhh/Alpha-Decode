@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Youtube, Instagram } from 'lucide-react';
+import { Instagram, Youtube } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 const TikTokIcon = ({ size = 20 }: { size?: number }) => (
     <svg
@@ -40,7 +40,7 @@ const DailyWord = ({ authToken }: DailyWordProps) => {
     };
 
     useEffect(() => {
-        fetch('/api/terms/')
+        fetch('/api/terms')
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: ApiTerm[]) => {
                 if (data.length > 0) {

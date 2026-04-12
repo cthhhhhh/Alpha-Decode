@@ -49,36 +49,36 @@ class WardrobeControllerTest {
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("POST /api/wardrobe/equip/{id}: success")
+    @DisplayName("POST /api/wardrobe/equipped-items/{id}: success")
     void equipItem_success() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.equipItem(eq(user), eq(1L))).thenReturn(new ShopDTO.EquipResponse(1L, null));
 
-        mockMvc.perform(post("/api/wardrobe/equip/1"))
+        mockMvc.perform(post("/api/wardrobe/equipped-items/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.equippedOutfitId").value(1));
     }
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("DELETE /api/wardrobe/unequip/{slot}: success for outfit")
+    @DisplayName("DELETE /api/wardrobe/equipped-slots/{slot}: success for outfit")
     void unequipSlot_outfit_success() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.unequipSlot(eq(user), eq("outfit"))).thenReturn(new ShopDTO.EquipResponse(null, null));
 
-        mockMvc.perform(delete("/api/wardrobe/unequip/outfit"))
+        mockMvc.perform(delete("/api/wardrobe/equipped-slots/outfit"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.equippedOutfitId").isEmpty());
     }
 
     @Test
     @WithMockUser(username = "testuser")
-    @DisplayName("DELETE /api/wardrobe/unequip/{slot}: returns 400 for unknown slot")
+    @DisplayName("DELETE /api/wardrobe/equipped-slots/{slot}: returns 400 for unknown slot")
     void unequipSlot_unknown_fail_returns400() throws Exception {
         when(userService.getCurrentUserReadOnly()).thenReturn(user);
         when(shopService.unequipSlot(eq(user), eq("foo"))).thenThrow(new IllegalArgumentException("Unknown slot: foo"));
 
-        mockMvc.perform(delete("/api/wardrobe/unequip/foo"))
+        mockMvc.perform(delete("/api/wardrobe/equipped-slots/foo"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Unknown slot: foo"));
     }

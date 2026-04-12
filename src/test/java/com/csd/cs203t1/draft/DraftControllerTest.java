@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,9 +16,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -121,7 +124,7 @@ class DraftControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("POST /api/drafts/{id}/approve: success as ADMIN")
+    @DisplayName("POST /api/drafts/{id}/approvals: success as ADMIN")
     void approveDraft_success() throws Exception {
         DraftDTO.DraftResponse approved = new DraftDTO.DraftResponse();
         approved.setId(1L);
@@ -132,7 +135,7 @@ class DraftControllerTest {
 
         when(draftService.approveDraft(1L)).thenReturn(approved);
 
-        mockMvc.perform(post("/api/drafts/1/approve"))
+        mockMvc.perform(post("/api/drafts/1/approvals"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("APPROVED"))
             .andExpect(jsonPath("$.approvedLessonId").value(100));
@@ -140,7 +143,7 @@ class DraftControllerTest {
 
     @Test
     @WithMockUser(roles = "CONTRIBUTOR")
-    @DisplayName("POST /api/drafts/{id}/submit: success")
+    @DisplayName("POST /api/drafts/{id}/submissions: success")
     void submitDraft_success() throws Exception {
         DraftDTO.DraftResponse submitted = new DraftDTO.DraftResponse();
         submitted.setId(1L);
@@ -151,8 +154,52 @@ class DraftControllerTest {
         when(userService.getCurrentUser()).thenReturn(contributor);
         when(draftService.submitDraft(1L, 10L)).thenReturn(submitted);
 
-        mockMvc.perform(post("/api/drafts/1/submit"))
+        mockMvc.perform(post("/api/drafts/1/submissions"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    @WithMockUser(roles = "CONTRIBUTOR")
+    @DisplayName("DELETE /api/drafts/{id}: success as CONTRIBUTOR")
+    void deleteDraft_success() throws Exception {
+        when(userService.getCurrentUser()).thenReturn(contributor);
+
+        mockMvc.perform(delete("/api/drafts/1"))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Draft deleted"));
+
+        verify(draftService).deleteDraft(1L, 10L);
+    }
+
+    @Test
+    @WithMockUser(roles = "CONTRIBUTOR")
+    @DisplayName("GET /api/drafts/mine: returns contributor drafts")
+    void getMyDrafts_success() throws Exception {
+        when(userService.getCurrentUser()).thenReturn(contributor);
+        when(draftService.getDraftsForContributor(10L)).thenReturn(Collections.singletonList(draftResponse));
+
+        mockMvc.perform(get("/api/drafts/mine"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("POST /api/drafts/{id}/rejections: success as ADMIN")
+    void rejectDraft_success() throws Exception {
+        DraftDTO.DraftResponse rejected = new DraftDTO.DraftResponse();
+        rejected.setId(1L);
+        rejected.setContributorId(10L);
+        rejected.setTitle("Mock Draft");
+        rejected.setStatus(DraftStatus.REJECTED);
+
+        when(draftService.rejectDraft(1L, "Missing details")).thenReturn(rejected);
+
+        mockMvc.perform(post("/api/drafts/1/rejections")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"rejectionReason\":\"Missing details\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("REJECTED"));
     }
 }

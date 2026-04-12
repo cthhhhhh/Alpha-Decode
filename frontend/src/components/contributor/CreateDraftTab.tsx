@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, Edit2, Send, Save, X } from 'lucide-react';
-import type { Draft } from './types';
-import { authHeaders } from '../admin/utils';
+import { Edit2, Plus, Save, Send, Trash2, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { ConfirmModal } from '../admin/ConfirmModal';
+import { authHeaders } from '../admin/utils';
+import type { Draft } from './types';
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   INTRO: { label: 'Intro', color: 'bg-blue-100 text-blue-700' },
@@ -235,7 +235,7 @@ export function CreateDraftTab({ drafts, onDraftsChange, initialEditId }: Create
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`/api/drafts/${editingId}/submit`, { method: 'POST', headers: authHeaders() });
+      const res = await fetch(`/api/drafts/${editingId}/submissions`, { method: 'POST', headers: authHeaders() });
       if (!res.ok) throw new Error(await res.text());
       resetForm();
       onDraftsChange();

@@ -1,4 +1,4 @@
-import { Ban, BookOpen, CheckCircle, ChevronDown, ChevronUp, Clock, Coins, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Trash2, Trophy, UserCheck, Zap, X } from 'lucide-react';
+import { Ban, BookOpen, CheckCircle, ChevronDown, ChevronUp, Clock, Coins, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Trash2, Trophy, UserCheck, X, Zap } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ConfirmModal } from './ConfirmModal';
@@ -94,7 +94,9 @@ export function UsersTab() {
       isBanning ? 'warning' : 'success',
       async () => {
         closeModal();
-        const res = await fetch(`/api/admin/users/${user.id}/${isBanning ? 'ban' : 'unban'}`, { method: 'POST', headers: authHeaders() });
+        const url = `/api/admin/users/${user.id}/bans`;
+        const method = isBanning ? 'POST' : 'DELETE';
+        const res = await fetch(url, { method, headers: authHeaders() });
         if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, enabled: !x.enabled, pendingApproval: false } : x));
       }
     );
@@ -103,7 +105,7 @@ export function UsersTab() {
   const handleReset = (user: UserData) => {
     showConfirm('Reset Progress', `Clear all coins, level, streak, and lesson progress for ${user.username}? This cannot be undone.`, 'Reset', 'info', async () => {
       closeModal();
-      await fetch(`/api/admin/users/${user.id}/reset`, { method: 'POST', headers: authHeaders() });
+      await fetch(`/api/admin/users/${user.id}/progress`, { method: 'DELETE', headers: authHeaders() });
       fetchUsers();
     });
   };
@@ -262,7 +264,7 @@ export function UsersTab() {
                               <button
                                 onClick={() => showConfirm('Approve Contributor', `Approve ${user.username} as a contributor?`, 'Approve', 'success', async () => {
                                   closeModal();
-                                  const res = await fetch(`/api/admin/users/${user.id}/approve-contributor`, { method: 'POST', headers: authHeaders() });
+                                  const res = await fetch(`/api/admin/users/${user.id}/contributor-approvals`, { method: 'POST', headers: authHeaders() });
                                   if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, role: 'CONTRIBUTOR', enabled: true, pendingApproval: false } : x));
                                 })}
                                 title="Approve contributor"
@@ -273,7 +275,7 @@ export function UsersTab() {
                               <button
                                 onClick={() => showConfirm('Reject Request', `Reject ${user.username}'s request?`, 'Reject', 'danger', async () => {
                                   closeModal();
-                                  const res = await fetch(`/api/admin/users/${user.id}/reject-contributor`, { method: 'POST', headers: authHeaders() });
+                                  const res = await fetch(`/api/admin/users/${user.id}/contributor-rejections`, { method: 'POST', headers: authHeaders() });
                                   if (res.ok) setUsers(u => u.map(x => x.id === user.id ? { ...x, pendingApproval: false } : x));
                                 })}
                                 title="Reject request"

@@ -54,13 +54,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.DELETE, "/api/auth/me")).authenticated()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/register-admin")).hasRole("ADMIN")
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/register")).permitAll()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/register-contributor")).permitAll()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/login")).permitAll()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/verify-user")).permitAll()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/auth/reset-password")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.DELETE, "/api/users/me")).authenticated()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/admin/users")).hasRole("ADMIN")
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/users")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/contributor-registrations")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/sessions")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/password-reset-verifications")).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/password-resets")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/lessons/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/api/terms/**")).permitAll()
                         // Let the controller return 401/409 with clearer messages.

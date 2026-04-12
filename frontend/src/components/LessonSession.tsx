@@ -1,6 +1,6 @@
-import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect } from 'react';
-import { BookOpen, CheckCircle2, XCircle, Coins, Trophy, Flag, RotateCcw } from 'lucide-react';
+import { BookOpen, CheckCircle2, Coins, Flag, RotateCcw, Trophy, XCircle } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import FlagModal from './FlagModal';
 
 function fisherYates<T>(arr: T[]): void {
@@ -109,7 +109,7 @@ const LessonSession = ({ lessonId, initialCompleted, onClose, onComplete, practi
 
     useEffect(() => {
         let isMounted = true;
-        fetch(`/api/lessons/questions/${lessonId}`)
+        fetch(`/api/lessons/${lessonId}/questions`)
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then((data: LessonData) => {
                 if (isMounted) {

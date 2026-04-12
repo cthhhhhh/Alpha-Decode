@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,9 +58,26 @@ class QuestionControllerTest {
 
         when(questionService.listQuestions()).thenReturn(List.of(q));
 
-        mockMvc.perform(get("/api/questions/"))
+        mockMvc.perform(get("/api/questions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/questions/{id}: returns question")
+    void getQuestionById_public_success() throws Exception {
+        IntroQuestion q = IntroQuestion.builder()
+                .explanation("explanation")
+                .title("title")
+                .content("content")
+                .build();
+        q.setId(2L);
+
+        when(questionService.getQuestion(2L)).thenReturn(q);
+
+        mockMvc.perform(get("/api/questions/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2));
     }
 
     @Test
@@ -118,5 +136,35 @@ class QuestionControllerTest {
 
         mockMvc.perform(delete("/api/questions/5"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(roles = "CONTRIBUTOR")
+    @DisplayName("PUT /api/questions/{id}: succeeds for contributor")
+    void updateQuestion_contributor_success() throws Exception {
+        IntroQuestion updated = IntroQuestion.builder()
+                .explanation("new explanation")
+                .title("new title")
+                .content("new content")
+                .build();
+        updated.setId(5L);
+
+        when(questionService.updateQuestion(org.mockito.ArgumentMatchers.eq(5L), org.mockito.ArgumentMatchers.any(QuestionDTO.class)))
+                .thenReturn(updated);
+
+        String body = """
+                {
+                  "question_type": "INTRO",
+                  "explanation": "new explanation",
+                  "title": "new title",
+                  "content": "new content"
+                }
+                """;
+
+        mockMvc.perform(put("/api/questions/5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5));
     }
 }

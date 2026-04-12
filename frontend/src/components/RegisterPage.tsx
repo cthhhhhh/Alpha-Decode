@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { AlertCircle, ArrowLeft, CheckCircle, Eye, EyeOff, Info, UserPlus } from 'lucide-react';
 import { motion } from 'motion/react';
-import { UserPlus, Eye, EyeOff, AlertCircle, ArrowLeft, CheckCircle, Info } from 'lucide-react';
+import { useState } from 'react';
 
 interface RegisterPageProps {
   onRegisterSuccess: (token: string, role: string, username: string, level?: number, xp?: number, maxUnlockedLessonIndex?: number, streak?: number, profilePic?: string, dailyQuizLastDate?: string, dailyQuizCompletedToday?: boolean, onboardingCompleted?: boolean) => void;
@@ -33,7 +33,7 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
     setLoading(true);
     try {
       if (selectedRole === 'CONTRIBUTOR') {
-        const res = await fetch('/api/auth/register-contributor', {
+        const res = await fetch('/api/contributor-registrations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, email, password }),
@@ -44,7 +44,7 @@ export default function RegisterPage({ onRegisterSuccess, onGoToLogin, onBack }:
         }
         setContributorSuccess(true);
       } else {
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, email, password }),

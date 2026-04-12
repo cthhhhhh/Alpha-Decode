@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { RefreshCcw, CheckCircle, Flag, ExternalLink, Trash2 } from 'lucide-react';
+import { CheckCircle, ExternalLink, Flag, RefreshCcw, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ConfirmModal } from './ConfirmModal';
 import type { FlagItem } from './types';
 import { authHeaders, formatReason } from './utils';
-import { ConfirmModal } from './ConfirmModal';
 
 export function ReportsTab() {
   const [flags, setFlags] = useState<FlagItem[]>([]);
@@ -28,7 +28,7 @@ export function ReportsTab() {
     setLoading(true);
     Promise.all([
       fetch('/api/flags', { headers: authHeaders() }),
-      fetch('/api/lessons/', { headers: authHeaders() }),
+      fetch('/api/lessons', { headers: authHeaders() }),
     ])
       .then(async ([fr, lr]) => {
         if (!fr.ok) throw new Error('Failed to load flags');

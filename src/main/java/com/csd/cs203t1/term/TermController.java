@@ -22,7 +22,7 @@ public class TermController {
 		this.termService = termService;
 	}
 
-	@GetMapping("/")
+	@GetMapping
 	public List<Term> getTerms() {
 		return termService.listTerms();
 	}
@@ -39,7 +39,7 @@ public class TermController {
 	}
 
 	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
-	@PostMapping("/lessons/{lessonId}")
+	@PostMapping("/lesson-links/{lessonId}")
 	public ResponseEntity<Term> addTermWithLesson(
 		@PathVariable Long lessonId,
 		@RequestBody Term term
@@ -49,7 +49,7 @@ public class TermController {
 	}
 
 	@PreAuthorize("hasAnyRole('CONTRIBUTOR','ADMIN')")
-	@PostMapping("/create")
+	@PostMapping
 	public ResponseEntity<Term> createTerm(
 		@RequestBody Term term
 	) {
