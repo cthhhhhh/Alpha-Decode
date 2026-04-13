@@ -15,6 +15,7 @@ import com.csd.cs203t1.achievement.Achievement;
 import com.csd.cs203t1.achievement.AchievementService;
 import com.csd.cs203t1.achievement.UserAchievementRepository;
 import com.csd.cs203t1.bookmark.UserBookmarkRepository;
+import com.csd.cs203t1.common.ResourceNotFoundException;
 import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.draft.DraftRepository;
 import com.csd.cs203t1.flag.FlagRepository;
@@ -459,7 +460,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void resetProgress(Long id) {
         java.util.Objects.requireNonNull(id, "ID must not be null");
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setCoins(0);
         user.setWeeklyCoins(0);
         // Do NOT reset totalCoinsCollected or weeklyCoinsCollected - these track historical data
@@ -475,7 +476,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void setUserEnabled(Long id, boolean enabled) {
         java.util.Objects.requireNonNull(id, "ID must not be null");
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setEnabled(enabled);
         user.setPendingApproval(false);
         userRepository.save(user);

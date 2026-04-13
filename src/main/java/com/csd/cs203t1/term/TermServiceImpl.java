@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.csd.cs203t1.common.ResourceNotFoundException;
 import com.csd.cs203t1.lesson.LessonRepository;
 
 import jakarta.transaction.Transactional;
@@ -27,7 +28,7 @@ public class TermServiceImpl implements TermService {
 		return terms.findById(id).map(term ->{
 			return term;
 			}
-		).orElseThrow(() -> new RuntimeException("Term not found"));
+		).orElseThrow(() -> new ResourceNotFoundException("Term not found"));
 	}
 
 
@@ -37,7 +38,7 @@ public class TermServiceImpl implements TermService {
 		return lessons.findById(lessonId).map(lesson -> {
 			term.setLesson(lesson);
             return terms.save(term);
-        }).orElseThrow(() -> new RuntimeException("lesson not found")); 
+        }).orElseThrow(() -> new ResourceNotFoundException("lesson not found")); 
 	}
 
 	@Override
@@ -50,7 +51,7 @@ public class TermServiceImpl implements TermService {
 	@Override
 	public void deleteTerm(Long id){
 		if(!terms.existsById(id)){
-			throw new RuntimeException("Term not found");
+			throw new ResourceNotFoundException("Term not found");
 		}
 		terms.deleteById(id);
 	}

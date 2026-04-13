@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.csd.cs203t1.common.ResourceNotFoundException;
 import com.csd.cs203t1.common.Role;
 import com.csd.cs203t1.user.User;
 import com.csd.cs203t1.user.UserRepository;
@@ -50,7 +51,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void updateUserRole(Long id, String newRoleStr) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (newRoleStr != null) {
             user.setRole(Role.valueOf(newRoleStr.toUpperCase()));
             if (user.getRole() != Role.CONTRIBUTOR) {
@@ -62,7 +63,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void approveContributor(Long id) {
-        User user = userRepository.findById(id).orElseThrow();
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!user.isPendingApproval()) {
             throw new IllegalArgumentException("User is not pending approval");
         }
@@ -74,7 +75,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void rejectContributor(Long id) {
-        User user = userRepository.findById(id).orElseThrow();
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (!user.isPendingApproval()) {
             throw new IllegalArgumentException("User is not pending approval");
         }
@@ -97,7 +98,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Map<String, Object> getUserStats(Long id) {
-        User user = userRepository.findById(id).orElseThrow();
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return Map.of(
                 "coins", user.getCoins(),
                 "level", user.getLevel(),

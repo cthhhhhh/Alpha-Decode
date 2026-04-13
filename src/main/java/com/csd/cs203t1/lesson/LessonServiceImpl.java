@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.csd.cs203t1.common.ResourceNotFoundException;
 import com.csd.cs203t1.draft.DraftService;
 import com.csd.cs203t1.question.Question;
 import com.csd.cs203t1.question.QuestionDTO;
@@ -30,20 +31,20 @@ public class LessonServiceImpl implements LessonService {
 		return lessons.findById(id).map(lesson ->{
 			return lesson;
 			}
-		).orElseThrow(() -> new RuntimeException("Lesson not found"));
+		).orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
 	}
 
 	@Override
 	public Lesson getLessonWithQuizAndQuestions(Long lessonId) {
         return lessons.findByIdWithQuizAndQuestions(lessonId)
-                .orElseThrow(() -> new RuntimeException("Lesson not found")); 
+		.orElseThrow(() -> new ResourceNotFoundException("Lesson not found")); 
     }
 
 
 	@Override
 	public Lesson updateLesson(Long id, LessonDTO dto) {
 		Lesson lesson = lessons.findById(id)
-			.orElseThrow(() -> new RuntimeException("Lesson not found"));
+			.orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
 		if (dto.getTitle() != null) lesson.setTitle(dto.getTitle());
 		if (dto.getColour() != null) lesson.setColour(dto.getColour());
 		if (dto.getStory() != null) lesson.setStory(dto.getStory());
@@ -54,7 +55,7 @@ public class LessonServiceImpl implements LessonService {
 	@Override
 	public void deleteLesson(Long id){
 		if(!lessons.existsById(id)){
-			throw new RuntimeException("Lesson not found");
+			throw new ResourceNotFoundException("Lesson not found");
 		}
 		draftService.handleLessonDeletion(id);
 		lessons.deleteById(id);

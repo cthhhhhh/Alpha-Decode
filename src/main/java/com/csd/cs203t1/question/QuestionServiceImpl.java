@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.csd.cs203t1.common.ResourceNotFoundException;
 import com.csd.cs203t1.quiz.Quiz;
 import com.csd.cs203t1.quiz.QuizRepository;
 
@@ -25,13 +26,13 @@ public class QuestionServiceImpl implements QuestionService {
 	@Override
 	public Question getQuestion(Long id){
 		return questions.findById(id)
-			.orElseThrow(() -> new RuntimeException("question not found"));
+			.orElseThrow(() -> new ResourceNotFoundException("question not found"));
 	}
 
 	@Override
 	public void deleteQuestion(Long id){
 		if(!questions.existsById(id)){
-			throw new RuntimeException("question not found");
+			throw new ResourceNotFoundException("question not found");
 		}
 		questions.deleteById(id);
 	}
@@ -39,7 +40,7 @@ public class QuestionServiceImpl implements QuestionService {
 	@Override
 	public Question addQuestion(Long quizId, QuestionDTO dto) {
 		Quiz quiz = quizzes.findById(quizId)
-			.orElseThrow(() -> new RuntimeException("Quiz not found"));
+			.orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 		Question q = QuestionMapper.mapToEntity(dto, quiz);
 		return questions.save(q);
 	}
