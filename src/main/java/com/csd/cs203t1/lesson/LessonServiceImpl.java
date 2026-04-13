@@ -30,13 +30,13 @@ public class LessonServiceImpl implements LessonService {
 		return lessons.findById(id).map(lesson ->{
 			return lesson;
 			}
-		).orElseThrow(() -> new RuntimeException("Lesson not found"));// TODO make custom exception,
+		).orElseThrow(() -> new RuntimeException("Lesson not found"));
 	}
 
 	@Override
 	public Lesson getLessonWithQuizAndQuestions(Long lessonId) {
         return lessons.findByIdWithQuizAndQuestions(lessonId)
-                .orElseThrow(() -> new RuntimeException("Lesson not found")); //TODO make custom exception
+                .orElseThrow(() -> new RuntimeException("Lesson not found")); 
     }
 
 

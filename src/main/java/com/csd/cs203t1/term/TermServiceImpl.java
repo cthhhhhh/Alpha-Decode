@@ -27,7 +27,7 @@ public class TermServiceImpl implements TermService {
 		return terms.findById(id).map(term ->{
 			return term;
 			}
-		).orElseThrow(() -> new RuntimeException("Lesson not found"));
+		).orElseThrow(() -> new RuntimeException("Term not found"));
 	}
 
 
@@ -37,7 +37,7 @@ public class TermServiceImpl implements TermService {
 		return lessons.findById(lessonId).map(lesson -> {
 			term.setLesson(lesson);
             return terms.save(term);
-        }).orElseThrow(() -> new RuntimeException("lesson not found")); //TODO make custom exception
+        }).orElseThrow(() -> new RuntimeException("lesson not found")); 
 	}
 
 	@Override
