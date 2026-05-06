@@ -2,8 +2,6 @@
 
 Alpha Decode is a gamified web application designed to help users master "Gen Alpha" slang.
 
-**[☁️ Play Alpha Decode Live!](https://alpha-decode.wittydesert-fcae5fd0.southeastasia.azurecontainerapps.io/)**
-
 ## Features
 
 * **Daily Drop:** A new slang term featured every day with definitions and usage examples.
