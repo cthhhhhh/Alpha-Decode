@@ -33,7 +33,7 @@ While Alpha Decode is deployed on the cloud, you can also spin it up locally:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/Lim-JL/CS203T1.git
+    git clone https://github.com/cthhhhhh/CS203T1.git
     cd CS203T1
     ```
 
